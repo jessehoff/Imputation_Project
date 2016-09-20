@@ -1,2 +1,12 @@
 *.ped
-
+*.ID
+*.bed
+*.map
+*.nosex
+*.log
+*.bim
+*.bam
+*.imiss
+*.lmiss
+*.fam
+*.irem
