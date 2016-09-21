@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#this filters multiple files for callrate on an allele and per animal basis and results in the production of per chip call rate stats. 
 plink --file 58336.160906.100.test_snp50_A --map 9913_SNP50.map --cow --geno 0.05 --mind 0.05 --make-bed --out /CIFS/MUG01_N/taylorjerr/JLH/160906_imputation_test/allele_individual_filtered/SNP_50_A
 
 plink --file 58336.160906.100.test_snp50_B --map 9913_SNP50.map --cow --geno 0.06 --mind 0.06 --make-bed --out /CIFS/MUG01_N/taylorjerr/JLH/160906_imputation_test/allele_individual_filtered/SNP_50_B
