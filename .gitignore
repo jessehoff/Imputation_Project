@@ -10,4 +10,8 @@
 *.lmiss
 *.fam
 *.frq
+*.hwe
+*.haps
+*.sample
+*.mm
 *.irem
