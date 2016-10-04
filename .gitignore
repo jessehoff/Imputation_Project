@@ -2,6 +2,11 @@
 *.ID
 *.bed
 *.map
+*.snakemake/*
+*.swp
+*checkpoint*
+pedtest.txt'
+*.Alpha
 *.nosex
 *.log
 *.bim
@@ -15,3 +20,5 @@
 *.sample
 *.mm
 *.irem
+toAlpha/Alpha/snp50_c.chr1.spec
+toAlpha/peds/*

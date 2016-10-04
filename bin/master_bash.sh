@@ -1,13 +1,13 @@
 #!/bin/bash
 
-bash allele_call_rate_stats.sh
+bash ./bin/allele_call_rate_stats.sh
 
-bash allele_call_rate_filter.sh
+bash ./bin/allele_call_rate_filter.sh
 
-bash individual_call_rate_stats.sh
+bash ./bin/individual_call_rate_stats.sh
 
-bash individual_call_rate_filter.sh
+bash ./bin/individual_call_rate_filter.sh
 
-bash hwe_stats.sh
+bash ./bin/hwe_stats.sh
 
-bash hwe_filter.sh
+bash ./bin/hwe_filter.sh
