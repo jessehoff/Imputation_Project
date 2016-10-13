@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from datetime import datetime
 import sys
 from sys import argv
 import re
@@ -17,6 +18,11 @@ start = re.findall(r'([\w]+) variants, ', log)
 stats = assay + geno + rem + start
 percent = int(stats[2])/int(stats[3])
 stats.append(percent)
+
+i = datetime.now()
+timestamp = i.strftime("%m/%d/%Y %H:%M:%S")
+stats.append(timestamp)
+
 
 logfile = open ('allele_filtered_log.csv', 'a')
 logfile.write(str(stats) + '\n')
