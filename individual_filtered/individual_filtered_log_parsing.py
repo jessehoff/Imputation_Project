@@ -1,5 +1,6 @@
 #!/usr/bin/env python 
 
+from datetime import datetime
 import sys
 from sys import argv
 script, infile = argv
@@ -21,6 +22,10 @@ stats = assay + mind + rem + rem1 + start
 
 percent = int(stats[2])/int(stats[3])
 stats.append(percent)
+
+i = datetime.now()
+timestamp = i.strftime("%m/%d/%Y %H:%M:%S")
+stats.append(timestamp)
 
 
 logfile = open ('individual_filtered_log.csv', 'a')
