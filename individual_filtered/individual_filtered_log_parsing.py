@@ -11,7 +11,8 @@ script, infile, outfile = argv
 # Opens input file from argv
 with open (infile, 'r') as logfile:
     log = logfile.read()
-    
+
+action = ['Individual Filtering Step']    
 assay = re.findall(r'--bfile ./allele_filtered/([\w]+)', log)#Identifies assay used from input file given to PLINK
 assay1 = re.findall(r'--bfile allele_filtered/([\w]+)', log) #Alternative regex for ID of assay
 mind = re.findall(r'--(mind\s*[\w.]+)', log)# filter used for individuals with low call rates (individuals missing proportion of variants above this value will be removed)
@@ -20,10 +21,10 @@ rem1 = re.findall(r'([0-9]+) cattle removed due to missing genotype data', log)#
 start = re.findall (r'([0-9]+) cattle \(', log)#Identifies starting number of animals loaded for proportion calculation
                 
 #List of strings from above regexpressions
-stats = assay + assay1 + mind + rem + rem1 + start 
+stats = action + assay + assay1 + mind + rem + rem1 + start 
 
 #Calculates proportion of animals removed
-proportion = float(stats[2])/float(stats[3])
+proportion = float(stats[3])/float(stats[4])
 stats.append(proportion)
 
 #Searches for and appends to stats list the time when plink filter was run
