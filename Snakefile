@@ -33,7 +33,7 @@ rule variant_stats:
 	output: 
 		frq = "allele_stats/{sample}.frq"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --cow --nonfounders --freq --out {params.oprefix}"
+		"plink --file {params.inprefix} --map {input.map} --cow --nonfounders --freq --out {params.oprefix}" # python allele_call_rate_visualization.py"
 
 
 
@@ -71,7 +71,7 @@ rule individual_stats:
 	output:
 		imiss="individual_stats/{sample}.imiss"
 	shell:
-		"plink --bfile {params.inprefix} --cow --missing --out {params.oprefix}"
+		"plink --bfile {params.inprefix} --cow --missing --out {params.oprefix}" #python individual_call_rate_visualization.py"
 
 
 
@@ -135,3 +135,61 @@ rule filter_hwe_variants:
 	shell:
 		"plink --bfile {params.inprefix} --cow --nonfounders --hwe 0.01 --make-bed --out {params.oprefix}; python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
+
+#Mendel Error Rates will happen last before merging across assays
+
+
+#Chrsplit -- Splits final .bed output of PLINK filtering septs into individual chromosomes
+#Input file location: ./hwe_filtered/
+#Input file types: (.bed, .bim, .fam)
+#Output file location: ./shapetest/
+#Output file types: (.phased.haps, .phased.sample)
+rule split_chromosomes:
+	input:
+		bed = "hwe_filtered/{sample}.bed"
+	params:
+		inprefix = "hwe_filtered/{sample}",
+		oprefix = "chrsplit/{sample}.chr"
+	output:
+		bed = "chrsplit/{sample}.chr1.bed" #may need to make this an oprefix param
+	shell:
+		"for chr in $(seq 1 30); do plink --bfile {params.inprefix} --chr $chr --make-bed  --nonfounders --cow --out {params.oprefix}$chr; done"
+
+
+
+
+
+
+
+rule run_shapeit:
+	input:
+		bed = "chrsplit/{sample}.chr1.bed",
+		#bim = "chrsplit/{sample}.chr1.bim",
+		#fam = "chrsplit/{sample}.chr1.fam"
+	params:
+		inprefix = "chrsplit/{sample}",
+		oprefix="shapetest/{sample}"
+	output:
+		haps = "shapetest/{sample}.chr1.phased.haps",
+		sample = "shapetest/{sample}.chr1.phased.sample"
+	shell:
+		"for chr in $(seq 1 30); do shapeit --input-bed {params.inprefix}.$chr.bed {params.inprefix}.$chr.bim {params.inprefix}.$chr.fam --output-max {params.oprefix}.$chr.phased.haps {params.oprefix}.$chr.phased.sample; done"
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		 
