@@ -1,11 +1,3 @@
-#def Map_Matcher(startingfilename): there will be a single wildcard object, which should correspond to the sample name. The sample name should start with a number so the funciton should use that number to return a map name
-#	Mapfiledict = {227234: ['map="maps/9913_ggpf250.map"'],etc etc}
-#	return Mapfiledict[startingfilename] this should be the string of the file map, and so the input should 
-#def variant_matcher(sample)
-
-
-
-
 map_dict = {'snp50_a':"maps/9913_SNP50.map", 'snp50_b':"maps/9913_SNP50.map", 'snp50_c':"maps/9913_SNP50.map", 'hd':"maps/9913_HD.map", 'ggpf250':"maps/9913_GGPF250.map" }
 
 samp_dict = {'snp50_a': "raw_genotypes/58336.160906.100.test_snp50_A", 'snp50_b':"raw_genotypes/58336.160906.100.test_snp50_B", 'snp50_c':"raw_genotypes/58336.160906.100.test_snp50_C", 'ggpf250':"raw_genotypes/227234.160906.100.test_ggpf250_A", 'hd':"777962.160906.100.test_hd_A"}
@@ -49,7 +41,6 @@ rule filter_variants:
 		stats = "allele_stats/{sample}.frq"
 	params:
 		inprefix = sampdicter,
-		#add the freq stats as an input and all other stats as inputs
 		oprefix="allele_filtered/{sample}",
 		logprefix="filter_logs/{sample}"
 	output:
@@ -136,7 +127,30 @@ rule filter_hwe_variants:
 		"plink --bfile {params.inprefix} --cow --nonfounders --hwe 0.01 --make-bed --out {params.oprefix}; python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
 
+rule missexed_filter:
+	
+
+
+
+
 #Mendel Error Rates will happen last before merging across assays
+
+
+
+rule merge_assays:
+	input:
+		bed = "hwe_filtered/{sample}.bed",
+		bim = "hwe_filtered/{sample}.bim",
+		fam = "hwe_filtered/{sample}.fam"
+	output:
+		bed = "merged_files/merged.bed"
+	shell:
+		"plink --bfile assay[0] --bmerge  --cow --make-bed --out merged"
+
+
+
+
+
 
 
 #Chrsplit -- Splits final .bed output of PLINK filtering septs into individual chromosomes
@@ -161,19 +175,21 @@ rule split_chromosomes:
 
 
 
+
+
 rule run_shapeit:
 	input:
 		bed = "chrsplit/{sample}.chr1.bed",
 		#bim = "chrsplit/{sample}.chr1.bim",
 		#fam = "chrsplit/{sample}.chr1.fam"
 	params:
-		inprefix = "chrsplit/{sample}",
-		oprefix="shapetest/{sample}"
+		inprefix = "chrsplit/{sample}.chr",
+		oprefix="shapetest/{sample}.chr"
 	output:
 		haps = "shapetest/{sample}.chr1.phased.haps",
 		sample = "shapetest/{sample}.chr1.phased.sample"
 	shell:
-		"for chr in $(seq 1 30); do shapeit --input-bed {params.inprefix}.$chr.bed {params.inprefix}.$chr.bim {params.inprefix}.$chr.fam --output-max {params.oprefix}.$chr.phased.haps {params.oprefix}.$chr.phased.sample; done"
+		"for chr in $(seq 1 30); do shapeit --input-bed {params.inprefix}$chr.bed {params.inprefix}$chr.bim {params.inprefix}$chr.fam --duohmm --output-max {params.oprefix}$chr.phased.haps {params.oprefix}$chr.phased.sample; done"
 		
 
 
