@@ -1,0 +1,18 @@
+rule targ:
+	input:
+		haps = expand("shapetest3/merged.chr{chr}.phased.haps",chr=list(range(2,31))),
+
+rule run_shapeit:
+	input:
+		bed="chrsplit/merged.chr{chr}.bed",
+		bim="chrsplit/merged.chr{chr}.bim",
+		fam="chrsplit/merged.chr{chr}.fam"
+	output:
+		sample = "shapetest3/merged.chr{chr}.phased.sample",
+		haps = "shapetest3/merged.chr{chr}.phased.haps"
+	log:
+		"logs/shaperuns/{chr}.log"
+	benchmark:
+		"benchmarks/{chr}.shapeit.benchmark.txt"
+	shell:
+                "shapeit --input-bed {input.bed} {input.bim} {input.fam} --duohmm --output-max {output.haps} {output.sample}"
