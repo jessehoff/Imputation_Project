@@ -25,12 +25,28 @@ rule make_vcf:
 	output:
 		vcf="shapevcf/merged.chr{chr}.phased.vcf",
 		log="shapevcf/logs/merged.chr{chr}.log"
+	log:
+                "logs/shapevcf/logs/snake.{chr}.log"
+	benchmark:
+                "benchmarks/shapevcf/shapevcf.{chr}.benchmark.txt"
 	params:
 		haps="shapetest3/merged.chr{chr}.phased"
 	shell:
 		"shapeit -convert --input-haps {params.haps} --output-log {output.log} --output-vcf {output.vcf}"
 
-
+rule vcf_to_fimpute:
+	input:
+		vcf="shapevcf/merged.chr{chr}.phased.vcf",
+	params:
+		colnum='2'
+	log:
+                "logs/vcf2fimpute/{chr}.log"
+	benchmark:
+                "benchmarks/vcf2fimpute/vcf2impute.{chr}.benchmark.txt"
+	output:
+		outname="fimpute_chip/merged.chr{chr}.fimpute"
+	shell:
+		"python ./bin/vcftoFimpute.py {input.vcf} {output.outname} {params}"
 
 #replace with a file of known ranges
 from itertools import tee
