@@ -1,4 +1,5 @@
-shapeit --input-bed ./chrsplit/snp50_c.chr1.bed ./chrsplit/snp50_c.chr1.bim ./chrsplit/snp50_c.chr1.fam \
-        --output-max ./shapetest/snp50_c.phased.haps ./shapetest/snp50_c.phased.sample
+shapeit --input-bed ./chrsplit/merged.chr1.bed ./chrsplit/merged.chr1.bim ./chrsplit/merged.chr1.fam \
+        --duohmm \
+	--output-max ./shapetest/merged.phased.haps ./shapetest2/merged.phased.sample
 
         #--input-map ./maps/9913_SNP50.map no map needed, automatically produced with default recombination rates. 

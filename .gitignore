@@ -5,7 +5,7 @@
 *.snakemake/*
 *.swp
 *checkpoint*
-pedtest.txt'
+pedtest.txt
 *.Alpha
 *.nosex
 *.log

@@ -1,6 +1,6 @@
 map_dict = {'snp50_a':"maps/9913_SNP50.map", 'snp50_b':"maps/9913_SNP50.map", 'snp50_c':"maps/9913_SNP50.map", 'hd':"maps/9913_HD.map", 'ggpf250':"maps/9913_GGPF250.map" }
 
-samp_dict = {'snp50_a': "raw_genotypes/58336.160906.100.test_snp50_A", 'snp50_b':"raw_genotypes/58336.160906.100.test_snp50_B", 'snp50_c':"raw_genotypes/58336.160906.100.test_snp50_C", 'ggpf250':"raw_genotypes/227234.160906.100.test_ggpf250_A", 'hd':"777962.160906.100.test_hd_A"}
+samp_dict = {'snp50_a': "raw_genotypes/58336.160906.100.test_snp50_A", 'snp50_b':"raw_genotypes/58336.160906.100.test_snp50_B", 'snp50_c':"raw_genotypes/58336.160906.100.test_snp50_C", 'ggpf250':"raw_genotypes/227234.160906.100.test_ggpf250_A", 'hd':"raw_genotypes/777962.160906.100.test_hd_A"}
 
 def mapdicter(shoein): 
 	return map_dict[shoein.sample]
@@ -46,7 +46,7 @@ rule filter_variants:
 	output:
 		bed="allele_filtered/{sample}.bed"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --cow --not-chr 0 --geno .05 --make-bed --out  {params.oprefix}; python allele_filtered/allele_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --file {params.inprefix} --map {input.map} --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .05 --make-bed --out  {params.oprefix}; python allele_filtered/allele_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
 
 
@@ -124,7 +124,7 @@ rule filter_hwe_variants:
 		bed="hwe_filtered/{sample}.bed"
 
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders --hwe 0.01 --make-bed --out {params.oprefix}; python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --nonfounders --hwe 0.01 --make-bed --out {params.oprefix}" #python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
 
 rule missexed_filter:
@@ -135,17 +135,17 @@ rule missexed_filter:
 
 #Mendel Error Rates will happen last before merging across assays
 
-
+DATA = ['snp50_a', 'snp50_b', 'snp50_c', 'hd', 'ggpf250']
 
 rule merge_assays:
 	input:
-		bed = "hwe_filtered/{sample}.bed",
-		bim = "hwe_filtered/{sample}.bim",
-		fam = "hwe_filtered/{sample}.fam"
+		expand("hwe_filtered/{previous}.bed", previous=DATA)
+	params:
+		oprefix="merged_files/merged"
 	output:
-		bed = "merged_files/merged.bed"
+		"merged_files/merged.bed"
 	shell:
-		"plink --bfile assay[0] --bmerge  --cow --make-bed --out merged"
+		"python hwe_filtered/file_list_maker.py; plink --merge-list hwe_filtered/allfiles.txt  --cow --make-bed --out {params.oprefix}"
 
 
 

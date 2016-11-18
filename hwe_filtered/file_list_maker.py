@@ -1,4 +1,4 @@
-mport glob
+import glob
 import pandas as pd
 import numpy as np
 
@@ -6,11 +6,11 @@ bed = []	#Set up empty lists for each needed file type
 bim = []
 fam = []
 
-for i in glob.glob('*.bed'): #Each of these searches for any file in directory that ends in "bed", "bim", or "fam"
+for i in glob.glob('/CIFS/MUG01_N/taylorjerr/JLH/160906_imputation_test/hwe_filtered/*.bed'): #Each of these searches for any file in directory that ends in "bed", "bim", or "fam"
     bed.append(i)
-for j in glob.glob('*.bim'):
+for j in glob.glob('/CIFS/MUG01_N/taylorjerr/JLH/160906_imputation_test/hwe_filtered/*.bim'):
     bim.append(j)
-for k in glob.glob('*.fam'):
+for k in glob.glob('/CIFS/MUG01_N/taylorjerr/JLH/160906_imputation_test/hwe_filtered/*.fam'):
     fam.append(k)
     
 with open('allfiles.txt', 'w+'):	#Open allfiles.txt that will be used in merge step

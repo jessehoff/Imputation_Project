@@ -1,3 +1,3 @@
 for chr in $(seq 1 33); do
-    plink --bfile ./hwe_filtered/snp50_c --chr $chr --make-bed  --nonfounders --cow --out ./chrsplit/snp50_c.chr$chr ;
+    plink --bfile ./merged_files/merged --chr $chr --make-bed  --nonfounders --cow --out ./chrsplit/merged.chr$chr ;
 done
