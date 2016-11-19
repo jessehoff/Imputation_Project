@@ -20,5 +20,7 @@ pedtest.txt
 *.sample
 *.mm
 *.irem
+*.hh
+*.sexcheck
 toAlpha/Alpha/snp50_c.chr1.spec
 toAlpha/peds/*
