@@ -25,7 +25,7 @@ rule variant_stats:
 	output: 
 		frq = "allele_stats/{sample}.frq"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --cow --nonfounders --freq --out {params.oprefix}" # python allele_call_rate_visualization.py"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --nonfounders --freq --out {params.oprefix}" # python allele_call_rate_visualization.py"
 
 
 
@@ -46,7 +46,7 @@ rule filter_variants:
 	output:
 		bed="allele_filtered/{sample}.bed"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .05 --make-bed --out  {params.oprefix}; python allele_filtered/allele_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .05 --make-bed --out  {params.oprefix}; python allele_filtered/allele_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
 
 
@@ -62,7 +62,7 @@ rule individual_stats:
 	output:
 		imiss="individual_stats/{sample}.imiss"
 	shell:
-		"plink --bfile {params.inprefix} --cow --missing --out {params.oprefix}" #python individual_call_rate_visualization.py"
+		"plink --bfile {params.inprefix} --cow --missing --keep-allele-order --out {params.oprefix}" #python individual_call_rate_visualization.py"
 
 
 
@@ -84,7 +84,7 @@ rule filter_individuals:
 		bed="individual_filtered/{sample}.bed"
 		
 	shell:
-		"plink --bfile {params.inprefix} --cow --mind .05 --make-bed --out {params.oprefix}; python individual_filtered/individual_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --mind .05 --keep-allele-order --make-bed --out {params.oprefix}; python individual_filtered/individual_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
 
 
@@ -103,7 +103,7 @@ rule hwe_stats:
 	output:
 		hwe="hwe_stats/{sample}.hwe"
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders --hardy --out {params.oprefix}"
+		"plink --bfile {params.inprefix}  --keep-allele-order --cow --nonfounders --hardy --out {params.oprefix}"
 
 
 
@@ -124,7 +124,7 @@ rule filter_hwe_variants:
 		bed="hwe_filtered/{sample}.bed"
 
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders --hwe 0.01 --make-bed --out {params.oprefix}" #python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.01 --make-bed --out {params.oprefix}" #python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
 
 rule missexed_filter:
@@ -167,7 +167,7 @@ rule split_chromosomes:
 	output:
 		bed = "chrsplit/{sample}.chr1.bed" #may need to make this an oprefix param
 	shell:
-		"for chr in $(seq 1 30); do plink --bfile {params.inprefix} --chr $chr --make-bed  --nonfounders --cow --out {params.oprefix}$chr; done"
+		"for chr in $(seq 1 30); do plink --bfile {params.inprefix}  --keep-allele-order --chr $chr --make-bed  --nonfounders --cow --out {params.oprefix}$chr; done"
 
 
 
