@@ -1,4 +1,4 @@
-map_dict = {'snp50_a':"maps/9913_SNP50.map", 'snp50_b':"maps/9913_SNP50.map", 'snp50_c':"maps/9913_SNP50.map", 'hd':"maps/9913_HD.map", 'ggpf250':"maps/9913_GGPF250.map" }
+map_dict = {'snp50_a':"maps/9913_SNP50.map",'58336.160906.75.imp_test':"maps/9913_SNP50.map", 'snp50_b':"maps/9913_SNP50.map", 'snp50_c':"maps/9913_SNP50.map", 'hd':"maps/9913_HD.map",'777962.160906.75.imp_test':"maps/9913_HD.map", 'ggpf250':"maps/9913_GGPF250.map",'227234.160906.75.imp_test':"maps/9913_GGPF250.map" }
 
 samp_dict = {'snp50_a': "raw_genotypes/58336.160906.100.test_snp50_A", 'snp50_b':"raw_genotypes/58336.160906.100.test_snp50_B", 'snp50_c':"raw_genotypes/58336.160906.100.test_snp50_C", 'ggpf250':"raw_genotypes/227234.160906.100.test_ggpf250_A", 'hd':"raw_genotypes/777962.160906.100.test_hd_A"}
 
