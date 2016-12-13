@@ -29,6 +29,8 @@ rule variant_stats:
 	params:
 		inprefix = "raw_genotypes/{sample}",
 		oprefix = "allele_stats/{sample}"
+	benchmark:
+		"filter_benchmarks/variant_stats/{sample}.txt"
 	output: 
 		frq = "allele_stats/{sample}.frq"
 	shell:
@@ -51,6 +53,8 @@ rule filter_variants:
 		inprefix = "raw_genotypes/{sample}",
 		oprefix="allele_filtered/{sample}",
 		logprefix="filter_logs/{sample}"
+	benchmark:                 
+		"filter_benchmarks/filter_variants/{sample}.txt"
 	output:
 		bed="allele_filtered/{sample}.bed"
 	shell:
@@ -67,6 +71,8 @@ rule individual_stats:
 	params:
 		inprefix="allele_filtered/{sample}",
 		oprefix="individual_stats/{sample}"
+	benchmark:                 
+		"filter_benchmarks/individual_stats/{sample}.txt"
 	output:
 		imiss="individual_stats/{sample}.imiss"
 	shell:
@@ -88,6 +94,8 @@ rule filter_individuals:
                 inprefix="allele_filtered/{sample}",
                 oprefix="individual_filtered/{sample}",
 		logprefix="filter_logs/{sample}"
+	benchmark:                 
+		"filter_benchmarks/filter_individuals/{sample}.txt"
 	output:
 		bed="individual_filtered/{sample}.bed"
 		
@@ -108,6 +116,8 @@ rule hwe_stats:
 	params:
 		inprefix="individual_filtered/{sample}",
 		oprefix="hwe_stats/{sample}"
+	benchmark:                 
+		"filter_benchmarks/hwe_stats/{sample}.txt"
 	output:
 		hwe="hwe_stats/{sample}.hwe"
 	shell:
@@ -128,6 +138,8 @@ rule filter_hwe_variants:
 		inprefix="individual_filtered/{sample}",
 		oprefix="hwe_filtered/{sample}",
 		logprefix="filter_logs/{sample}"
+	benchmark:                 
+		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
 		bed="hwe_filtered/{sample}.bed"
 	shell:
@@ -152,6 +164,8 @@ rule merge_assays: #split this into two steps
 		expand("hwe_filtered/{previous}.bed", previous=DATA2)
 	params:
 		oprefix="merged_files/{merged}"
+	  benchmark:                 
+		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
 		bedout= "merged_files/{merged}.bed",
 		mergefilelist= "hwe_filtered/allfiles{merged}.txt"
@@ -175,6 +189,7 @@ rule split_chromosomes:
 	params:
 		inprefix = "hwe_filtered/{sample}",
 		oprefix = "chrsplit/{sample}.chr"
+	benchmark:                 "filter_benchmarks/split_chromosomes/{sample}.txt"
 	output:
 		bed = "chrsplit/{sample}.chr1.bed" #may need to make this an oprefix param
 	shell:
