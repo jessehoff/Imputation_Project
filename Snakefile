@@ -1,9 +1,12 @@
-map_dict = {'snp50_a':"maps/9913_SNP50.map", 'snp50_b':"maps/9913_SNP50.map", 'snp50_c':"maps/9913_SNP50.map", 'hd':"maps/9913_HD.map", 'ggpf250':"maps/9913_GGPF250.map" }
+map_dict = {'777962':"maps/9913_HD.map",'227234':"maps/9913_GGPF250.map",'58336':"maps/9913_SNP50.map" }
 
 samp_dict = {'snp50_a': "raw_genotypes/58336.160906.100.test_snp50_A", 'snp50_b':"raw_genotypes/58336.160906.100.test_snp50_B", 'snp50_c':"raw_genotypes/58336.160906.100.test_snp50_C", 'ggpf250':"raw_genotypes/227234.160906.100.test_ggpf250_A", 'hd':"raw_genotypes/777962.160906.100.test_hd_A"}
 
+#should be adapted to just parse the filename for the info, and have as many dict keys as maps available
 def mapdicter(shoein): 
-	return map_dict[shoein.sample]
+	t = shoein.sample
+	num_sites = t.split('.')[0] #the file naming involves the number of sites in the genotype query, and so indicates which map to use. 
+	return map_dict[num_sites]
 
 def sampdicter(wildcards):         
 	return samp_dict[wildcards.sample]
@@ -16,11 +19,15 @@ def sampdicter(wildcards):
 #Output File Location: allele_stats/
 #Output File Types: (.frq, .log, .nosex)
 
+#rule mergeraws: #adds a mix of sample files. Ma
+#	--keep ./checkflip/snp50_a.fam
+
+
 rule variant_stats:
 	input:
 		map = mapdicter
 	params:
-		inprefix = sampdicter,
+		inprefix = "raw_genotypes/{sample}",
 		oprefix = "allele_stats/{sample}"
 	benchmark:
 		"filter_benchmarks/variant_stats/{sample}.txt"
@@ -37,12 +44,13 @@ rule variant_stats:
 #Input File Location: /raw_genotypes/ 
 #Output File Location: /allele_filtered 
 #Output: output file suffixes will be (.bed, .bim, .fam, .irem, .log, .nosex)
+
 rule filter_variants:
 	input:	
 		map = mapdicter,
 		stats = "allele_stats/{sample}.frq"
 	params:
-		inprefix = sampdicter,
+		inprefix = "raw_genotypes/{sample}",
 		oprefix="allele_filtered/{sample}",
 		logprefix="filter_logs/{sample}"
 	benchmark:                 
@@ -134,9 +142,8 @@ rule filter_hwe_variants:
 		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
 		bed="hwe_filtered/{sample}.bed"
-
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.01 --make-bed --out {params.oprefix}" #python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.0001 --make-bed --out {params.oprefix}" #python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
 
 rule missexed_filter:
@@ -147,19 +154,23 @@ rule missexed_filter:
 
 #Mendel Error Rates will happen last before merging across assays
 
-DATA = ['snp50_a', 'snp50_b', 'snp50_c', 'hd', 'ggpf250']
+#DATA = ['snp50_a', 'snp50_b', 'snp50_c', 'hd', 'ggpf250'] 
+DATA = ['227234.160906.75.imp_test','58336.160906.75.imp_test','777962.160906.75.imp_test']
 
-rule merge_assays:
+DATA2 = ['227234.161117.12083.100_B', '58336.161117.127.100_B',   '777962.161117.1681.100_A', '58336.161117.1062.100_C' , '58336.161117.7744.100_A',  '777962.161117.417.100_B']
+
+rule merge_assays: #split this into two steps
 	input:
-		expand("hwe_filtered/{previous}.bed", previous=DATA)
+		expand("hwe_filtered/{previous}.bed", previous=DATA2)
 	params:
-		oprefix="merged_files/merged"
-	benchmark:                 
-		"filter_benchmarks/merge_assays/merged.txt"
+		oprefix="merged_files/{merged}"
+	  benchmark:                 
+		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
-		"merged_files/merged.bed"
+		bedout= "merged_files/{merged}.bed",
+		mergefilelist= "hwe_filtered/allfiles{merged}.txt"
 	shell:
-		"python hwe_filtered/file_list_maker.py; plink --merge-list hwe_filtered/allfiles.txt  --cow --make-bed --out {params.oprefix}"
+		"python hwe_filtered/file_list_maker.py {output.mergefilelist}; plink --merge-list hwe_filtered/allfiles.txt  --cow --make-bed --out {params.oprefix}"
 
 
 
