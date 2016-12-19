@@ -32,9 +32,20 @@ rule variant_stats:
 	benchmark:
 		"filter_benchmarks/variant_stats/{sample}.txt"
 	output: 
-		frq = "allele_stats/{sample}.frq"
+		frq = "allele_stats/{sample}.frq",
+		log = "allele_stats/{sample}.log",
+		hh = "allele_stats/{sample}.hh"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --nonfounders --freq --out {params.oprefix}" # python allele_call_rate_visualization.py"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --nonfounders --freq --out {params.oprefix}" 
+
+
+rule allel_call_rate_visualization:
+	input:
+		frq = "allele_stats/{sample}.frq"
+	output:
+		png = "allele_stats/{sample}.png"
+	shell:
+		"python allele_call_rate_visualization.py {input.frq}"
 
 
 
@@ -56,9 +67,23 @@ rule filter_variants:
 	benchmark:                 
 		"filter_benchmarks/filter_variants/{sample}.txt"
 	output:
-		bed="allele_filtered/{sample}.bed"
+		bed="allele_filtered/{sample}.bed",
+		bim="allele_filtered/{sample}.bim",
+		fam="allele_filtered/{sample}.fam",
+		log="allele_filtered/{sample}.log"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .05 --make-bed --out  {params.oprefix}; python allele_filtered/allele_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .05 --make-bed --out  {params.oprefix}"
+
+
+
+rule variant_filter_log:
+	input:
+		bed="allele_filtered/{sample}.bed",
+		log = "allele_filtered/{sample}.log"
+	output:
+		csv = "filter_logs/{sample}.csv"
+	shell:
+		"python allele_filtered/allele_filtered_log_parsing.py {input.log} {output.csv}"
 
 
 
@@ -67,6 +92,7 @@ rule filter_variants:
 #Output: output file suffixes will be (.imiss, .lmiss, .log, .nosex)
 rule individual_stats:
 	input:
+		rules.variant_filter_log.output,
 		bed="allele_filtered/{sample}.bed"
 	params:
 		inprefix="allele_filtered/{sample}",
@@ -74,11 +100,19 @@ rule individual_stats:
 	benchmark:                 
 		"filter_benchmarks/individual_stats/{sample}.txt"
 	output:
-		imiss="individual_stats/{sample}.imiss"
+		imiss="individual_stats/{sample}.imiss",
+		lmiss="individual_stats/{sample}.lmiss",
+		log ="individual_stats/{sample}.log"
 	shell:
 		"plink --bfile {params.inprefix} --cow --missing --keep-allele-order --out {params.oprefix}" #python individual_call_rate_visualization.py"
 
-
+rule individual_call_rate_visualization:
+	input:
+		imiss="individual_stats/{sample}.imiss"
+	output:
+		png="individual_stats/{sample}.png"
+	shell:
+		"python individual_call_rate_visualization.py"
 
 #PLINK filter (mind) -- Filters individuals based on specified call rate.  Individuals missing more than given proportion of their genotypes will be filtered out of the dataset.
 #Python script (individual_filtered_log_parsing.py) -- parses output logfile for important metadata and saves to csv in /filter_logs directory.
@@ -88,21 +122,32 @@ rule individual_stats:
 
 rule filter_individuals:
         input:
-        	bed="allele_filtered/{sample}.bed",
+        	rules.variant_filter_log.output,
+		bed="allele_filtered/{sample}.bed",
 		imiss="individual_stats/{sample}.imiss"
 	params:
                 inprefix="allele_filtered/{sample}",
                 oprefix="individual_filtered/{sample}",
-		logprefix="filter_logs/{sample}"
 	benchmark:                 
 		"filter_benchmarks/filter_individuals/{sample}.txt"
 	output:
-		bed="individual_filtered/{sample}.bed"
+		bed="individual_filtered/{sample}.bed",
+		bim="individual_filtered/{sample}.bim",
+		fam="individual_filtered/{sample}.fam",
+		log="individual_filtered/{sample}.log"
 		
 	shell:
-		"plink --bfile {params.inprefix} --cow --mind .05 --keep-allele-order --make-bed --out {params.oprefix}; python individual_filtered/individual_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --mind .05 --keep-allele-order --make-bed --out {params.oprefix}"
 
-
+rule individual_filter_logging:
+	input:
+		rules.variant_filter_log.output,
+		csv="filter_logs/{sample}.csv",
+		log="individual_filtered/{sample}.log"
+	output:
+		#csv="filter_logs/{sample}.csv"
+	shell:
+		"python individual_filtered/individual_filtered_log_parsing.py {input.log} {input.csv}"
 
 
 #Gathers statistics on individual Hardy Weinberg Equilibrium (reports HWE P value at each locus)
@@ -112,6 +157,7 @@ rule filter_individuals:
 
 rule hwe_stats:
 	input:
+		rules.individual_filter_logging.output,
 		bed="individual_filtered/{sample}.bed"
 	params:
 		inprefix="individual_filtered/{sample}",
@@ -119,7 +165,8 @@ rule hwe_stats:
 	benchmark:                 
 		"filter_benchmarks/hwe_stats/{sample}.txt"
 	output:
-		hwe="hwe_stats/{sample}.hwe"
+		hwe="hwe_stats/{sample}.hwe",
+		log="hwe_stats/{sample}.log"
 	shell:
 		"plink --bfile {params.inprefix}  --keep-allele-order --cow --nonfounders --hardy --out {params.oprefix}"
 
@@ -133,7 +180,8 @@ rule hwe_stats:
 rule filter_hwe_variants:
 	input:
 		bed="individual_filtered/{sample}.bed",
-		stats="hwe_stats/{sample}.hwe"
+		stats="hwe_stats/{sample}.hwe",
+		indiv_log="rules.idividual_filtering_log.output"
 	params: 
 		inprefix="individual_filtered/{sample}",
 		oprefix="hwe_filtered/{sample}",
@@ -141,13 +189,16 @@ rule filter_hwe_variants:
 	benchmark:                 
 		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
-		bed="hwe_filtered/{sample}.bed"
+		bed="hwe_filtered/{sample}.bed",
+		bim="hwe_filtered/{sample}.bim",
+		fam="hwe_filtered/{sample}.fam",
+		log="hwe_filtered/{sample}.log"
 	shell:
 		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.0001 --make-bed --out {params.oprefix}" #python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
 
 
 rule missexed_filter:
-	
+		
 
 
 
@@ -164,7 +215,7 @@ rule merge_assays: #split this into two steps
 		expand("hwe_filtered/{previous}.bed", previous=DATA2)
 	params:
 		oprefix="merged_files/{merged}"
-	  benchmark:                 
+	benchmark:                 
 		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
 		bedout= "merged_files/{merged}.bed",
