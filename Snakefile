@@ -123,6 +123,7 @@ rule individual_call_rate_visualization:
 rule filter_individuals:
         input:
         	rules.variant_filter_log.output,
+		csv="filter_logs/{sample}.csv",
 		bed="allele_filtered/{sample}.bed",
 		imiss="individual_stats/{sample}.imiss"
 	params:
@@ -137,17 +138,8 @@ rule filter_individuals:
 		log="individual_filtered/{sample}.log"
 		
 	shell:
-		"plink --bfile {params.inprefix} --cow --mind .05 --keep-allele-order --make-bed --out {params.oprefix}"
+		"plink --bfile {params.inprefix} --cow --mind .05 --keep-allele-order --make-bed --out {params.oprefix}; python individual_filtered/individual_filtered_log_parsing.py {output.log} {input.csv}"
 
-rule individual_filter_logging:
-	input:
-		rules.variant_filter_log.output,
-		csv="filter_logs/{sample}.csv",
-		log="individual_filtered/{sample}.log"
-	output:
-		#csv="filter_logs/{sample}.csv"
-	shell:
-		"python individual_filtered/individual_filtered_log_parsing.py {input.log} {input.csv}"
 
 
 #Gathers statistics on individual Hardy Weinberg Equilibrium (reports HWE P value at each locus)
@@ -157,7 +149,7 @@ rule individual_filter_logging:
 
 rule hwe_stats:
 	input:
-		rules.individual_filter_logging.output,
+		csv="filter_logs/{sample}.csv",
 		bed="individual_filtered/{sample}.bed"
 	params:
 		inprefix="individual_filtered/{sample}",
@@ -181,11 +173,10 @@ rule filter_hwe_variants:
 	input:
 		bed="individual_filtered/{sample}.bed",
 		stats="hwe_stats/{sample}.hwe",
-		indiv_log="rules.idividual_filtering_log.output"
+		csv="filter_logs/{sample}.csv"
 	params: 
 		inprefix="individual_filtered/{sample}",
-		oprefix="hwe_filtered/{sample}",
-		logprefix="filter_logs/{sample}"
+		oprefix="hwe_filtered/{sample}"
 	benchmark:                 
 		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
@@ -194,11 +185,13 @@ rule filter_hwe_variants:
 		fam="hwe_filtered/{sample}.fam",
 		log="hwe_filtered/{sample}.log"
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.0001 --make-bed --out {params.oprefix}" #python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.00000001 --make-bed --out {params.oprefix}; python hwe_filtered/hwe_log_parsing.py {output.log} {input.csv}"
 
 
-rule missexed_filter:
-		
+#rule missexed_filter:
+	#input:
+	#output:
+	#shell:
 
 
 
