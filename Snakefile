@@ -188,12 +188,40 @@ rule filter_hwe_variants:
 		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.00000001 --make-bed --out {params.oprefix}; python hwe_filtered/hwe_log_parsing.py {output.log} {input.csv}"
 
 
-#rule missexed_filter:
-	#input:
-	#output:
-	#shell:
+rule impute_sex:
+	input:
+		bed="hwe_filtered/{sample}.bed",
+		csv="filter_logs/{sample}.csv"
+	params:
+		inprefix="hwe_filtered/{sample}",
+		oprefix="sex_impute/{sample}"
+	benchmark:
+		"filter_benchmarks/impute_sex/{sample}.txt"
+	output:
+		bed="sex_impute/{sample}.bed",
+		bim="sex_impute/{sample}.bim",
+		fam="sex_impute/{sample}.fam",
+		log="sex_impute/{sample}.log",
+		sexcheck="sex_impute/{sample}.sexcheck"
+	shell:
+		"plink --bfile {params.inprefix} --cow --impute-sex ycount --make-bed --out {params.oprefix}; python sex_determination/missexed_animals_filter.py {output.sexcheck}"
 
 
+
+rule remove_missexed_animals:
+	input:
+		txt="missexed_animals.txt",
+		bed="sex_impute/{sample}.bed"
+	params:
+		inprefix="sex_impute/{sample}",
+		oprefix="correct_sex/{sample}"
+	output:
+		bed="correct_sex/{sample}.bed",
+                bim="correct_sex/{sample}.bim",
+                fam="correct_sex/{sample}.fam",
+                log="correct_sex/{sample}.log",	
+	shell:
+		"plink --bfile {params.inprefix} --cow --remove {input.txt} --make-bed --out {params.oprefix}"
 
 
 #Mendel Error Rates will happen last before merging across assays
@@ -203,22 +231,19 @@ DATA = ['227234.160906.75.imp_test','58336.160906.75.imp_test','777962.160906.75
 
 DATA2 = ['227234.161117.12083.100_B', '58336.161117.127.100_B',   '777962.161117.1681.100_A', '58336.161117.1062.100_C' , '58336.161117.7744.100_A',  '777962.161117.417.100_B']
 
+DATA3 = ['58336.160906.100.test_snp50_A', '58336.160906.100.test_snp50_B', '58336.160906.100.test_snp50_C']
 rule merge_assays: #split this into two steps
 	input:
-		expand("hwe_filtered/{previous}.bed", previous=DATA2)
+		expand("correct_sex/{previous}.bed", previous=DATA3)
 	params:
 		oprefix="merged_files/{merged}"
 	benchmark:                 
 		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
 		bedout= "merged_files/{merged}.bed",
-		mergefilelist= "hwe_filtered/allfiles{merged}.txt"
+		mergefilelist= "correct_sex/allfiles{merged}.txt"
 	shell:
 		"python hwe_filtered/file_list_maker.py {output.mergefilelist}; plink --merge-list hwe_filtered/allfiles.txt  --cow --make-bed --out {params.oprefix}"
-
-
-
-
 
 
 
