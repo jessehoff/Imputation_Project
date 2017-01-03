@@ -236,14 +236,19 @@ rule merge_assays: #split this into two steps
 	input:
 		expand("correct_sex/{previous}.bed", previous=DATA3)
 	params:
-		oprefix="merged_files/{merged}"
-	benchmark:                 
-		"filter_benchmarks/merge_assays/{merged}.txt"
+		oprefix="merged_files/merge_test"	
+#	oprefix="merged_files/{merged}"
+#	benchmark:                 
+#		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
-		bedout= "merged_files/{merged}.bed",
-		mergefilelist= "correct_sex/allfiles{merged}.txt"
+		#mergefilelist= "correct_sex/allfiles.txt"
+		#bed = "merged_files/{merged}.bed",
+                #bim = "merged_files/{merged}.bim",
+                #fam = "merged_files/{merged}.fam",
+                #log = "merged_files/{merged}.log"
+                bed = "merged_files/merge_test.bed"
 	shell:
-		"python hwe_filtered/file_list_maker.py {output.mergefilelist}; plink --merge-list hwe_filtered/allfiles.txt  --cow --make-bed --out {params.oprefix}"
+		"python file_list_maker.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --make-bed --out {params.oprefix}"
 
 
 
@@ -254,13 +259,20 @@ rule merge_assays: #split this into two steps
 #Output file types: (.phased.haps, .phased.sample)
 rule split_chromosomes:
 	input:
-		bed = "hwe_filtered/{sample}.bed"
+		bed = "merged_files/{sample}.bed",
+		bim = "merged_files/{sample}.bim",
+		fam = "merged_files/{sample}.fam",
+		log = "merged_files/{sample}.log"
 	params:
-		inprefix = "hwe_filtered/{sample}",
+		inprefix = "merged_files/{sample}",
 		oprefix = "chrsplit/{sample}.chr"
-	benchmark:                 "filter_benchmarks/split_chromosomes/{sample}.txt"
+	benchmark:                 
+		"filter_benchmarks/split_chromosomes/{sample}.txt"
 	output:
-		bed = "chrsplit/{sample}.chr1.bed" #may need to make this an oprefix param
+		bed = "chrsplit/{sample}.chr1.bed", #may need to make this an oprefix param
+		bim = "chrsplit/{sample}.chr1.bim",
+		fam = "chrsplit/{sample}.chr1.fam",
+		log = "chrsplit/{sample}.chr1.log"
 	shell:
 		"for chr in $(seq 1 30); do plink --bfile {params.inprefix}  --keep-allele-order --chr $chr --make-bed  --nonfounders --cow --out {params.oprefix}$chr; done"
 
