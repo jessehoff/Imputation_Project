@@ -159,19 +159,27 @@ DATA = ['227234.160906.75.imp_test','58336.160906.75.imp_test','777962.160906.75
 
 DATA2 = ['227234.161117.12083.100_B', '58336.161117.127.100_B',   '777962.161117.1681.100_A', '58336.161117.1062.100_C' , '58336.161117.7744.100_A',  '777962.161117.417.100_B']
 
-rule merge_assays: #split this into two steps
+rule make_mergelist:
 	input:
 		expand("hwe_filtered/{previous}.bed", previous=DATA2)
+	output:
+		mergefilelist= "hwe_filtered/allfiles{merged}.txt"
+	shell:
+		"python hwe_filtered/file_list_maker.py {output.mergefilelist};"
+
+
+rule merge_single_chip: 
+	input:
+		mergefilelist= "hwe_filtered/allfilesmerged2.txt",
+		singlechip= "./dataprepper/Animals_Single_chip.txt"
 	params:
 		oprefix="merged_files/{merged}"
-	  benchmark:                 
+	benchmark:                 
 		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
 		bedout= "merged_files/{merged}.bed",
-		mergefilelist= "hwe_filtered/allfiles{merged}.txt"
 	shell:
-		"python hwe_filtered/file_list_maker.py {output.mergefilelist}; plink --merge-list hwe_filtered/allfiles.txt  --cow --make-bed --out {params.oprefix}"
-
+		"plink --merge-list {input.mergefilelist} --keep {input.singlechip} --nonfounders  --cow --make-bed --out {params.oprefix}"
 
 
 
