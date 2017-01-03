@@ -231,24 +231,32 @@ DATA = ['227234.160906.75.imp_test','58336.160906.75.imp_test','777962.160906.75
 
 DATA2 = ['227234.161117.12083.100_B', '58336.161117.127.100_B',   '777962.161117.1681.100_A', '58336.161117.1062.100_C' , '58336.161117.7744.100_A',  '777962.161117.417.100_B']
 
-DATA3 = ['58336.160906.100.test_snp50_A', '58336.160906.100.test_snp50_B', '58336.160906.100.test_snp50_C']
-rule merge_assays: #split this into two steps
+
+rule make_mergelist:
 	input:
 		expand("correct_sex/{previous}.bed", previous=DATA3)
-	params:
-		oprefix="merged_files/merge_test"	
-#	oprefix="merged_files/{merged}"
-#	benchmark:                 
-#		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
-		#mergefilelist= "correct_sex/allfiles.txt"
-		#bed = "merged_files/{merged}.bed",
-                #bim = "merged_files/{merged}.bim",
-                #fam = "merged_files/{merged}.fam",
-                #log = "merged_files/{merged}.log"
-                bed = "merged_files/merge_test.bed"
+		mergefilelist= "hwe_filtered/allfiles{merged}.txt"
 	shell:
-		"python file_list_maker.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --make-bed --out {params.oprefix}"
+		"python correct_sex/file_list_maker.py {output.mergefilelist};"
+
+
+rule merge_single_chip: 
+	input:
+		mergefilelist= "correct_sex/allfilesmerged2.txt",
+		singlechip= "./dataprepper/Animals_Single_chip.txt"
+	params:
+		oprefix="merged_files/{merged}"
+	benchmark:                 
+		"filter_benchmarks/merge_assays/{merged}.txt"
+	output:
+		bedout= "merged_files/{merged}.bed",
+	shell:
+		"plink --merge-list {input.mergefilelist} --keep {input.singlechip} --nonfounders  --cow --make-bed --out {params.oprefix}"
+
+
+
+
 
 
 
