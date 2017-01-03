@@ -1,0 +1,169 @@
+rule targ:
+	input:
+		#jag=expand("merged_files/f250_tests_{setter}_{chip}.bed",setter=list(range(1,5)),chip=['f250','snp50'])
+		#jag=expand("merged_files/accutestf250_merge_small_list_{setter}.txt",setter=list(range(1,5)))
+		#accsets =expand("merged_files/accutestf250_{setter}.bed",setter=list(range(1,5)))
+		#split_chromosomes=expand("chrsplit/accutestf250_small_{setter}.chr{chr}.bed",setter=list(range(1,5)),chr=list(range(1,31)))
+		jag=expand("accutest_small/accutestf250_small_{setter}.chr{chr}.phased.sample",setter=list(range(1,2)),chr=list(range(20,22)))
+		#"accutest_{size}/accutestf250_{size}_{run}.chr{chr}.phased.sample",
+#snakemake -s f250test -np
+
+rule grab_with_drops: #makes beds for each multichip animal
+	input:
+		animalset="dataprepper/f250_{setter}_{chip}.txt",
+		mergelist="hwe_filtered/{chip}files.txt"
+	params:
+		outprefix="merged_files/f250_tests_{setter}_{chip}"
+	output:
+		bed="merged_files/f250_tests_{setter}_{chip}.bed"
+	shell:
+		"plink --merge-list {input.mergelist} --keep {input.animalset} --nonfounders --cow --make-bed --out {params.outprefix}"
+
+
+
+
+rule make_merge_list: #makes a merge list 
+	input:
+		single_angus="merged_files/single_chip_{size}_100.bed", #from Dataprepper notebook
+		f250bed="merged_files/f250_tests_{setter}_f250.bed",
+		snp50bed="merged_files/f250_tests_{setter}_snp50.bed"
+	output:
+		"merged_files/accutestf250_merge_{size}_list_{setter}.txt"
+	shell:
+		"python ./bin/merge_file_maker.py {input.single_angus} {input.f250bed} {input.snp50bed} {output}"
+		
+rule make_acc_sets:		
+	input:
+		"merged_files/accutestf250_merge_{size}_list_{setter,\d+}.txt"
+	params:
+		outprefix="merged_files/accutestf250_{size}_{setter,\d+}"
+	output:
+		bed="merged_files/accutestf250_{size}_{setter,\d+}.bed"
+	benchmark:"filter_benchmarks/make_acc_sets/accutestf250_{size}_{setter,\d+}.txt"
+	log:
+		"logs/make_acc_sets/accutestf250_{size}_{setter,\d+}.log"
+	shell:
+		"(plink --merge-list {input} --nonfounders --cow --make-bed --out {params.outprefix}) > {log}"
+
+
+rule split_chromosomes:
+	input:
+		bed = "merged_files/{sample}.bed"
+	params:
+		inprefix = "merged_files/{sample}",
+		oprefix = "chrsplit/{sample}.chr{chr}",
+		chr="{chr}"
+	benchmark:"filter_benchmarks/split_chromosomes/{sample}.{chr}.txt"
+	log:
+		"logs/make_acc_sets/{sample}.chr{chr}.log"
+	output:
+		bed = "chrsplit/{sample}.chr{chr}.bed" #may need to make this an oprefix param
+	shell:
+		"(plink --bfile {params.inprefix}  --keep-allele-order --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix}) > {log}"
+
+
+
+rule run_shapeit:
+	input:
+		bed="chrsplit/accutestf250_{size}_{run}.chr{chr}.bed",
+		bim="chrsplit/accutestf250_{size}_{run}.chr{chr}.bim",
+		fam="chrsplit/accutestf250_{size}_{run}.chr{chr}.fam"
+	output:
+		sample = "shapetest/accutestf250_{size}_{run}.chr{chr}.phased.sample",
+		haps = "shapetest/accutestf250_{size}_{run}.chr{chr}.phased.haps",
+		log = "shapetest/logs/accutestf250_{size}_{run}.chr{chr}.log"
+	log:
+		"logs/shaperuns/accutestf250_{size}_{run}.chr{chr}log"
+	threads: 8
+	benchmark:
+		"benchmarks/shapeit/accutestf250_{size}_{run}.chr{chr}.benchmark.txt"
+	shell:
+		"(shapeit --input-bed {input.bed} {input.bim} {input.fam} --thread 8 --effective-size 200 --duohmm --output-max {output.haps} {output.sample} --output-log {output.log}) > {log}"
+
+#snakemake -s f250test --cores 8
+
+rule run_eagle:
+	input:
+		bed="chrsplit/accutestf250_{size}_{run}.chr{chr}.bed",
+		bim="chrsplit/accutestf250_{size}_{run}.chr{chr}.bim",
+		fam="chrsplit/accutestf250_{size}_{run}.chr{chr}.fam"
+	params:
+		bed="chrsplit/accutestf250_{size}_{run}.chr{chr}",
+		out="eagletest/accutestf250_{size}_{run}.chr{chr}"
+	threads: 16
+	benchmark:
+		"benchmarks/eagle/accutestf250_{size}_{run}.chr{chr}.benchmark.txt"
+	log:
+		"logs/eagle/accutestf250_{size}_{run}.chr{chr}.log"
+	output:
+		sample = "eagletest/accutestf250_{size}_{run}.chr{chr}.sample",
+		haps = "eagletest/accutestf250_{size}_{run}.chr{chr}.haps.gz",
+	shell:
+		"(eagle --bfile={params.bed} --bpEnd 20000000 --geneticMapFile=USE_BIM --maxMissingPerSnp .95  --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.out})> {log} "
+
+
+
+rule make_vcf:
+	input:
+		haps="{source}test/merged.chr{chr}.phased.haps",
+	output:
+		vcf="shapevcf/merged.chr{chr}.phased.vcf",
+		log="shapevcf/logs/merged.chr{chr}.log"
+	log:
+			"logs/shapevcf/logs/snake.{chr}.log"
+	benchmark:
+			"benchmarks/shapevcf/shapevcf.{chr}.benchmark.txt"
+	params:
+		haps="shapetest3/merged.chr{chr}.phased"
+	shell:
+		"shapeit -convert --input-haps {params.haps} --output-log {output.log} --output-vcf {output.vcf}"
+
+rule vcf_to_fimpute:
+	input:
+		vcf="shapevcf/merged.chr{chr}.phased.vcf",
+	params:
+		colnum='2'
+	log:
+			"logs/vcf2fimpute/{chr}.log"
+	benchmark:
+			"benchmarks/vcf2fimpute/vcf2impute.{chr}.benchmark.txt"
+	output:
+		outname="fimpute_chip/merged.chr{chr}.fimpute"
+	shell:
+		"python ./bin/vcftoFimpute.py {input.vcf} {output.outname} {params}"
+
+#replace with a file of known ranges
+from itertools import tee
+def parwise(iterable):
+	a,b = tee(iterable)
+	next(b, None)
+	return zip(a,b)
+
+def chunks(end):
+	return [str(i[0]+1)+ ' ' + str(i[1]) for i in parwise(range(0,end,5000000))]
+	
+rangedict = {'25': chunks(43879707)}
+
+def chrchunker(WC):
+	return rangedict[WC.chr][int(WC.chunk)]
+	
+	
+#will need to get the chunker to create variable chunks based on the size of the file
+rule run_impute2:
+	input:
+		haps="{source}test/merged.chr{chr}.phased.haps",
+		maps="maps/impmap.chr{chr}.map"
+	params:
+		chunk= chrchunker
+	log:
+		"logs/impruns/{chr}.{chunk}.log"
+	benchmark:
+		"benchmarks/impruns/{chr}.{chunk}.log"
+	output:
+		out= "{source}test/imputed/merged.chr{chr}.{chunk}.imputed"
+	shell:
+		"(impute2 -use_prephased_g -known_haps_g {input.haps} -m {input.maps} -int {params.chunk} -Ne 100 -o {output.out}) > {log}"
+		
+		
+		
+
