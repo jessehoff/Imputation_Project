@@ -1,6 +1,5 @@
-map_dict = {'777962':"maps/9913_HD.map",'227234':"maps/9913_GGPF250.map",'58336':"maps/9913_SNP50.map" }
+map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9914_HD_161214.map",'227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map",'58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map",'76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
 
-samp_dict = {'snp50_a': "raw_genotypes/58336.160906.100.test_snp50_A", 'snp50_b':"raw_genotypes/58336.160906.100.test_snp50_B", 'snp50_c':"raw_genotypes/58336.160906.100.test_snp50_C", 'ggpf250':"raw_genotypes/227234.160906.100.test_ggpf250_A", 'hd':"raw_genotypes/777962.160906.100.test_hd_A"}
 
 #should be adapted to just parse the filename for the info, and have as many dict keys as maps available
 def mapdicter(shoein): 
@@ -39,13 +38,13 @@ rule variant_stats:
 		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --nonfounders --freq --out {params.oprefix}" 
 
 
-rule allel_call_rate_visualization:
-	input:
-		frq = "allele_stats/{sample}.frq"
-	output:
-		png = "allele_stats/{sample}.png"
-	shell:
-		"python allele_call_rate_visualization.py {input.frq}"
+#rule allele_call_rate_visualization:
+#	input:
+#		frq = "allele_stats/{sample}.frq"
+#	output:
+#		png = "allele_stats/{sample}.png"
+#	shell:
+#		"python allele_call_rate_visualization.py {input.frq}"
 
 
 
@@ -193,6 +192,7 @@ rule impute_sex:
 		bed="hwe_filtered/{sample}.bed",
 		csv="filter_logs/{sample}.csv"
 	params:
+		logprefix="filter_logs/{sample}",
 		inprefix="hwe_filtered/{sample}",
 		oprefix="sex_impute/{sample}"
 	benchmark:
@@ -202,15 +202,16 @@ rule impute_sex:
 		bim="sex_impute/{sample}.bim",
 		fam="sex_impute/{sample}.fam",
 		log="sex_impute/{sample}.log",
-		sexcheck="sex_impute/{sample}.sexcheck"
+		sexcheck="sex_impute/{sample}.sexcheck",
+		txt="sex_impute/{sample}.missexed_animals.txt"
 	shell:
-		"plink --bfile {params.inprefix} --cow --impute-sex ycount --make-bed --out {params.oprefix}; python sex_determination/missexed_animals_filter.py {output.sexcheck}"
+		"plink --bfile {params.inprefix} --cow --impute-sex ycount --make-bed --out {params.oprefix}; python sex_impute/missexed_animals_filter.py {output.sexcheck} {output.txt}; python sex_impute/missexed_animals_filter_logging.py {output.txt} {input.csv}" #{params.logprefix}.csv"
 
 
 
 rule remove_missexed_animals:
 	input:
-		txt="missexed_animals.txt",
+		txt="sex_impute/{sample}.missexed_animals.txt",
 		bed="sex_impute/{sample}.bed"
 	params:
 		inprefix="sex_impute/{sample}",
@@ -226,37 +227,28 @@ rule remove_missexed_animals:
 
 #Mendel Error Rates will happen last before merging across assays
 
-#DATA = ['snp50_a', 'snp50_b', 'snp50_c', 'hd', 'ggpf250'] 
-DATA = ['227234.160906.75.imp_test','58336.160906.75.imp_test','777962.160906.75.imp_test']
-
-DATA2 = ['227234.161117.12083.100_B', '58336.161117.127.100_B',   '777962.161117.1681.100_A', '58336.161117.1062.100_C' , '58336.161117.7744.100_A',  '777962.161117.417.100_B']
-
-
-rule make_mergelist:
+DATA = ['58336.161214.315.SNP50A', '58336.161214.335.SNP50B', '58336.161214.3399.SNP50C'] 
+#DATA =['139977.161214.2326.GGPHDV3', '227234.161214.325.GGPF250', '26504.161214.3126.GGPLDV3', '30105.161214.2500.GGPLDV4', '58336.161214.315.SNP50A', '58336.161214.335.SNP50B', '58336.161214.3399.SNP50C', '76999.161214.3498.GGP90KT']
+#DATA = ['58336.161214.335.SNP50B', '227234.161214.325.GGPF250']
+rule merge_assays: #split this into two steps
 	input:
-		expand("correct_sex/{previous}.bed", previous=DATA3)
-	output:
-		mergefilelist= "hwe_filtered/allfiles{merged}.txt"
-	shell:
-		"python correct_sex/file_list_maker.py {output.mergefilelist};"
-
-
-rule merge_single_chip: 
-	input:
-		mergefilelist= "correct_sex/allfilesmerged2.txt",
-		singlechip= "./dataprepper/Animals_Single_chip.txt"
+		expand("correct_sex/{previous}.bed", previous=DATA),
+		expand("correct_sex/{previous}.bim", previous=DATA),
+		expand("correct_sex/{previous}.fam", previous=DATA),
+		expand("correct_sex/{previous}.log", previous=DATA)
 	params:
-		oprefix="merged_files/{merged}"
-	benchmark:                 
-		"filter_benchmarks/merge_assays/{merged}.txt"
+		oprefix="merged_files/161214_merged"	
+#	oprefix="merged_files/{merged}"
+#	benchmark:                 
+#		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
-		bedout= "merged_files/{merged}.bed",
+		#mergefilelist= "correct_sex/allfiles.txt"
+                bim = "merged_files/161214_merged.bim",
+                fam = "merged_files/161214_merged.fam",
+                log = "merged_files/161214_merged.log",
+                bed = "merged_files/161214_merged.bed"
 	shell:
-		"plink --merge-list {input.mergefilelist} --keep {input.singlechip} --nonfounders  --cow --make-bed --out {params.oprefix}"
-
-
-
-
+		"python file_list_maker.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --make-bed --out {params.oprefix}"
 
 
 
@@ -267,20 +259,20 @@ rule merge_single_chip:
 #Output file types: (.phased.haps, .phased.sample)
 rule split_chromosomes:
 	input:
-		bed = "merged_files/{sample}.bed",
-		bim = "merged_files/{sample}.bim",
-		fam = "merged_files/{sample}.fam",
-		log = "merged_files/{sample}.log"
+		bed = "merged_files/161214_merged.bed",
+		bim = "merged_files/161214_merged.bim",
+		fam = "merged_files/161214_merged.fam",
+		log = "merged_files/161214_merged.log"
 	params:
-		inprefix = "merged_files/{sample}",
-		oprefix = "chrsplit/{sample}.chr"
+		inprefix = "merged_files/161214_merged",
+		oprefix = "chrsplit/161214_merged.chr"
 	benchmark:                 
-		"filter_benchmarks/split_chromosomes/{sample}.txt"
+		"filter_benchmarks/split_chromosomes161214_merged.txt"
 	output:
-		bed = "chrsplit/{sample}.chr1.bed", #may need to make this an oprefix param
-		bim = "chrsplit/{sample}.chr1.bim",
-		fam = "chrsplit/{sample}.chr1.fam",
-		log = "chrsplit/{sample}.chr1.log"
+		bed = "chrsplit/161214_merged.chr1.bed", #may need to make this an oprefix param
+		bim = "chrsplit/161214_merged.chr1.bim",
+		fam = "chrsplit/161214_merged.chr1.fam",
+		log = "chrsplit/161214_merged.chr1.log"
 	shell:
 		"for chr in $(seq 1 30); do plink --bfile {params.inprefix}  --keep-allele-order --chr $chr --make-bed  --nonfounders --cow --out {params.oprefix}$chr; done"
 
