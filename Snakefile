@@ -11,6 +11,18 @@ def sampdicter(wildcards):
 	return samp_dict[wildcards.sample]
 
 
+rule filter_duplicate_individuals:
+	input:
+		id = "raw_genotypes/{sample}.ID",
+		ped = "raw_genotypes/{sample}.ped"
+	benchmark:
+		"filter_benchmarks/duplicates_filtered/{sample}.txt"
+	output:
+		dup = "duplicates_filtered/dup_ids/{sample}.txt",
+		ped = "duplicates_filtered/{sample}.ped"
+	shell:
+		"python duplicates_filtered/duplicate_filter.py {input.id} {output.dup} {input.ped} {output.ped}"
+
 #Dictionaries: This rule takes .map and .ped inputs from dictionaries based on specified output 'wildcard' which is the name of the assay.  
 #PLINK command (freq) -- Determines call rates for each variant in dataset and returns how many times each allele appears in every assay
 #Python Script (allele_call_rate viusalization.py) and (allele_removal_prediction.py).  Takes argument and identifies how many alleles will be removed given a specific filter call rate.  Visualization script creates histograms with distributions of call rates and exports to png file in allele_stats/ directory
@@ -24,9 +36,11 @@ def sampdicter(wildcards):
 
 rule variant_stats:
 	input:
-		map = mapdicter
+		map = mapdicter,
+		dup = "duplicates_filtered/dup_ids/{sample}.txt",
+		input = "duplicates_filtered/{sample}.ped"
 	params:
-		inprefix = "raw_genotypes/{sample}",
+		inprefix = "duplicates_filtered/{sample}",
 		oprefix = "allele_stats/{sample}"
 	benchmark:
 		"filter_benchmarks/variant_stats/{sample}.txt"
@@ -58,9 +72,11 @@ rule variant_stats:
 rule filter_variants:
 	input:	
 		map = mapdicter,
+		dup = "duplicates_filtered/dup_ids/{sample}.txt",
+                input = "duplicates_filtered/{sample}.ped",
 		stats = "allele_stats/{sample}.frq"
 	params:
-		inprefix = "raw_genotypes/{sample}",
+		inprefix = "duplicates_filtered/{sample}",
 		oprefix="allele_filtered/{sample}",
 		logprefix="filter_logs/{sample}"
 	benchmark:                 
