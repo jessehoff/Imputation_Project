@@ -13,16 +13,16 @@ with open (infile, 'r') as logfile:
 
 action = ['HWE Filtering Step']
 #Regular expressions for locating metadata in log file
-assay = re.findall(r'individual_filtered/([\w_]+)\n', log) #Locates assay ID
-hwe = re.findall(r'--(hwe\s*[\w.]+)', log)#Value of hwe filter
+#assay = re.findall(r'individual_filtered/([\w_]+)\n', log) #Locates assay ID
+hwe = re.findall(r'--(hwe\s*[\w.]+)\n', log)#Value of hwe filter
 rem = re.findall(r'([0-9]+) variants removed', log)#Number of variants removed by filter
 start = re.findall(r'([\w]+) variants loaded from ', log)#Number of variants loaded before filtering
 
 #Concatenates regular expressions above into "stats" list 
-stats = action + assay + hwe + rem + start
+stats = action + hwe + rem + start
 
 #Calculates proportion of variants removed compared to total then appends to "stats"
-percent = int(stats[3])/int(stats[4])
+percent = int(stats[2])/int(stats[3])
 stats.append(percent)
 
 #Locates time when filter was run by PLINK then appends this to stats list
