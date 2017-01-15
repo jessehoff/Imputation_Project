@@ -26,7 +26,7 @@ for line in file:
 outfile =  open(new_ped, 'w')    
 ped = open(old_ped, 'r').readlines()
 for x in ped:			
-    id = x.split()[0]			# using the IID from ped file, it can be written to the new ped file if it's value in dict is 0
+    id = x.split()[1]			# using the IID from ped file, it can be written to the new ped file if it's value in dict is 0
     if id in dup:			
             if dup[id] == 0: 
                 outfile.write(x) 
