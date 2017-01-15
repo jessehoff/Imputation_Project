@@ -243,9 +243,9 @@ rule remove_missexed_animals:
 
 #Mendel Error Rates will happen last before merging across assays
 
-DATA = ['58336.161214.315.SNP50A', '58336.161214.335.SNP50B', '58336.161214.3399.SNP50C'] 
-#DATA =['139977.161214.2326.GGPHDV3', '227234.161214.325.GGPF250', '26504.161214.3126.GGPLDV3', '30105.161214.2500.GGPLDV4', '58336.161214.315.SNP50A', '58336.161214.335.SNP50B', '58336.161214.3399.SNP50C', '76999.161214.3498.GGP90KT']
-#DATA = ['58336.161214.335.SNP50B', '227234.161214.325.GGPF250']
+#DATA = ['58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C'] 
+DATA =['139977.170112.2326.GGPHDV3', '227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '30105.170112.2500.GGPLDV4', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT']
+#DATA = ['58336.170112.335.SNP50B', '227234.170112.325.GGPF250']
 rule merge_assays: #split this into two steps
 	input:
 		expand("correct_sex/{previous}.bed", previous=DATA),
@@ -253,16 +253,16 @@ rule merge_assays: #split this into two steps
 		expand("correct_sex/{previous}.fam", previous=DATA),
 		expand("correct_sex/{previous}.log", previous=DATA)
 	params:
-		oprefix="merged_files/161214_merged"	
+		oprefix="merged_files/170112_merged"	
 #	oprefix="merged_files/{merged}"
 #	benchmark:                 
 #		"filter_benchmarks/merge_assays/{merged}.txt"
 	output:
 		#mergefilelist= "correct_sex/allfiles.txt"
-                bim = "merged_files/161214_merged.bim",
-                fam = "merged_files/161214_merged.fam",
-                log = "merged_files/161214_merged.log",
-                bed = "merged_files/161214_merged.bed"
+                bim = "merged_files/170112_merged.bim",
+                fam = "merged_files/170112_merged.fam",
+                log = "merged_files/170112_merged.log",
+                bed = "merged_files/170112_merged.bed"
 	shell:
 		"python file_list_maker.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --make-bed --out {params.oprefix}"
 
@@ -275,20 +275,20 @@ rule merge_assays: #split this into two steps
 #Output file types: (.phased.haps, .phased.sample)
 rule split_chromosomes:
 	input:
-		bed = "merged_files/161214_merged.bed",
-		bim = "merged_files/161214_merged.bim",
-		fam = "merged_files/161214_merged.fam",
-		log = "merged_files/161214_merged.log"
+		bed = "merged_files/170112_merged.bed",
+		bim = "merged_files/170112_merged.bim",
+		fam = "merged_files/170112_merged.fam",
+		log = "merged_files/170112_merged.log"
 	params:
-		inprefix = "merged_files/161214_merged",
-		oprefix = "chrsplit/161214_merged.chr"
+		inprefix = "merged_files/170112_merged",
+		oprefix = "chrsplit/170112_merged.chr"
 	benchmark:                 
-		"filter_benchmarks/split_chromosomes161214_merged.txt"
+		"filter_benchmarks/split_chromosomes170112_merged.txt"
 	output:
-		bed = "chrsplit/161214_merged.chr1.bed", #may need to make this an oprefix param
-		bim = "chrsplit/161214_merged.chr1.bim",
-		fam = "chrsplit/161214_merged.chr1.fam",
-		log = "chrsplit/161214_merged.chr1.log"
+		bed = "chrsplit/170112_merged.chr1.bed", #may need to make this an oprefix param
+		bim = "chrsplit/170112_merged.chr1.bim",
+		fam = "chrsplit/170112_merged.chr1.fam",
+		log = "chrsplit/170112_merged.chr1.log"
 	shell:
 		"for chr in $(seq 1 30); do plink --bfile {params.inprefix}  --keep-allele-order --chr $chr --make-bed  --nonfounders --cow --out {params.oprefix}$chr; done"
 
