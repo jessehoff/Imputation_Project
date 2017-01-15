@@ -11,6 +11,7 @@ script, infile, outfile = argv
 sexcheck = pd.read_table(infile, delim_whitespace=True)	#Reads into pandas datatable
 	
 sexcheck = sexcheck[sexcheck.PEDSEX !=0]		#Looks for and saves all non-zero values for PEDSEX (animals with sexes assigned on pedigree		  
+sexcheck = sexcheck[sexcheck.SNPSEX !=0]
 problems = sexcheck[sexcheck.STATUS == 'PROBLEM']	#Looks for and saves rows from previous that have PROBLEM status
 my_list =problems['IID'].tolist()
 my_list=list(set(my_list))
