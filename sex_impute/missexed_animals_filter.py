@@ -18,4 +18,4 @@ my_list=list(set(my_list))
 
 with open(outfile,'w') as file:		#Writes to designated txt output file, which will act as a wildcard in snakemake (custom name based on the creation of file in that step) -- This is write only, not append, so it will refresh this every time that the step is run
     for item in my_list:
-        file.write(item + ' '+item +"\n")
+        file.write('1 '+item +"\n")
