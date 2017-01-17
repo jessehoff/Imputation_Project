@@ -1,0 +1,5 @@
+['Duplicate Individuals Removed', 0]
+['Allele Filtering Step', 'assay', 'geno .05', '2895', '52563', 0.05507676502482735, ['Tue Jan 17 10:16:12 2017']]
+['Individual Filtering Step', '58336', 'mind .05', '2', '335', 0.005970149253731343, ['Tue Jan 17 10:16:18 2017']]
+['HWE Filtering Step', 'hwe 0.00000001', '37', '49622', 0.0007456370158397485, 'Tue Jan 17 10:16:21 2017']
+['Missexed Animals Filtered', 0]
