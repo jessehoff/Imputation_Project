@@ -23,6 +23,17 @@ rule filter_duplicate_individuals:
 	shell:
 		"python duplicates_filtered/duplicate_filter.py {input.id} {output.dup} {input.ped} {output.ped}"
 
+
+rule create_filter_log:
+        input:
+                ped="duplicates_filtered/{sample}.ped",
+                log = "duplicates_filtered/dup_ids/{sample}.txt"
+        output:
+                csv = "filter_logs/{sample}.csv"
+        shell:
+                "python duplicates_filtered/duplicate_logging.py {input.log} {output.csv}"
+
+
 #Dictionaries: This rule takes .map and .ped inputs from dictionaries based on specified output 'wildcard' which is the name of the assay.  
 #PLINK command (freq) -- Determines call rates for each variant in dataset and returns how many times each allele appears in every assay
 #Python Script (allele_call_rate viusalization.py) and (allele_removal_prediction.py).  Takes argument and identifies how many alleles will be removed given a specific filter call rate.  Visualization script creates histograms with distributions of call rates and exports to png file in allele_stats/ directory
@@ -38,7 +49,8 @@ rule variant_stats:
 	input:
 		map = mapdicter,
 		dup = "duplicates_filtered/dup_ids/{sample}.txt",
-		input = "duplicates_filtered/{sample}.ped"
+		input = "duplicates_filtered/{sample}.ped",
+		log = "filter_logs/{sample}.csv"
 	params:
 		inprefix = "duplicates_filtered/{sample}",
 		oprefix = "allele_stats/{sample}"
@@ -74,7 +86,8 @@ rule filter_variants:
 		map = mapdicter,
 		dup = "duplicates_filtered/dup_ids/{sample}.txt",
                 input = "duplicates_filtered/{sample}.ped",
-		stats = "allele_stats/{sample}.frq"
+		stats = "allele_stats/{sample}.frq",
+		csv = "filter_logs/{sample}.csv"
 	params:
 		inprefix = "duplicates_filtered/{sample}",
 		oprefix="allele_filtered/{sample}",
@@ -87,18 +100,8 @@ rule filter_variants:
 		fam="allele_filtered/{sample}.fam",
 		log="allele_filtered/{sample}.log"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .05 --make-bed --out  {params.oprefix}"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .05 --make-bed --out  {params.oprefix}; python allele_filtered/allele_filtered_log_parsing.py {output.log} {input.csv}"
 
-
-
-rule variant_filter_log:
-	input:
-		bed="allele_filtered/{sample}.bed",
-		log = "allele_filtered/{sample}.log"
-	output:
-		csv = "filter_logs/{sample}.csv"
-	shell:
-		"python allele_filtered/allele_filtered_log_parsing.py {input.log} {output.csv}"
 
 
 
@@ -107,7 +110,7 @@ rule variant_filter_log:
 #Output: output file suffixes will be (.imiss, .lmiss, .log, .nosex)
 rule individual_stats:
 	input:
-		rules.variant_filter_log.output,
+		rules.create_filter_log.output,
 		bed="allele_filtered/{sample}.bed"
 	params:
 		inprefix="allele_filtered/{sample}",
@@ -137,7 +140,7 @@ rule individual_call_rate_visualization:
 
 rule filter_individuals:
         input:
-        	rules.variant_filter_log.output,
+        	rules.create_filter_log.output,
 		csv="filter_logs/{sample}.csv",
 		bed="allele_filtered/{sample}.bed",
 		imiss="individual_stats/{sample}.imiss"
