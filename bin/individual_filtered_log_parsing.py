@@ -25,11 +25,13 @@ time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
 stats = action + mind + space + rem + rem1 + space + start + space
 
 #Calculates proportion of animals removed
-proportion = float(stats[3])/float(stats[5])
-stats.append(proportion)
+proportion = int(stats[3])/int(stats[5])
+x=[]
+x.append(str(proportion))
 
-stats = stats + time
+stats = stats + x + time
 
+stats = ', '.join(stats)
 #Appends resulting stats list to the output csv file designated by argv 
 logfile = open (outfile, 'a')
 logfile.write(str(stats) + '\n')

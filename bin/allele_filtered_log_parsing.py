@@ -23,12 +23,14 @@ time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
 
 stats = action + geno + rem + space + start + space #Concatenates lists from previous 4 regular expressions
 
+
 proportion = int(stats[2])/int(stats[4])#Calculates a proportion of of variants removed by filter.
-stats.append(proportion)#Appends to list of strings
+x = []
+x.append(str(proportion))#Appends to list of strings
 
-stats = stats + space + time
-
+stats = stats + x + space + time
+stats = ', '.join(stats)
 
 logfile = open (outfile, 'a+') #Appends the list generated in previous steps to designated csv outfile
-logfile.write( str(stats) + '\n')
+logfile.write(str(stats) + '\n')
 logfile.close()

@@ -24,8 +24,11 @@ stats = action + hwe + rem + space + start + space
 
 #Calculates proportion of variants removed compared to total then appends to "stats"
 percent = int(stats[2])/int(stats[4])
-stats.append(percent)
-stats = stats + space + time
+x=[]
+x.append(str(percent))
+stats = stats + x + space + time
+
+stats = ', '.join(stats)
 #Appends stats list to the end of specified csv file
 logfile = open (outfile, 'a')
 logfile.write(str(stats) + '\n')
