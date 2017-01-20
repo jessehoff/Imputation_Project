@@ -12,6 +12,11 @@ script, infile, outfile = argv
 with open (infile, 'r') as logfile:
     log = logfile.read()
 
+infile= infile.strip('individual_filtered/') #These three seubsequent steps take the input file's name and separate date, #SNPs, #individuals, and Assay to be reported on the top line for calculations, etc.
+infile = infile.strip('.log')
+metadata = infile.split('.')
+
+
 action = ['Individual Filtering Step']    
 mind = re.findall(r'--(mind\s*[\w.]+)', log)# filter used for individuals with low call rates (individuals missing proportion of variants above this value will be removed)
 rem = re.findall(r'([0-9]+) cow removed due to missing genotype data', log)#Extracts number of animals removed (for if single cow is removed)
@@ -23,9 +28,10 @@ time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
                 
 #List of strings from above regexpressions
 stats = action + mind + space + rem + rem1 + space + start + space
+stats.insert(0, metadata[3])
 
 #Calculates proportion of animals removed
-proportion = int(stats[3])/int(stats[5])
+proportion = int(stats[4])/int(stats[6])
 x=[]
 x.append(str(proportion))
 

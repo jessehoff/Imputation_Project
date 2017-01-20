@@ -11,6 +11,10 @@ script, infile, outfile = argv
 with open (infile, 'r') as logfile:
     log = logfile.read()
 
+infile= infile.strip('hwe_filtered/') #These three seubsequent steps take the input file's name and separate date, #SNPs, #individuals, and Assay to be reported on the top line for calculations, etc.
+infile = infile.strip('.log')
+metadata = infile.split('.')
+
 action = ['HWE Filtering Step']
 #Regular expressions for locating metadata in log file
 #assay = re.findall(r'individual_filtered/([\w_]+)\n', log) #Locates assay ID
@@ -21,9 +25,10 @@ space = [' ']
 time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
 #Concatenates regular expressions above into "stats" list 
 stats = action + hwe + rem + space + start + space 
+stats.insert(0,metadata[3])
 
 #Calculates proportion of variants removed compared to total then appends to "stats"
-percent = int(stats[2])/int(stats[4])
+percent = int(stats[3])/int(stats[5])
 x=[]
 x.append(str(percent))
 stats = stats + x + space + time
