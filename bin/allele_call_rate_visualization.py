@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 import pandas as pd
-import seaborn as sb
-import matplotlib.pyplot as plt
-import seaborn as sb
 import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
-from sys import argv
 
+from sys import argv
 script, a, outfile = argv
 
 assay= pd.read_table(a,delim_whitespace=True)
