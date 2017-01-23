@@ -27,11 +27,11 @@ time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
 
                 
 #List of strings from above regexpressions
-stats = action + mind + space + rem + rem1 + space + start + space
+stats = action + mind + space + space + space + rem + rem1 + start 
 stats.insert(0, metadata[3])
 
 #Calculates proportion of animals removed
-proportion = int(stats[4])/int(stats[6])
+proportion = int(stats[6])/int(stats[7])
 x=[]
 x.append(str(proportion))
 

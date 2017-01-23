@@ -24,14 +24,14 @@ start = re.findall(r'([\w]+) variants loaded from ', log)#Number of variants loa
 space = [' ']
 time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
 #Concatenates regular expressions above into "stats" list 
-stats = action + hwe + rem + space + start + space 
+stats = action + hwe + rem + start 
 stats.insert(0,metadata[3])
 
 #Calculates proportion of variants removed compared to total then appends to "stats"
-percent = int(stats[3])/int(stats[5])
+percent = int(stats[3])/int(stats[4])
 x=[]
 x.append(str(percent))
-stats = stats + x + space + time
+stats = stats + x + space + space + space + time
 
 stats = ', '.join(stats)
 #Appends stats list to the end of specified csv file

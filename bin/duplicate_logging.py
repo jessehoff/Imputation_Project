@@ -19,20 +19,27 @@ metadata = infile.split('.')
 
 #Establishes list to be written as first line of each file's logging information.Beginning statistics.
 
-start_info =  starting + space + space + space
+start_info =  starting + space + space 
 start_info.insert(0, metadata[3])
 start_info.append(metadata[0])
-start_info.append(metadata[2])
 start_info = start_info + space + space
+start_info.append(metadata[2])
+start_info = start_info + space
 start_info.append(metadata[1])
 start_info = ', '.join(start_info)
+
+
 removed = []			#Puts the count from above into a "list" so that it can be the same type as other data
 removed.append(str(count))
 
-
-stats =  action + space + space + removed + space #Adds the action from above to stats, and reports number of removed entries
+stats =  action + space + space + space + space + removed #Adds the action from above to stats, and reports number of removed entries
 stats.append(metadata[2])
 stats.insert(0,metadata[3])
+
+proportion = int(stats[6])/int(stats[7])
+x=[]
+x.append(str(proportion))
+stats = stats + x
 stats = ', '.join(stats)
 
 

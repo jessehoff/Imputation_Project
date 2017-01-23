@@ -22,13 +22,13 @@ rem = re.findall(r'([0-9]+) cattle \(', log)
 space = [' ']
 time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
 
-stats = action + impute_sex + space + [str(count)] + space + rem + space 
+stats = action + impute_sex + space + space + space + [str(count)] + rem 
 
 stats.insert(0, metadata[3])
 
 
 #Calculates proportion of animals removed
-proportion = int(stats[4])/int(stats[6])
+proportion = int(stats[6])/int(stats[7])
 x=[]
 x.append(str(proportion))
 
