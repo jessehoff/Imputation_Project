@@ -1,8 +1,8 @@
 rule targ:
 	input:
-		jag = expand("eagle_plink/170112_merged.chr{chr}.bed", chr = list(range(1,31)))
+		jag = expand("chrsplit/170112_merged.chr{chr}.bed", chr = list(range(1,34)))
 
-map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9914_HD_161214.map",'227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map",'58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map",'76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
+map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_HD_161214.map",'227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map",'58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map",'76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
 #This map dictionary should be able to remain the same, and we can add new maps for whichever new assays become available in future datasets
 
 #should be adapted to just parse the filename for the info, and have as many dict keys as maps available
@@ -273,11 +273,11 @@ rule remove_missexed_animals:
                 fam="correct_sex/{sample}.fam",
                 log="correct_sex/{sample}.log",	
 	shell:
-		"plink --bfile {params.inprefix} --cow --remove {input.txt} --make-bed --out {params.oprefix}"
+		"plink --bfile {params.inprefix} --cow --remove {input.txt} --keep-allele-order --make-bed --out {params.oprefix}"
 
 
 #This list contains the different file names that will be merged together.  
-DATA =['139977.170112.2326.GGPHDV3', '227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '30105.170112.2500.GGPLDV4', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT']
+DATA =['139977.170112.2326.GGPHDV3', '227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '30105.170112.2500.GGPLDV4', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD' ]
 
 #Python Script (file_list_maker.py) searches the correct_sex sub-directory for all of the files made with a .bed suffix, and then writes the file names to a .txt file (allfiles.txt)
 #PLINK function (merge-list) takes this list as an input and merges the different files into a single .bed file
@@ -309,84 +309,84 @@ rule merge_assays:
 #Output file types: (.bed, .bim, .fam, .log, .hh, .nosex)
 rule split_chromosomes:
 	input:
-		bed = "merged_files/{sample}.bed",
-		bim = "merged_files/{sample}.bim",
-		fam = "merged_files/{sample}.fam",
-		log = "merged_files/{sample}.log"
+		bed = "merged_files/170112_merged.bed",
+		bim = "merged_files/170112_merged.bim",
+		fam = "merged_files/170112_merged.fam",
+		log = "merged_files/170112_merged.log"
 	params:
-		inprefix = "merged_files/{sample}",
-		oprefix = "chrsplit/{sample}.chr{chr}",
+		inprefix = "merged_files/170112_merged",
+		oprefix = "chrsplit/170112_merged.chr{chr}",
 		chr = "{chr}"
 	benchmark:                 
-		"filter_benchmarks/split_chromosomes{sample}.txt"
+		"filter_benchmarks/split_chromosomes/170112_merged.txt"
 	log:
-		"snake_logs/chromosome_split/{sample}.chr{chr}.log"
+		"snake_logs/chromosome_split/170112_merged.chr{chr}.log"
 	output:
-		bed = "chrsplit/{sample}.chr{chr}.bed",
-		bim = "chrsplit/{sample}.chr{chr}.bim",
-		fam = "chrsplit/{sample}.chr{chr}.fam",
-		log = "chrsplit/{sample}.chr{chr}.log"
+		bed = "chrsplit/170112_merged.chr{chr}.bed",
+		bim = "chrsplit/170112_merged.chr{chr}.bim",
+		fam = "chrsplit/170112_merged.chr{chr}.fam",
+		log = "chrsplit/170112_merged.chr{chr}.log"
 	shell:
 		"(plink --bfile {params.inprefix}  --keep-allele-order --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
 
 
-rule eagle:
-        input:
-                bed = "chrsplit/{sample}.chr{chr}.bed",                
-		bim = "chrsplit/{sample}.chr{chr}.bim",
-                fam = "chrsplit/{sample}.chr{chr}.fam",
-                log = "chrsplit/{sample}.chr{chr}.log"
+#rule eagle:
+#        input:
+#                bed = "chrsplit/{sample}.chr{chr}.bed",                
+#		bim = "chrsplit/{sample}.chr{chr}.bim",
+#                fam = "chrsplit/{sample}.chr{chr}.fam",
+#                log = "chrsplit/{sample}.chr{chr}.log"
 #        benchmark:
 #		"filter_benchmarks/eagle_phasing/{sample}.chr{chr}.txt"
-	log:
-		"snake_logs/eagle_phasing/{sample}.chr{chr}.log"
-	params: 
-		inprefix ="chrsplit/{sample}.chr{chr}",
-                oprefix = "eagle_phased/{sample}.chr{chr}"
-	threads: 16
-	output:
-                sample = "eagle_phased/{sample}.chr{chr}.sample",
-                haps = "eagle_phased/{sample}.chr{chr}.haps.gz"
+#	log:
+#		"snake_logs/eagle_phasing/{sample}.chr{chr}.log"
+#	params: 
+#		inprefix ="chrsplit/{sample}.chr{chr}",
+#                oprefix = "eagle_phased/{sample}.chr{chr}"
+#	threads: 16
+#	output:
+#                sample = "eagle_phased/{sample}.chr{chr}.sample",
+#                haps = "eagle_phased/{sample}.chr{chr}.haps.gz"
 
-	shell:
-		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp .95 --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.oprefix}) > {log}"
-
-
-rule eagle_to_vcf:
-	input: 
-		haps = "eagle_phased/{sample}.chr{chr}.haps.gz",
-		sample = "eagle_phased/{sample}.chr{chr}.sample"
-	params:
-		inprefix = "eagle_phased/{sample}.chr{chr}",
-		oprefix = "eagle_vcfs/{sample}.chr{chr}"
-	benchmark:
-		"filter_benchmarks/eagle_to_vcf/{sample}.chr{chr}.benchmark.txt"
-	log:
-		"snake_logs/eagle_to_vcf/{sample}.chr{chr}.log"
-	output:
-		vcf = "eagle_vcfs/{sample}.chr{chr}.phased.vcf",
-		log = "eagle_vcfs/{sample}.chr{chr}.log"
-
-	shell: 
-		"(guzip {input.haps}; shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
+##	shell:
+#		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp .95 --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.oprefix}) > {log}"
 
 
-rule vcf_to_plink:
-	input:
-		vcf = "eagle_vcfs/{sample}.chr{chr}.phased.vcf"
-	params:
-		oprefix = "eagle_plink/{sample}.chr{chr}"
-	benchmark:
-		"filter_benchmarks/vcf_to_plink/{sample}.chr{chr}.benchmark.txt"
-	log:
-		"snake_logs/vcf_to_plink/{sample}.chr{chr}.log"
-	output:
-		bed = "eagle_plink/{sample}.chr{chr}.phased.bed",
-		bim = "eagle_plink/{sample}.chr{chr}.phased.bim",
-		fam = "eagle_plink/{sample}.chr{chr}.phased.fam",
-		log = "eagle_plink/{sample}.chr{chr}.phased.log"
-	shell:
-		"plink --vcf {input.vcf} --cow --keep-allele-order --make-bed --out {params.oprefix}"	
+#rule eagle_to_vcf:
+#	input:
+#		haps = "eagle_phased/{sample}.chr{chr}.haps.gz",
+#		sample = "eagle_phased/{sample}.chr{chr}.sample"
+#	params:
+#		inprefix = "eagle_phased/{sample}.chr{chr}",
+#		oprefix = "eagle_vcfs/{sample}.chr{chr}"
+#	benchmark:
+#		"filter_benchmarks/eagle_to_vcf/{sample}.chr{chr}.benchmark.txt"
+#	log:
+#		"snake_logs/eagle_to_vcf/{sample}.chr{chr}.log"
+#	output:
+#		vcf = "eagle_vcfs/{sample}.chr{chr}.phased.vcf",
+#		log = "eagle_vcfs/{sample}.chr{chr}.log"
+#
+#	shell: 
+#		"(guzip {input.haps}; shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
+
+
+#rule vcf_to_plink:
+#	input:
+#		vcf = "eagle_vcfs/{sample}.chr{chr}.phased.vcf"
+#	params:
+#		oprefix = "eagle_plink/{sample}.chr{chr}"
+#	benchmark:
+#		"filter_benchmarks/vcf_to_plink/{sample}.chr{chr}.benchmark.txt"
+#	log:
+#		"snake_logs/vcf_to_plink/{sample}.chr{chr}.log"
+#	output:
+#		bed = "eagle_plink/{sample}.chr{chr}.phased.bed",
+#		bim = "eagle_plink/{sample}.chr{chr}.phased.bim",
+#		fam = "eagle_plink/{sample}.chr{chr}.phased.fam",
+#		log = "eagle_plink/{sample}.chr{chr}.phased.log"
+#	shell:
+#		"plink --vcf {input.vcf} --cow --keep-allele-order --make-bed --out {params.oprefix}"	
 
 #rule run_shapeit:
 #	input:

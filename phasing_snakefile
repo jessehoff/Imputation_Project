@@ -1,0 +1,81 @@
+#CHROMOSOMES = list(range(1,31))
+rule targ:
+	input:
+		jag = expand("eagle_plink/170112_merged.chr{chr}.phased.bed", chr = list(range(1,33)))
+
+
+#rule run_eagle:
+#	input:
+#		bed = "chrsplit/170112_merged.chr{chr}.bed",
+#		bim = "chrsplit/170112_merged.chr{chr}.bim",
+#		fam = "chrsplit/170112_merged.chr{chr}.fam",
+#		log = "chrsplit/170112_merged.chr{chr}.log",
+#	params:
+#		inprefix ="chrsplit/170112_merged.chr{chr}",
+#		oprefix = "eagle_phased/170112_merged.chr{chr}"
+#	benchmark:
+#		"filter_benchmarks/eagle_phased/170112_merged.chr{chr}.benchmark.txt"
+#	log:
+#		"snake_logs/eagle_phased/170112_merged.chr{chr}.log"
+#	threads: 8
+#	output:
+#		sample = "eagle_phased/170112_merged.chr{chr}.sample",
+#		haps = "eagle_phased/170112_merged.chr{chr}.haps.gz"
+#	shell:
+#		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp 1 --maxMissingPerIndiv 1 --numThreads 8 --outPrefix {params.oprefix}) > {log}"
+
+
+
+rule eagle_to_vcf:
+	input:
+		haps = "eagle_phased/170112_merged.chr{chr}.haps",
+		sample = "eagle_phased/170112_merged.chr{chr}.sample"
+	params:
+		inprefix = "eagle_phased/170112_merged.chr{chr}",
+		oprefix = "eagle_vcfs/170112_merged.chr{chr}"
+	benchmark:
+		"filter_benchmarks/eagle_to_vcf/170112_merged.chr{chr}.benchmark.txt"
+	log:
+		"snake_logs/eagle_to_vcf/170112_merged.chr{chr}.log"
+	output:
+		vcf = "eagle_vcfs/170112_merged.chr{chr}.phased.vcf",
+		log = "eagle_vcfs/170112_merged.chr{chr}.log"
+	shell:
+		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
+
+
+
+
+rule vcf_to_plink:
+	input:
+		vcf = "eagle_vcfs/170112_merged.chr{chr}.phased.vcf"
+	params:
+		oprefix = "eagle_plink/170112_merged.chr{chr}.phased"
+	benchmark:
+		"filter_benchmarks/vcf_to_plink/170112_merged.chr{chr}.benchmark.txt"
+	log:
+		"snake_logs/vcf_to_plink/170112_merged.chr{chr}.phased.log"
+	output:
+		bed = "eagle_plink/170112_merged.chr{chr}.phased.bed",
+		bim = "eagle_plink/170112_merged.chr{chr}.phased.bim",
+		fam = "eagle_plink/170112_merged.chr{chr}.phased.fam",
+		log = "eagle_plink/170112_merged.chr{chr}.phased.log"
+	shell:
+		"plink --vcf {input.vcf} --cow --keep-allele-order --make-bed --out {params.oprefix}"
+
+rule merge_eagle_plinks:
+	input:
+		bed = "eagle_plink/170112_merged.chr{chr}.phased.bed",
+		bim = "eagle_plink/170112_merged.chr{chr}.phased.bim",
+		fam = "eagle_plink/170112_merged.chr{chr}.phased.fam",
+		log = "eagle_plink/170112_merged.chr{chr}.phased.log"
+	params:
+		oprefix = "eagle_plink/170112_merged.phased"
+	output:
+		bed = "eagle_plink_merged/170112_merged.phased.bed",
+		bim = "eagle_plink_merged/170112_merged.phased.bed",
+		fam = "eagle_plink_merged/170112_merged.phased.bed",
+		log = "eagle_plink_merged/170112_merged.phased.bed"	
+
+	shell:
+		"python eagle_plink_merging.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --keep-allele-order --make-bed --out {params.oprefix}"
