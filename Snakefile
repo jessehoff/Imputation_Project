@@ -1,6 +1,9 @@
-map_dict = {'777962':"maps/9913_HD.map",'227234':"maps/9913_GGPF250.map",'58336':"maps/9913_SNP50.map" }
+rule targ:
+	input:
+		jag = expand("chrsplit/170112_merged.chr{chr}.bed", chr = list(range(1,34)))
 
-samp_dict = {'snp50_a': "raw_genotypes/58336.160906.100.test_snp50_A", 'snp50_b':"raw_genotypes/58336.160906.100.test_snp50_B", 'snp50_c':"raw_genotypes/58336.160906.100.test_snp50_C", 'ggpf250':"raw_genotypes/227234.160906.100.test_ggpf250_A", 'hd':"raw_genotypes/777962.160906.100.test_hd_A"}
+map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_HD_161214.map",'227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map",'58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map",'76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
+#This map dictionary should be able to remain the same, and we can add new maps for whichever new assays become available in future datasets
 
 #should be adapted to just parse the filename for the info, and have as many dict keys as maps available
 def mapdicter(shoein): 
@@ -11,99 +14,170 @@ def mapdicter(shoein):
 def sampdicter(wildcards):         
 	return samp_dict[wildcards.sample]
 
+#This step produces a new ped file that does not have any duplicate individuals.  
+#Finds duplicated individuals in ID file.  Only adds these individuals once when parsing ped file line by line.
+#Python Script (duplicate_filter.py) takes beginning ID and ped files.  Produces list of duplicate IDs, and then a new ped file both in specified locations
+#Input File Locations: raw_genotypes/
+#Output File Location: duplicates_filtered/ and duplicates_filtered/dup_ids/
+#Output File Types: (.ped, .txt)
+rule filter_duplicate_individuals:
+	input:
+		id = "raw_genotypes/{sample}.ID",
+		ped = "raw_genotypes/{sample}.ped"
+	benchmark:
+		"filter_benchmarks/duplicates_filtered/{sample}.txt"
+	output:
+		dup = "duplicates_filtered/dup_ids/{sample}.txt",
+		ped = "duplicates_filtered/{sample}.ped"
+	shell:
+		"python bin/duplicate_filter.py {input.id} {output.dup} {input.ped} {output.ped}"
+
+#Python Script (duplicate_logging.py) reads the list of duplicated ids produced in filter_duplicate_individuals rule, counts lines, and writes to specified csv that will serve as logging for the rest of the filtering process. 
+#Input File Location: raw_genotypes/dup_ids/
+#Output File Location: filter_logs/
+#output File Type: (.csv)
+rule create_filter_log:
+        input:
+                ped="duplicates_filtered/{sample}.ped",
+                log = "duplicates_filtered/dup_ids/{sample}.txt"
+        output:
+                csv = "filter_logs/{sample}.csv"
+        shell:
+                "python bin/duplicate_logging.py {input.log} {output.csv}"
 
 #Dictionaries: This rule takes .map and .ped inputs from dictionaries based on specified output 'wildcard' which is the name of the assay.  
-#PLINK command (freq) -- Determines call rates for each variant in dataset and returns how many times each allele appears in every assay
-#Python Script (allele_call_rate viusalization.py) and (allele_removal_prediction.py).  Takes argument and identifies how many alleles will be removed given a specific filter call rate.  Visualization script creates histograms with distributions of call rates and exports to png file in allele_stats/ directory
+#PLINK command (freq) -- Determines call rates for each variant in dataset and returns how many times each snp appears in every assay
+#Python Script (snp_call_rate viusalization.py) and (snp_removal_prediction.py).  Takes argument and identifies how many snps will be removed given a specific filter call rate.  Visualization script creates histograms with distributions of call rates and exports to png file in snp_stats/ directory
 #Input File Location: raw_genotypes/
-#Output File Location: allele_stats/
+#Output File Location: snp_stats/
 #Output File Types: (.frq, .log, .nosex)
-
-#rule mergeraws: #adds a mix of sample files. Ma
-#	--keep ./checkflip/snp50_a.fam
-
-
 rule variant_stats:
 	input:
-		map = mapdicter
+		map = mapdicter,
+		dup = "duplicates_filtered/dup_ids/{sample}.txt",
+		input = "duplicates_filtered/{sample}.ped",
+		log = "filter_logs/{sample}.csv",
 	params:
-		inprefix = "raw_genotypes/{sample}",
-		oprefix = "allele_stats/{sample}"
+		inprefix = "duplicates_filtered/{sample}",
+		oprefix = "snp_stats/{sample}"
 	benchmark:
 		"filter_benchmarks/variant_stats/{sample}.txt"
 	output: 
-		frq = "allele_stats/{sample}.frq"
+		frq = "snp_stats/{sample}.frq",
+		log = "snp_stats/{sample}.log",
+		hh = "snp_stats/{sample}.hh"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --nonfounders --freq --out {params.oprefix}" # python allele_call_rate_visualization.py"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --nonfounders --freq --out {params.oprefix}" 
 
+#Python Script for Visualization (snp_call_rate_visualization.py) reads in .frq file generated by PLINK's --freq function
+#Creates a histogram of the missing genotype rate for each SNP in the dataset.  This call rate is calculated for each SNP as (NCHROBS)/max(NCHROBS)
+#Writes figure to a .png file
+#Histogram uses 100 bins, and a y-axis max of 5000 SNPs, which look good for existing assays, but can be easily adjusted.
+#Input File Location: snp_stats/
+#Output File Location: snp_stats/figures/
+#Output File Type: (.png)
+
+rule snp_call_rate_visualization:
+	input:
+		frq = "snp_stats/{sample}.frq"
+	output:
+		png = "snp_stats/figures/{sample}.snp_call_rate.png"
+	shell:
+		"python bin/snp_call_rate_visualization.py {input.frq} {output.png}"
 
 
 #Dictionaries for selecting correct .map and .ped files:  This uses two functions, mapdicter and sampdicter to match the correct .ped and .map files with each assay. Using a specific 'wildcard' for the output of this rule will call the correct input map and ped file for the filter to be used on. 
 #PLINK filter (mind) -- Filters individuals based on specified call rate.  Individuals missing more than given proportion of their genotypes will be filtered out of the dataset. 
-#Python script (allele_filtered_log_parsing.py) -- parses output logfile for important metadata and saves to assay's specific csv in /filter_logs directory. 
+#Python script (snp_filtered_log_parsing.py) -- parses output logfile for important metadata and saves to assay's specific csv in /filter_logs directory. 
 #Input File Location: /raw_genotypes/ 
-#Output File Location: /allele_filtered 
+#Output File Location: /snp_filtered 
 #Output: output file suffixes will be (.bed, .bim, .fam, .irem, .log, .nosex)
 
 rule filter_variants:
 	input:	
 		map = mapdicter,
-		stats = "allele_stats/{sample}.frq"
+		dup = "duplicates_filtered/dup_ids/{sample}.txt",
+                input = "duplicates_filtered/{sample}.ped",
+		stats = "snp_stats/{sample}.frq",
+		csv = "filter_logs/{sample}.csv",
+		png = "snp_stats/figures/{sample}.snp_call_rate.png"
 	params:
-		inprefix = "raw_genotypes/{sample}",
-		oprefix="allele_filtered/{sample}",
+		inprefix = "duplicates_filtered/{sample}",
+		oprefix="snp_filtered/{sample}",
 		logprefix="filter_logs/{sample}"
 	benchmark:                 
 		"filter_benchmarks/filter_variants/{sample}.txt"
 	output:
-		bed="allele_filtered/{sample}.bed"
+		bed="snp_filtered/{sample}.bed",
+		bim="snp_filtered/{sample}.bim",
+		fam="snp_filtered/{sample}.fam",
+		log="snp_filtered/{sample}.log"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .05 --make-bed --out  {params.oprefix}; python allele_filtered/allele_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {input.csv}"
+
 
 
 
 #PLINK statistic (missing) -- Gathers statistics on individual call rates (reports proportion of missing genotypes for each individual)
-#Input File Location: /allele_filtered/
+#Input File Location: /snp_filtered/
 #Output: output file suffixes will be (.imiss, .lmiss, .log, .nosex)
 rule individual_stats:
 	input:
-		bed="allele_filtered/{sample}.bed"
+		rules.create_filter_log.output,
+		bed="snp_filtered/{sample}.bed"
 	params:
-		inprefix="allele_filtered/{sample}",
+		inprefix="snp_filtered/{sample}",
 		oprefix="individual_stats/{sample}"
 	benchmark:                 
 		"filter_benchmarks/individual_stats/{sample}.txt"
 	output:
-		imiss="individual_stats/{sample}.imiss"
+		imiss="individual_stats/{sample}.imiss",
+		lmiss="individual_stats/{sample}.lmiss",
+		log ="individual_stats/{sample}.log"
 	shell:
-		"plink --bfile {params.inprefix} --cow --missing --keep-allele-order --out {params.oprefix}" #python individual_call_rate_visualization.py"
+		"plink --bfile {params.inprefix} --cow --missing --keep-allele-order --out {params.oprefix}" #python bin/individual_call_rate_visualization.py"
 
-
+#Python Script for Visualization (individual_call_rate_visualization.py) reads in .imiss file generated by PLINK's --missing function
+#Creates a histogram of the missing genotyping rate for each individual in the dataset (F_MISS)
+#Writes figure to a .png file
+#Histogram uses 50 bins, and a y-axis max of 50 animals, which look good for existing assays, but can be easily adjusted.
+#Input File Location: individual_stats/
+#Output File Location: individual_stats/figures/
+#Output File Type: (.png)
+rule individual_call_rate_visualization:
+	input:
+		imiss="individual_stats/{sample}.imiss"
+	output:
+		png="individual_stats/figures/{sample}.individual_call_rate.png"
+	shell:
+		"python bin/individual_call_rate_visualization.py {input.imiss} {output.png}"
 
 #PLINK filter (mind) -- Filters individuals based on specified call rate.  Individuals missing more than given proportion of their genotypes will be filtered out of the dataset.
 #Python script (individual_filtered_log_parsing.py) -- parses output logfile for important metadata and saves to csv in /filter_logs directory.
-#Input File Location: /allele_filtered/
+#Input File Location: /snp_filtered/
 #Output File Location: /individual_filtered
 #Output: output file suffixes will be (.bed, .bim, .fam, .irem, .log, .nosex)
 
 rule filter_individuals:
         input:
-        	bed="allele_filtered/{sample}.bed",
-		imiss="individual_stats/{sample}.imiss"
+        	rules.create_filter_log.output,
+		csv="filter_logs/{sample}.csv",
+		bed="snp_filtered/{sample}.bed",
+		imiss="individual_stats/{sample}.imiss",
+		png="individual_stats/figures/{sample}.individual_call_rate.png"
 	params:
-                inprefix="allele_filtered/{sample}",
+                inprefix="snp_filtered/{sample}",
                 oprefix="individual_filtered/{sample}",
-		logprefix="filter_logs/{sample}"
 	benchmark:                 
 		"filter_benchmarks/filter_individuals/{sample}.txt"
 	output:
-		bed="individual_filtered/{sample}.bed"
+		bed="individual_filtered/{sample}.bed",
+		bim="individual_filtered/{sample}.bim",
+		fam="individual_filtered/{sample}.fam",
+		log="individual_filtered/{sample}.log"
 		
 	shell:
-		"plink --bfile {params.inprefix} --cow --mind .05 --keep-allele-order --make-bed --out {params.oprefix}; python individual_filtered/individual_filtered_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
-
-
-
+		"plink --bfile {params.inprefix} --cow --mind .1 --keep-allele-order --make-bed --out {params.oprefix}; python bin/individual_filtered_log_parsing.py {output.log} {input.csv}"
 
 #Gathers statistics on individual Hardy Weinberg Equilibrium (reports HWE P value at each locus)
 #Input File Location: /individual_filtered/
@@ -112,6 +186,7 @@ rule filter_individuals:
 
 rule hwe_stats:
 	input:
+		csv="filter_logs/{sample}.csv",
 		bed="individual_filtered/{sample}.bed"
 	params:
 		inprefix="individual_filtered/{sample}",
@@ -119,12 +194,18 @@ rule hwe_stats:
 	benchmark:                 
 		"filter_benchmarks/hwe_stats/{sample}.txt"
 	output:
-		hwe="hwe_stats/{sample}.hwe"
+		hwe="hwe_stats/{sample}.hwe",
+		log="hwe_stats/{sample}.log"
 	shell:
 		"plink --bfile {params.inprefix}  --keep-allele-order --cow --nonfounders --hardy --out {params.oprefix}"
 
-
-
+rule hwe_visualization:
+	input:
+		hwe="hwe_stats/{sample}.hwe"	
+	output:
+		png="hwe_stats/figures/{sample}.hwe_pvalues.png"
+	shell:
+		"python bin/hwe_visualization.py {input.hwe} {output.png}"
 #PLINK filter (hwe) -- Filters loci based on their HWE P values. Variants with HWE P values below a specified value will be removed from the dataset
 #Python script (hwe_log_parsing.py) -- parses output logfile for important metadata and saves to csv in /filter_logs directory
 #Input File Location: /individual_filtered/
@@ -133,97 +214,193 @@ rule hwe_stats:
 rule filter_hwe_variants:
 	input:
 		bed="individual_filtered/{sample}.bed",
-		stats="hwe_stats/{sample}.hwe"
+		stats="hwe_stats/{sample}.hwe",
+		csv="filter_logs/{sample}.csv",
+		png="hwe_stats/figures/{sample}.hwe_pvalues.png"
 	params: 
 		inprefix="individual_filtered/{sample}",
-		oprefix="hwe_filtered/{sample}",
-		logprefix="filter_logs/{sample}"
+		oprefix="hwe_filtered/{sample}"
 	benchmark:                 
 		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
-		bed="hwe_filtered/{sample}.bed"
+		bed="hwe_filtered/{sample}.bed",
+		bim="hwe_filtered/{sample}.bim",
+		fam="hwe_filtered/{sample}.fam",
+		log="hwe_filtered/{sample}.log"
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.0001 --make-bed --out {params.oprefix}" #python hwe_filtered/hwe_log_parsing.py {params.oprefix}.log {params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.00000001 --make-bed --out {params.oprefix}; python bin/hwe_log_parsing.py {output.log} {input.csv}"
 
-
-rule missexed_filter:
-	
-
-
-
-
-#Mendel Error Rates will happen last before merging across assays
-
-#DATA = ['snp50_a', 'snp50_b', 'snp50_c', 'hd', 'ggpf250'] 
-DATA = ['227234.160906.75.imp_test','58336.160906.75.imp_test','777962.160906.75.imp_test']
-
-DATA2 = ['227234.161117.12083.100_B', '58336.161117.127.100_B',   '777962.161117.1681.100_A', '58336.161117.1062.100_C' , '58336.161117.7744.100_A',  '777962.161117.417.100_B']
-
-rule make_mergelist:
+#PLINK function (impute-sex) looks at sex provided by ped file, and at X chromosome heterozygosity (and y chromosome variants if provided), and determines whether an animal is male, female, or unknown. If sex from ped file is unknown, this will impute the sex if possible, and write that into the new bed file that it produces. 
+#Python Scripts: (missexed_animals_filter.py) reads the .sexcheck file produced by impute sex function.  If an individual's sex is changed from known M/F to the opposite sex, it's ID will be written to the {sample}.missexed_animals.txt file, and removed in subsequent step.  (missexed_animals_filter_logging.py) will count lines of filter output, and write to the assay's csv log file.  
+##Input File Location: hwe_filtered/
+##Output File Location: sex_impute/
+##Output: output file suffixes will be (.bed, .bim, .fam, .log, .sexcheck, .missexed_animals.txt)
+rule impute_sex:
 	input:
-		expand("hwe_filtered/{previous}.bed", previous=DATA2)
-	output:
-		mergefilelist= "hwe_filtered/allfiles{merged}.txt"
-	shell:
-		"python hwe_filtered/file_list_maker.py {output.mergefilelist};"
-
-
-rule merge_single_chip: 
-	input:
-		mergefilelist= "hwe_filtered/allfilesmerged2.txt",
-		singlechip= "./dataprepper/Animals_Single_chip.txt"
+		bed="hwe_filtered/{sample}.bed",
+		csv="filter_logs/{sample}.csv"
 	params:
-		oprefix="merged_files/{merged}"
-	benchmark:                 
-		"filter_benchmarks/merge_assays/{merged}.txt"
+		logprefix="filter_logs/{sample}",
+		inprefix="hwe_filtered/{sample}",
+		oprefix="sex_impute/{sample}"
+	benchmark:
+		"filter_benchmarks/impute_sex/{sample}.txt"
 	output:
-		bedout= "merged_files/{merged}.bed",
+		bed="sex_impute/{sample}.bed",
+		bim="sex_impute/{sample}.bim",
+		fam="sex_impute/{sample}.fam",
+		log="sex_impute/{sample}.log",
+		sexcheck="sex_impute/{sample}.sexcheck",
+		txt="sex_impute/{sample}.missexed_animals.txt"
 	shell:
-		"plink --merge-list {input.mergefilelist} --keep {input.singlechip} --nonfounders  --cow --make-bed --out {params.oprefix}"
+		"plink --bfile {params.inprefix} --cow --keep-allele-order --impute-sex ycount --make-bed --out {params.oprefix}; python bin/missexed_animals_filter.py {output.sexcheck} {output.txt}; python bin/missexed_animals_filter_logging.py {output.txt} {output.log} {input.csv}" #{params.logprefix}.csv"
+
+#PLINK function (remove) takes "sex_impute/{sample}.missexed_animals.txt" and produces new bed file without listed IDs, removing missexed animals
+#Input File Locations: sex_impute/
+#Output File Locations: correct_sex/
+#Output File Types: (.bed, .bim, .fam, .log, .hh, .nosex)
+
+rule remove_missexed_animals:
+	input:
+		txt="sex_impute/{sample}.missexed_animals.txt",
+		bed="sex_impute/{sample}.bed"
+	params:
+		inprefix="sex_impute/{sample}",
+		oprefix="correct_sex/{sample}"
+	output:
+		bed="correct_sex/{sample}.bed",
+                bim="correct_sex/{sample}.bim",
+                fam="correct_sex/{sample}.fam",
+                log="correct_sex/{sample}.log",	
+	shell:
+		"plink --bfile {params.inprefix} --cow --remove {input.txt} --keep-allele-order --make-bed --out {params.oprefix}"
+
+
+#This list contains the different file names that will be merged together.  
+DATA =['139977.170112.2326.GGPHDV3', '227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '30105.170112.2500.GGPLDV4', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD' ]
+
+#Python Script (file_list_maker.py) searches the correct_sex sub-directory for all of the files made with a .bed suffix, and then writes the file names to a .txt file (allfiles.txt)
+#PLINK function (merge-list) takes this list as an input and merges the different files into a single .bed file
+#Input File Locations: correct_sex/
+#Output File Location: merged_files/
+#Output File Types: (.bed, .bim, .fam, .log, .hh, .nosex)
+rule merge_assays:
+	input:
+		expand("correct_sex/{previous}.bed", previous=DATA), #Expand function allows us to ask for one file -- ___merged.bed, and have it produce all of the necessary prerequesite files from the DATA list above.
+		expand("correct_sex/{previous}.bim", previous=DATA),
+		expand("correct_sex/{previous}.fam", previous=DATA),
+		expand("correct_sex/{previous}.log", previous=DATA)
+	params:
+		oprefix="merged_files/170112_merged"	
+	output:
+		#mergefilelist= "correct_sex/allfiles.txt"
+                bim = "merged_files/170112_merged.bim",
+                fam = "merged_files/170112_merged.fam",
+                log = "merged_files/170112_merged.log",
+                bed = "merged_files/170112_merged.bed"
+	shell:
+		"python file_list_maker.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --keep-allele-order --make-bed --out {params.oprefix}"
 
 
 
-
-
-
-#Chrsplit -- Splits final .bed output of PLINK filtering septs into individual chromosomes
-#Input file location: ./hwe_filtered/
-#Input file types: (.bed, .bim, .fam)
-#Output file location: ./shapetest/
-#Output file types: (.phased.haps, .phased.sample)
+#Chrsplit -- Splits final .bed output of PLINK filtering septs into individual chromosomes to prepare for phasing step
+#Input file location: merged_files/
+#Output file location: chrsplit/
+#Output file types: (.bed, .bim, .fam, .log, .hh, .nosex)
 rule split_chromosomes:
 	input:
-		bed = "hwe_filtered/{sample}.bed"
+		bed = "merged_files/170112_merged.bed",
+		bim = "merged_files/170112_merged.bim",
+		fam = "merged_files/170112_merged.fam",
+		log = "merged_files/170112_merged.log"
 	params:
-		inprefix = "hwe_filtered/{sample}",
-		oprefix = "chrsplit/{sample}.chr"
-	benchmark:                 "filter_benchmarks/split_chromosomes/{sample}.txt"
+		inprefix = "merged_files/170112_merged",
+		oprefix = "chrsplit/170112_merged.chr{chr}",
+		chr = "{chr}"
+	benchmark:                 
+		"filter_benchmarks/split_chromosomes/170112_merged.txt"
+	log:
+		"snake_logs/chromosome_split/170112_merged.chr{chr}.log"
 	output:
-		bed = "chrsplit/{sample}.chr1.bed" #may need to make this an oprefix param
+		bed = "chrsplit/170112_merged.chr{chr}.bed",
+		bim = "chrsplit/170112_merged.chr{chr}.bim",
+		fam = "chrsplit/170112_merged.chr{chr}.fam",
+		log = "chrsplit/170112_merged.chr{chr}.log"
 	shell:
-		"for chr in $(seq 1 30); do plink --bfile {params.inprefix}  --keep-allele-order --chr $chr --make-bed  --nonfounders --cow --out {params.oprefix}$chr; done"
+		"(plink --bfile {params.inprefix}  --keep-allele-order --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
 
 
+#rule eagle:
+#        input:
+#                bed = "chrsplit/{sample}.chr{chr}.bed",                
+#		bim = "chrsplit/{sample}.chr{chr}.bim",
+#                fam = "chrsplit/{sample}.chr{chr}.fam",
+#                log = "chrsplit/{sample}.chr{chr}.log"
+#        benchmark:
+#		"filter_benchmarks/eagle_phasing/{sample}.chr{chr}.txt"
+#	log:
+#		"snake_logs/eagle_phasing/{sample}.chr{chr}.log"
+#	params: 
+#		inprefix ="chrsplit/{sample}.chr{chr}",
+#                oprefix = "eagle_phased/{sample}.chr{chr}"
+#	threads: 16
+#	output:
+#                sample = "eagle_phased/{sample}.chr{chr}.sample",
+#                haps = "eagle_phased/{sample}.chr{chr}.haps.gz"
+
+##	shell:
+#		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp .95 --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.oprefix}) > {log}"
 
 
+#rule eagle_to_vcf:
+#	input:
+#		haps = "eagle_phased/{sample}.chr{chr}.haps.gz",
+#		sample = "eagle_phased/{sample}.chr{chr}.sample"
+#	params:
+#		inprefix = "eagle_phased/{sample}.chr{chr}",
+#		oprefix = "eagle_vcfs/{sample}.chr{chr}"
+#	benchmark:
+#		"filter_benchmarks/eagle_to_vcf/{sample}.chr{chr}.benchmark.txt"
+#	log:
+#		"snake_logs/eagle_to_vcf/{sample}.chr{chr}.log"
+#	output:
+#		vcf = "eagle_vcfs/{sample}.chr{chr}.phased.vcf",
+#		log = "eagle_vcfs/{sample}.chr{chr}.log"
+#
+#	shell: 
+#		"(guzip {input.haps}; shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
 
 
+#rule vcf_to_plink:
+#	input:
+#		vcf = "eagle_vcfs/{sample}.chr{chr}.phased.vcf"
+#	params:
+#		oprefix = "eagle_plink/{sample}.chr{chr}"
+#	benchmark:
+#		"filter_benchmarks/vcf_to_plink/{sample}.chr{chr}.benchmark.txt"
+#	log:
+#		"snake_logs/vcf_to_plink/{sample}.chr{chr}.log"
+#	output:
+#		bed = "eagle_plink/{sample}.chr{chr}.phased.bed",
+#		bim = "eagle_plink/{sample}.chr{chr}.phased.bim",
+#		fam = "eagle_plink/{sample}.chr{chr}.phased.fam",
+#		log = "eagle_plink/{sample}.chr{chr}.phased.log"
+#	shell:
+#		"plink --vcf {input.vcf} --cow --keep-allele-order --make-bed --out {params.oprefix}"	
 
-
-
-rule run_shapeit:
-	input:
-		bed = "chrsplit/{sample}.chr1.bed",
-		#bim = "chrsplit/{sample}.chr1.bim",
-		#fam = "chrsplit/{sample}.chr1.fam"
-	params:
-		inprefix = "chrsplit/{sample}.chr",
-		oprefix="shapetest/{sample}.chr"
-	output:
-		haps = "shapetest/{sample}.chr1.phased.haps",
-		sample = "shapetest/{sample}.chr1.phased.sample"
-	shell:
-		"for chr in $(seq 1 30); do shapeit --input-bed {params.inprefix}$chr.bed {params.inprefix}$chr.bim {params.inprefix}$chr.fam --duohmm --output-max {params.oprefix}$chr.phased.haps {params.oprefix}$chr.phased.sample; done"
+#rule run_shapeit:
+#	input:
+#		bed = "chrsplit/{sample}.{chr}.bed",
+		#bim = "chrsplit/{sample}.{chr}.bim",
+		#fam = "chrsplit/{sample}.{chr}.fam"
+#	params:
+#		inprefix = "chrsplit/{sample}.chr",
+#		oprefix="shapetest/{sample}.chr"
+#	output:
+#		haps = "shapetest/{sample}.{chr}.phased.haps",
+#		sample = "shapetest/{sample}.{chr}.phased.sample"
+#	shell:
+#		"for chr in $(seq 1 30); do shapeit --input-bed {params.inprefix}$chr.bed {params.inprefix}$chr.bim {params.inprefix}$chr.fam --duohmm --output-max {params.oprefix}$chr.phased.haps {params.oprefix}$chr.phased.sample; done"
 		
 
 

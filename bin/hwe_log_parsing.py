@@ -11,24 +11,29 @@ script, infile, outfile = argv
 with open (infile, 'r') as logfile:
     log = logfile.read()
 
+infile= infile.strip('hwe_filtered/') #These three seubsequent steps take the input file's name and separate date, #SNPs, #individuals, and Assay to be reported on the top line for calculations, etc.
+infile = infile.strip('.log')
+metadata = infile.split('.')
+
 action = ['HWE Filtering Step']
 #Regular expressions for locating metadata in log file
 #assay = re.findall(r'individual_filtered/([\w_]+)\n', log) #Locates assay ID
 hwe = re.findall(r'--(hwe\s*[\w.]+)\n', log)#Value of hwe filter
 rem = re.findall(r'([0-9]+) variants removed', log)#Number of variants removed by filter
 start = re.findall(r'([\w]+) variants loaded from ', log)#Number of variants loaded before filtering
-
+space = [' ']
+time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
 #Concatenates regular expressions above into "stats" list 
-stats = action + hwe + rem + start
+stats = action + hwe + rem + start 
+stats.insert(0,metadata[3])
 
 #Calculates proportion of variants removed compared to total then appends to "stats"
-percent = int(stats[2])/int(stats[3])
-stats.append(percent)
+percent = int(stats[3])/int(stats[4])
+x=[]
+x.append(str(percent))
+stats = stats + x + space + space + space + time
 
-#Locates time when filter was run by PLINK then appends this to stats list
-time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
-stats = stats +time
-
+stats = ', '.join(stats)
 #Appends stats list to the end of specified csv file
 logfile = open (outfile, 'a')
 logfile.write(str(stats) + '\n')
