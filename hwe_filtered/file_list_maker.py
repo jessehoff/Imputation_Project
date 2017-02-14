@@ -1,9 +1,7 @@
 import glob
-import pandas as pd
-import numpy as np
 import sys
 import os
-output=sys.argv[1]
+output=sys.argv
 
 curd = os.getcwd() 
 

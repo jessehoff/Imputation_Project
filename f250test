@@ -4,8 +4,15 @@ rule targ:
 		#jag=expand("merged_files/accutestf250_merge_small_list_{setter}.txt",setter=list(range(1,5)))
 		#accsets =expand("merged_files/accutestf250_{setter}.bed",setter=list(range(1,5)))
 		#split_chromosomes=expand("chrsplit/accutestf250_small_{setter}.chr{chr}.bed",setter=list(range(1,5)),chr=list(range(1,31)))
-		jag=expand("accutest_small/accutestf250_small_{setter}.chr{chr}.phased.sample",setter=list(range(1,2)),chr=list(range(20,22)))
+		#split_chromosomes=expand("chrsplit/accutestf250_{chip}_Singlechip.chr{chr}.bed",chip=['HD','snp50','f250'],chr=list(range(1,31)))
+		#jag=expand("shapetest/accutestf250_HD_Singlechip.chr{chr}.phased.sample",chr=list(range(1,31,5)))
+		jag=expand("shapetest/accutestf250_f250_Singlechip.chr{chr}.phased.sample",chr=list(range(1,31,5)))
+
+									#do 1,31,5 going forward
 		#"accutest_{size}/accutestf250_{size}_{run}.chr{chr}.phased.sample",
+	
+	#			sample = "shapetest/accutestf250_{size}_{run}.chr{chr}.phased.sample",
+
 #snakemake -s f250test -np
 
 rule grab_with_drops: #makes beds for each multichip animal
@@ -45,6 +52,10 @@ rule make_acc_sets:
 	shell:
 		"(plink --merge-list {input} --nonfounders --cow --make-bed --out {params.outprefix}) > {log}"
 
+#plink --merge-list accutestf250_snp50_Singlechip.txt --nonfounders --cow --make-bed --out accutestf250_snp50_Singlechip
+
+#plink --merge-list accutestf250_f250_Singlechip.txt --nonfounders --cow --make-bed --out accutestf250_f250_Singlechip
+
 
 rule split_chromosomes:
 	input:
@@ -60,8 +71,6 @@ rule split_chromosomes:
 		bed = "chrsplit/{sample}.chr{chr}.bed" #may need to make this an oprefix param
 	shell:
 		"(plink --bfile {params.inprefix}  --keep-allele-order --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix}) > {log}"
-
-
 
 rule run_shapeit:
 	input:
@@ -99,24 +108,25 @@ rule run_eagle:
 		sample = "eagletest/accutestf250_{size}_{run}.chr{chr}.sample",
 		haps = "eagletest/accutestf250_{size}_{run}.chr{chr}.haps.gz",
 	shell:
-		"(eagle --bfile={params.bed} --bpEnd 20000000 --geneticMapFile=USE_BIM --maxMissingPerSnp .95  --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.out})> {log} "
+		"(eagle --bfile={params.bed} --bpEnd 200000 --geneticMapFile=USE_BIM --maxMissingPerSnp .95  --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.out})> {log} "
 
-
+#snakemake -s f250test eagletest/accutestf250_small_2.chr20.sample 
+#snakemake -s f250test eaglevcf/accutestf250_small_1.chr20.phased.vcf 
 
 rule make_vcf:
 	input:
-		haps="{source}test/merged.chr{chr}.phased.haps",
+		haps="{source}test/accutestf250_{size}_{run}.chr{chr}.haps",
 	output:
-		vcf="shapevcf/merged.chr{chr}.phased.vcf",
-		log="shapevcf/logs/merged.chr{chr}.log"
+		vcf="{source}vcf/accutestf250_{size}_{run}.chr{chr}.phased.vcf",
+		log="{source}vcf/logs/accutestf250_{size}_{run}.chr{chr}.log"
 	log:
-			"logs/shapevcf/logs/snake.{chr}.log"
+			"logs/{source}vcf/logs/{source}.{chr}.log"
 	benchmark:
-			"benchmarks/shapevcf/shapevcf.{chr}.benchmark.txt"
+			"benchmarks/accutestf250_vcf/accutestf250_vcf_{size}_{run}.{chr}.benchmark.txt"
 	params:
-		haps="shapetest3/merged.chr{chr}.phased"
+		haps="{source}test/accutestf250_{size}_{run}.chr{chr}"
 	shell:
-		"shapeit -convert --input-haps {params.haps} --output-log {output.log} --output-vcf {output.vcf}"
+		"(shapeit -convert --input-haps {params.haps} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
 
 rule vcf_to_fimpute:
 	input:
