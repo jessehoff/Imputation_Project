@@ -1,0 +1,62 @@
+DATA =['227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD' ]
+
+
+rule targ:
+        input:
+               jag = expand("impute_input/{sample}.chr{chr}.phased.haps",sample = DATA,  chr = list(range(1,30)))
+
+rule decompress:
+	input:
+		gzhaps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz"
+	output:
+		haps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps"
+	shell:
+		"gunzip -c {input.gzhaps} > {output.haps};" #rm eagle_phased_assays/*.haps.gz"
+	
+rule convert:
+	input:
+		haps= "eagle_phased_assays/{sample}.chr{chr}.phased.haps",
+		sample = "eagle_phased_assays/{sample}.chr{chr}.phased.sample"
+	params:
+		inprefix = "eagle_phased_assays/{sample}.chr{chr}.phased",
+		oprefix = "impute_input/{sample}.chr{chr}.phased"
+	log:
+		"snake_logs/convert/{sample}.chr{chr}.phased.log"
+	benchmark:
+		"filter_benchmarks/convert/{sample}.chr{chr}.phased.benchmark.txt"
+	output:
+		haps = "impute_input/{sample}.chr{chr}.phased.haps",
+		sample = "impute_input/{sample}.chr{chr}.phased.sample",
+		legend = "impute_input/{sample}.chr{chr}.phased.legend"
+	shell:
+		"shapeit -convert --input-haps {params.inprefix} --output-ref {output.haps} {output.sample} {output.legend}"
+
+from itertools import tee
+def parwise(iterable):
+        a,b = tee(iterable)
+        next(b, None)
+        return zip(a,b)
+
+def chunks(end):
+        return [str(i[0]+1)+ ' ' + str(i[1]) for i in parwise(range(0,end,5000000))]
+
+rangedict = {'1':chunks(158322647),'2':chunks(136914030),'3':chunks(121412973), '4':chunks(120786530), '5':chunks(121186724), '6':chunks(119454666), '7':chunks(112628884), '8':chunks(113380773), '9':chunks(105701306), '10':chunks(104301732), '11':chunks(107282960), '12':chunks(91155612), '13':chunks(84230359), '14':chunks(84628243), '15':chunks(85272311), '16':chunks(81720984), '17':chunks(75149392), '18':chunks(65999195), '19':chunks(64044783), '20':chunks(71992748), '21':chunks(71594139), '22':chunks(61379134), '23':chunks(52467978), '24':chunks(62685898), '25':chunks(43879707), '26':chunks(51680135), '27':chunks(45402893), '28':chunks(46267578), '29':chunks(51504286), '30':chunks(143024438)}
+
+def chrchunker(WC):
+        return rangedict[WC.chr][int(WC.chunk)]
+
+
+rule run_impute2:
+        input:
+                haps="{source}test/merged.chr{chr}.phased.haps",
+                maps="maps/impmap.chr{chr}.map"
+        params:
+                chunk= chrchunker
+        log:
+                "logs/impruns/{chr}.{chunk}.log"
+        benchmark:
+                "benchmarks/impruns/{chr}.{chunk}.log"
+        output:
+                out= "{source}test/imputed/merged.chr{chr}.{chunk}.imputed"
+        shell:
+                "(impute2 -use_prephased_g -known_haps_g {input.haps} -m {input.maps} -int {params.chunk} -Ne 100 -o {output.out}) > {log}"
