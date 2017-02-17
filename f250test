@@ -1,3 +1,6 @@
+import glob
+assays = [i[21:-8] for i in glob.glob('./eagle_plink/phased*extract') ]
+print(assays)
 rule targ:
 	input:
 		#jag=expand("merged_files/f250_tests_{setter}_{chip}.bed",setter=list(range(1,5)),chip=['f250','snp50'])
@@ -6,7 +9,8 @@ rule targ:
 		#split_chromosomes=expand("chrsplit/accutestf250_small_{setter}.chr{chr}.bed",setter=list(range(1,5)),chr=list(range(1,31)))
 		#split_chromosomes=expand("chrsplit/accutestf250_{chip}_Singlechip.chr{chr}.bed",chip=['HD','snp50','f250'],chr=list(range(1,31)))
 		#jag=expand("shapetest/accutestf250_HD_Singlechip.chr{chr}.phased.sample",chr=list(range(1,31,5)))
-		jag=expand("shapetest/accutestf250_f250_Singlechip.chr{chr}.phased.sample",chr=list(range(1,31,5)))
+		#jag=expand("shapetest/accutestf250_f250_Singlechip.chr{chr}.phased.sample",chr=list(range(1,31,5)))
+		jag = expand("eagle_assays/{assay}.run1.chr20.bim", assay = assays)#,chr=list(range(1,31,5)))
 
 									#do 1,31,5 going forward
 		#"accutest_{size}/accutestf250_{size}_{run}.chr{chr}.phased.sample",
@@ -108,10 +112,10 @@ rule run_eagle:
 		sample = "eagletest/accutestf250_{size}_{run}.chr{chr}.sample",
 		haps = "eagletest/accutestf250_{size}_{run}.chr{chr}.haps.gz",
 	shell:
-		"(eagle --bfile={params.bed} --bpEnd 200000 --geneticMapFile=USE_BIM --maxMissingPerSnp .95  --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.out})> {log} "
+		"(eagle --bfile={params.bed}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.out})> {log} "
 
-#snakemake -s f250test eagletest/accutestf250_small_2.chr20.sample 
-#snakemake -s f250test eaglevcf/accutestf250_small_1.chr20.phased.vcf 
+#snakemake -s f250test eagletest/accutestf250_small_2.chr25.sample 
+#snakemake -s f250test eaglevcf/accutestf250_small_1.chr25.phased.vcf 
 
 rule make_vcf:
 	input:
@@ -128,6 +132,69 @@ rule make_vcf:
 	shell:
 		"(shapeit -convert --input-haps {params.haps} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
 
+rule vcf_to_plink:
+	input:
+		vcf="eaglevcf/accutestf250_small_{run}.chr{chr}.phased.vcf",
+	params:
+		oprefix = "eagle_plink/accutestf250_small_{run}.chr{chr}"
+	benchmark:
+		"benchmarks/vcf_to_plink/accutestf250_{small}_{run}.chr{chr}.benchmark.txt"
+	log:
+		"logs/vcf_to_plink/accutestf250_{small}_{run}.chr{chr}.log"
+	output:
+		bed = "eagle_plink/accutestf250_{small}_{run}.chr{chr}.bed",
+		bim = "eagle_plink/accutestf250_{small}_{run}.chr{chr}.bim",
+		fam = "eagle_plink/accutestf250_{small}_{run}.chr{chr}.fam",
+		log = "eagle_plink/accutestf250_{small}_{run}.chr{chr}.log"
+	shell:
+		"(plink --vcf {input.vcf} --cow --keep-allele-order --make-bed --out {params.oprefix}) > {log}"
+
+
+
+
+
+
+
+
+#should be adapted to just parse the filename for the info, and have as many dict keys as maps available
+def keepmap(shoein):
+        t = shoein.assay
+        name = [i for i in glob.glob('eagle_plink/phased*extract') if t in i][0] #the file naming involves the number of sites in the genotype query, and so indicates which map to use.
+        return name
+def keepids(shoein):
+        t = shoein.assay
+        name = [i for i in glob.glob('eagle_plink/phased*keep') if t in i][0]
+        return name
+
+
+
+
+rule eagle_assays:
+	input:
+		bed = "eagle_plink/accutestf250_small_{run}.chr{chr}.bed",
+		bim = "eagle_plink/accutestf250_small_{run}.chr{chr}.bim",
+		fam = "eagle_plink/accutestf250_small_{run}.chr{chr}.fam",
+		keep_map = keepmap, 
+		keep_ids = keepids
+	params:
+		iprefix = "eagle_plink/accutestf250_small_{run}.chr{chr}",
+		oprefix = "eagle_assays/{assay}.run{run}.chr{chr}"
+	benchmark:
+		"benchmarks/eagle_assays/{assay}.chr{chr}.benchmark.txt"
+	log:
+		"logs/eagle_assays/{assay}.chr{chr}.log"
+	output:
+		bed = "eagle_assays/{assay}.run{run}.chr{chr}.bed",
+		bim = "eagle_assays/{assay}.run{run}.chr{chr}.bim",
+		fam = "eagle_assays/{assay}.run{run}.chr{chr}.fam",
+		log = "eagle_assays/{assay}.run{run}.chr{chr}.log"
+	shell:
+		"(plink --bfile {params.iprefix} --cow --keep {input.keep_ids}  --extract {input.keep_map} --make-bed --keep-allele-order --out {params.oprefix}) > {log}"
+
+#snakemake -s f250test eagle_assays/227234.161117.12083.100_B.run1.chr20.bim 
+#					    agle_assays/{assay}.run1.chr{chr}.bim
+
+		
 rule vcf_to_fimpute:
 	input:
 		vcf="shapevcf/merged.chr{chr}.phased.vcf",
@@ -141,6 +208,9 @@ rule vcf_to_fimpute:
 		outname="fimpute_chip/merged.chr{chr}.fimpute"
 	shell:
 		"python ./bin/vcftoFimpute.py {input.vcf} {output.outname} {params}"
+		
+
+
 
 #replace with a file of known ranges
 from itertools import tee
