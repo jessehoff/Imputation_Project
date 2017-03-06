@@ -1,4 +1,6 @@
-['Allele Filtering Step', 'assay', 'geno .05', '25846', '227201', 0.11375830212014912, ['Sat Jan 14 14:48:37 2017']]
-['Individual Filtering Step', '227234', 'mind .05', '12', '325', 0.036923076923076927, ['Sun Jan 15 18:17:11 2017']]
-['HWE Filtering Step', 'hwe 0.00000001', '341', '200917', 0.0016972182543040161, 'Sun Jan 15 18:17:22 2017']
-['Missexed Animals Filtered', 0]
+GGPF250, Before Filtering Steps,  ,  , 227234,  ,  , 325,  , 170112
+GGPF250, Duplicate Individuals Removed,  ,  ,  ,  , 0, 325, 0.0
+GGPF250, SNP Filtering Step, geno .1, 22481, 227201, 0.0989476278713562,  ,  ,  , Fri Feb  3 21:59:35 2017
+GGPF250, Individual Filtering Step, mind .1,  ,  ,  , 0, 325, 0.0, Fri Feb  3 21:59:48 2017
+GGPF250, HWE Filtering Step, hwe 0.00000001, 500, 204282, 0.0024475969493151623,  ,  ,  , Fri Feb  3 21:59:52 2017
+GGPF250, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 0, 325, 0.0, Fri Feb  3 21:59:54 2017

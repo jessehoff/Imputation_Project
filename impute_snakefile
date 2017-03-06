@@ -12,7 +12,7 @@ rangedict = {'1':chunks(158322647),'2':chunks(136914030),'3':chunks(121412973), 
 def chrchunker(WC):
         return rangedict[WC.chr][int(WC.chunk)[0:]]
 
-DATA =['227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KTi','777962.170127.483.HD']
+DATA =['227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD']
 IMPREFS1 =['58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT']
 IMPGENS1 =['26504.170112.3126.GGPLDV3']
 IMPREFS2 =['227234.170112.325.GGPF250', '777962.170127.483.HD']
@@ -60,11 +60,11 @@ rule convert:
 
 rule run_impute2_round1:
         input:
-                haps=expand("impute_input/{sample}.chr{chr}.phased.haps", sample=IMPGENS1),# chr = list(range(1,30))), 
-                legend=expand("impute_input/{sample}.chr{chr}.phased.legend", sample=IMPGENS1),# chr = list(range(1,30))),
-                sample=expand("impute_input/{sample}.chr{chr}.phased.sample", sample = IMPGENS1),# chr = list(range(1,30))),
-                refhaps=expand("impute_input/{sample}.chr{chr}.phased.haps", sample = IMPREFS1),# chr = list(range(1,30))),
-                reflegend=expand("impute_input/{sample}.chr{chr}.phased.legend", sample = IMPREFS1),# chr = list(range(1,30))), 
+                haps=expand("impute_input/{sample}.chr{chr}.phased.haps", sample=IMPGENS1, chr = list(range(1,30))), 
+                legend=expand("impute_input/{sample}.chr{chr}.phased.legend", sample=IMPGENS1, chr = list(range(1,30))),
+                sample=expand("impute_input/{sample}.chr{chr}.phased.sample", sample = IMPGENS1, chr = list(range(1,30))),
+                refhaps=expand("impute_input/{sample}.chr{chr}.phased.haps", sample = IMPREFS1, chr = list(range(1,30))),
+                reflegend=expand("impute_input/{sample}.chr{chr}.phased.legend", sample = IMPREFS1, chr = list(range(1,30))), 
                 maps=expand("impute_maps/imputemap.chr{chr}.map", chr = list(range(1,30)))
         params:
                 chunk= chrchunker
@@ -74,8 +74,9 @@ rule run_impute2_round1:
                 "benchmarks/imprun1/imp_round1.chr{chr}.{chunk}.log"
         output:
 		"imprun1/imp_round1.chr{chr}.{chunk}.phased.impute2"
+		#"imprun1/imp_round1.chr{chr}.{chunk}.phased.impute2"
         shell:
-                "(impute2 -merge_ref_panels -m {input.maps} -h {input.refhaps} -l {input.reflegend} -use_prephased_g -known_haps_g {input.haps} -m {input.maps} -int {params.chunk} -Ne 100 -o {output.out}) > {log}"
+                "(impute2 -merge_ref_panels -m {input.maps} -h {input.refhaps} -l {input.reflegend} -use_prephased_g -known_haps_g {input.haps} -m {input.maps} -int {params.chunk} -Ne 100 -o {output}) > {log}"
 
 
 #rule run_impute2_round2:

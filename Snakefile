@@ -277,7 +277,7 @@ rule remove_missexed_animals:
 
 
 #This list contains the different file names that will be merged together.  
-DATA =['139977.170112.2326.GGPHDV3', '227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '30105.170112.2500.GGPLDV4', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD' ]
+DATA =['227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD' ]
 
 #Python Script (file_list_maker.py) searches the correct_sex sub-directory for all of the files made with a .bed suffix, and then writes the file names to a .txt file (allfiles.txt)
 #PLINK function (merge-list) takes this list as an input and merges the different files into a single .bed file

@@ -1,8 +1,7 @@
-/CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/139977.170112.2326.GGPHDV3
 /CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/227234.170112.325.GGPF250
 /CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/26504.170112.3126.GGPLDV3
-/CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/30105.170112.2500.GGPLDV4
 /CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/58336.170112.315.SNP50A
 /CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/58336.170112.335.SNP50B
 /CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/58336.170112.3399.SNP50C
 /CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/76999.170112.3498.GGP90KT
+/CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/correct_sex/777962.170127.483.HD

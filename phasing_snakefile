@@ -1,11 +1,14 @@
 #CHROMOSOMES = list(range(1,31))
-DATA =['139977.170112.2326.GGPHDV3', '227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '30105.170112.2500.GGPLDV4', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD' ]
-
+DATA =[ '227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD' ]
+REDATA=['777962.170127.483.HD']
 
 rule targ:
 	input:
-		jag = expand("eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz",sample = DATA,  chr = list(range(1,30)))
+#		jag = expand("eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz",sample = DATA,  chr = list(range(1,30)))
 #		jag = expand("eagle_chrsplit/{sample}.chr{chr}.bed", sample = DATA, chr = list(range(1,30)))
+#		jag = expand("eagle_phased/170112_merged.chr{chr}.haps.gz", chr=list(range(1,33)))
+#		jag = expand("eagle_phased_assays/{sample}.chr15.phased.haps.gz",sample=REDATA))
+		jag = ["eagle_phased_assays/284.chr14.phased.haps.gz", "eagle_phased_assays/284.chr16.phased.haps.gz"]
 rule split_chromosomes:
         input:
                 bed = expand( "correct_sex/{assay}.bed", assay = DATA),
@@ -91,7 +94,7 @@ rule eagle_to_vcf:
 		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
 
 
-
+#At this point, we shouldn't have to be converting these files back to a plink format.  Minimac will take these phased VCF files as inputs.
 
 rule vcf_to_plink:
 	input:
@@ -125,4 +128,9 @@ rule merge_eagle_plinks:
 		log = "eagle_plink_merged/170112_merged.phased.bed"	
 
 	shell:
-		"python eagle_plink_merging.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --keep-allele-order --make-bed --out {params.oprefix}"
+		"python eagle_plink_merging.py eagle_plink_merged/allfiles.txt; plink --merge-list eagle_plink_merged/allfiles.txt  --cow --keep-allele-order --make-bed --out {params.oprefix}"
+
+
+
+
+

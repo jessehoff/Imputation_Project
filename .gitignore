@@ -27,3 +27,9 @@ toAlpha/peds/*
 *.txt
 *sql
 *.csv
+*.frqx
+*.gz
+*.legend
+*.hap
+*.png
+*.vcf

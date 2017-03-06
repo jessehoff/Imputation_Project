@@ -1,4 +1,6 @@
-['Allele Filtering Step', 'assay', 'geno .05', '1842', '76987', 0.023926117396443555, ['Sat Jan 14 14:47:57 2017']]
-['Individual Filtering Step', '76999', 'mind .05', '54', '3498', 0.015437392795883362, ['Sun Jan 15 18:17:07 2017']]
-['HWE Filtering Step', 'hwe 0.00000001', '463', '75071', 0.006167494771616203, 'Sun Jan 15 18:17:19 2017']
-['Missexed Animals Filtered', 7]
+GGP90KT, Before Filtering Steps,  ,  , 76999,  ,  , 3498,  , 170112
+GGP90KT, Duplicate Individuals Removed,  ,  ,  ,  , 0, 3498, 0.0
+GGP90KT, SNP Filtering Step, geno .1, 913, 76987, 0.011859145050463066,  ,  ,  , Fri Feb  3 22:00:54 2017
+GGP90KT, Individual Filtering Step, mind .1,  ,  ,  , 0, 3498, 0.0, Fri Feb  3 22:01:19 2017
+GGP90KT, HWE Filtering Step, hwe 0.00000001, 658, 76000, 0.008657894736842106,  ,  ,  , Fri Feb  3 22:01:24 2017
+GGP90KT, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 7, 3498, 0.002001143510577473, Fri Feb  3 22:01:25 2017

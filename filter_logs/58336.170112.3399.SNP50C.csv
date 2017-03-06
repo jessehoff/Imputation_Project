@@ -1,5 +1,6 @@
-['Duplicate Individuals Removed', 87]
-['Allele Filtering Step', 'assay', 'geno .05', '4096', '52563', 0.07792553697467801, ['Tue Jan 17 10:15:57 2017']]
-['Individual Filtering Step', '58336', 'mind .05', '28', '3312', 0.008454106280193236, ['Tue Jan 17 10:16:17 2017']]
-['HWE Filtering Step', 'hwe 0.00000001', '317', '48421', 0.0065467462464633116, 'Tue Jan 17 10:16:20 2017']
-['Missexed Animals Filtered', 15]
+SNP50C, Before Filtering Steps,  ,  , 58336,  ,  , 3399,  , 170112
+SNP50C, Duplicate Individuals Removed,  ,  ,  ,  , 87, 3399, 0.02559576345984113
+SNP50C, SNP Filtering Step, geno .1, 3432, 52563, 0.06529307687917356,  ,  ,  , Fri Feb  3 22:00:11 2017
+SNP50C, Individual Filtering Step, mind .1,  ,  ,  , 17, 3312, 0.005132850241545894, Fri Feb  3 22:00:43 2017
+SNP50C, HWE Filtering Step, hwe 0.00000001, 405, 49085, 0.00825099317510441,  ,  ,  , Fri Feb  3 22:00:47 2017
+SNP50C, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 15, 3295, 0.004552352048558422, Fri Feb  3 22:00:49 2017

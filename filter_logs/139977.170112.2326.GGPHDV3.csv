@@ -1,4 +1,62 @@
-['Allele Filtering Step', 'assay', 'geno .05', '4152', '138907', 0.029890502278502883, ['Sat Jan 14 14:47:26 2017']]
-['Individual Filtering Step', '139977', 'mind .05', '37', '2326', 0.01590713671539123, ['Sun Jan 15 18:17:05 2017']]
-['HWE Filtering Step', 'hwe 0.00000001', '797', '134577', 0.00592226011874243, 'Sun Jan 15 18:17:18 2017']
-['Missexed Animals Filtered', 3]
+GGPHDV3, Before Filtering Steps,  ,  , 139977,  ,  , 2326,  , 170112
+GGPHDV3, Duplicate Individuals Removed,  ,  ,  ,  , 0, 2326, 0.0
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Tue Jan 24 22:50:47 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Tue Jan 24 22:51:21 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Tue Jan 24 22:51:27 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Tue Jan 24 22:51:29 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Tue Jan 24 23:01:02 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Tue Jan 24 23:01:37 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Tue Jan 24 23:01:43 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Tue Jan 24 23:01:45 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Tue Jan 24 23:14:05 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Tue Jan 24 23:14:39 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Tue Jan 24 23:14:45 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Tue Jan 24 23:14:47 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Tue Jan 24 23:27:01 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Tue Jan 24 23:27:35 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Tue Jan 24 23:27:40 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Tue Jan 24 23:27:42 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Tue Jan 24 23:37:31 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Tue Jan 24 23:38:04 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Tue Jan 24 23:38:10 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Tue Jan 24 23:38:12 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Tue Jan 24 23:41:45 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Tue Jan 24 23:42:22 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Tue Jan 24 23:42:28 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Tue Jan 24 23:42:30 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Tue Jan 24 23:53:13 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Tue Jan 24 23:53:48 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Tue Jan 24 23:53:54 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Tue Jan 24 23:53:56 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Wed Jan 25 00:01:51 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Wed Jan 25 00:02:24 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Wed Jan 25 00:02:30 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Wed Jan 25 00:02:32 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Wed Jan 25 08:10:11 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Wed Jan 25 08:10:53 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Wed Jan 25 08:10:59 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Wed Jan 25 08:11:01 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Wed Jan 25 09:29:57 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Wed Jan 25 09:30:31 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Wed Jan 25 09:30:37 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Wed Jan 25 09:30:39 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Wed Jan 25 09:58:30 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Wed Jan 25 09:59:03 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Wed Jan 25 09:59:09 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Wed Jan 25 09:59:11 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Fri Jan 27 12:39:23 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Fri Jan 27 12:40:07 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Fri Jan 27 12:40:14 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Fri Jan 27 12:40:16 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Fri Jan 27 15:16:37 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Fri Jan 27 15:17:13 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Fri Jan 27 15:17:19 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Fri Jan 27 15:17:21 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Fri Jan 27 15:24:15 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Fri Jan 27 15:24:58 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Fri Jan 27 15:25:06 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Fri Jan 27 15:25:08 2017
+GGPHDV3, SNP Filtering Step, geno .1, 2961, 138907, 0.021316420338787823,  ,  ,  , Fri Jan 27 15:31:21 2017
+GGPHDV3, Individual Filtering Step, mind .1,  ,  ,  , 0, 2326, 0.0, Fri Jan 27 15:32:04 2017
+GGPHDV3, HWE Filtering Step, hwe 0.00000001, 908, 135768, 0.006687879323551941,  ,  ,  , Fri Jan 27 15:32:12 2017
+GGPHDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 3, 2326, 0.0012897678417884782, Fri Jan 27 15:32:15 2017

@@ -1,4 +1,22 @@
 ﻿COPY (
+SELECT international_id, 
+	SUM (CASE WHEN assay = 'GGP90KT' THEN 1 ELSE 0 END) AS ggp90kt,
+	SUM (CASE WHEN assay = 'GGPF250' THEN 1 ELSE 0 END) AS ggpf250,
+	SUM (CASE WHEN assay = 'GGPHDv3' THEN 1 ELSE 0 END) AS ggphdv3,
+	SUM (CASE WHEN assay = 'GGPHDv4' THEN 1 ELSE 0 END) AS ggphdv4,
+	SUM (CASE WHEN assay = 'HD' THEN 1 ELSE 0 END) AS hd,
+	SUM (CASE WHEN assay = 'SNP50' THEN 1 ELSE 0 END) AS snp50
+FROM sample_sheet
+WHERE international_id LIKE 'SIM%'
+	AND do_not_analyze IS NULL
+GROUP BY international_id
+ORDER BY international_id
+)
+TO '/CIFS/MUG01_N/deckerje/tnr343/170112_SIM/Imputation_Project/raw_genotypes/animal_assay_matrix.csv'
+WITH CSV HEADER;
+--Query returned successfully: 15839 rows affected, 298 msec execution time.
+----------------------------------
+COPY (
 SELECT international_id, CASE WHEN sire_international_id IS NULL THEN '0' ELSE sire_international_id END,
 	CASE WHEN dam_international_id IS NULL THEN '0' ELSE dam_international_id END,
 	CASE WHEN sex = 'M' THEN 1
@@ -154,6 +172,7 @@ reformat_gen_array_v0.1.1.pl --input sim_ggpldv4.csv --output_prefix GGPLDV4
 reformat_gen_array_v0.1.1.pl --input sim_snp50a.csv --output_prefix SNP50A 
 reformat_gen_array_v0.1.1.pl --input sim_snp50b.csv --output_prefix SNP50B 
 reformat_gen_array_v0.1.1.pl --input sim_snp50c.csv --output_prefix SNP50C 
+reformat_gen_array_v0.1.1.pl --input sim_hd.csv --output_prefix HD 
 
 
 
