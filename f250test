@@ -1,6 +1,6 @@
 import glob
 assays = [i[21:-8] for i in glob.glob('./eagle_plink/phased*extract') ]
-print(assays)
+#print(assays)
 rule targ:
 	input:
 		#jag=expand("merged_files/f250_tests_{setter}_{chip}.bed",setter=list(range(1,5)),chip=['f250','snp50'])
@@ -10,7 +10,7 @@ rule targ:
 		#split_chromosomes=expand("chrsplit/accutestf250_{chip}_Singlechip.chr{chr}.bed",chip=['HD','snp50','f250'],chr=list(range(1,31)))
 		#jag=expand("shapetest/accutestf250_HD_Singlechip.chr{chr}.phased.sample",chr=list(range(1,31,5)))
 		#jag=expand("shapetest/accutestf250_f250_Singlechip.chr{chr}.phased.sample",chr=list(range(1,31,5)))
-		jag = expand("eagle_assays/{assay}.run1.chr20.bim", assay = assays)#,chr=list(range(1,31,5)))
+		jag = expand("eagle_assays/{assay}.run1.chr{chr}.bim", assay = assays , chr=list(range(1,31,5)))
 
 									#do 1,31,5 going forward
 		#"accutest_{size}/accutestf250_{size}_{run}.chr{chr}.phased.sample",
@@ -117,6 +117,16 @@ rule run_eagle:
 #snakemake -s f250test eagletest/accutestf250_small_2.chr25.sample 
 #snakemake -s f250test eaglevcf/accutestf250_small_1.chr25.phased.vcf 
 
+rule decompress:
+		input:
+			gzhaps = "eagletest/{sample}.chr{chr}.haps.gz"
+		log:
+			"logs/decompress/{sample}.chr{chr}.log"
+		output:
+			haps = "eagletest/{sample}.chr{chr}.haps"
+		shell: 
+			"(gunzip -c {input.gzhaps} > {output.haps})>{log};" #rm eagle_phased_assays/*.haps.gz) > {log}"
+
 rule make_vcf:
 	input:
 		haps="{source}test/accutestf250_{size}_{run}.chr{chr}.haps",
@@ -190,6 +200,9 @@ rule eagle_assays:
 		log = "eagle_assays/{assay}.run{run}.chr{chr}.log"
 	shell:
 		"(plink --bfile {params.iprefix} --cow --keep {input.keep_ids}  --extract {input.keep_map} --make-bed --keep-allele-order --out {params.oprefix}) > {log}"
+
+
+
 
 #snakemake -s f250test eagle_assays/227234.161117.12083.100_B.run1.chr20.bim 
 #					    agle_assays/{assay}.run1.chr{chr}.bim
