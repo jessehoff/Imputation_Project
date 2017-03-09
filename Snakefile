@@ -115,6 +115,27 @@ rule filter_variants:
 	shell:
 		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {input.csv}"
 
+rule convert_chip2seq:
+	input:
+		bed="snp_filtered/{sample}.bed",
+		bim="snp_filtered/{sample}.bim",
+		fam="snp_filtered/{sample}.fam",
+		refalt = "refalt/update_alleles_chip2seq.txt",
+		log="snp_filtered/{sample}.log"
+	params:
+		iprefix="snp_filtered/{sample}",
+		oprefix = "ref_alt/{sample}"
+	benchmark:
+		"benchmarks/convert_chip2seq/{sample}.txt"
+	log:
+		"logs/convert_chip2seq/{sample}.log"
+	output:
+		bed="ref_alt/{sample}.bed",
+		bim="ref_alt/{sample}.bim",
+		fam="ref_alt/{sample}.fam",
+		log="ref_alt/{sample}.log"
+	shell:
+		"(plink --bfile {params.iprefix} --cow  --keep-allele-order --out {params.oprefix} --update-alleles {input.refalt}  --make-bed)> {log}"
 
 
 
@@ -123,10 +144,10 @@ rule filter_variants:
 #Output: output file suffixes will be (.imiss, .lmiss, .log, .nosex)
 rule individual_stats:
 	input:
-		rules.create_filter_log.output,
-		bed="snp_filtered/{sample}.bed"
+		rules.convert_chip2seq.output,
+		bed="ref_alt/{sample}.bed",
 	params:
-		inprefix="snp_filtered/{sample}",
+		inprefix="ref_alt/{sample}",
 		oprefix="individual_stats/{sample}"
 	benchmark:                 
 		"filter_benchmarks/individual_stats/{sample}.txt"
@@ -152,7 +173,7 @@ rule individual_call_rate_visualization:
 	shell:
 		"python bin/individual_call_rate_visualization.py {input.imiss} {output.png}"
 
-#PLINK filter (mind) -- Filters individuals based on specified call rate.  Individuals missing more than given proportion of their genotypes will be filtered out of the dataset.
+#PLINK filter (mind) -- Filters individuals based on specified call rate.  Individuals missing more than given proportion of their genotypes will be filtered out of the set.
 #Python script (individual_filtered_log_parsing.py) -- parses output logfile for important metadata and saves to csv in /filter_logs directory.
 #Input File Location: /snp_filtered/
 #Output File Location: /individual_filtered
