@@ -1,6 +1,12 @@
+DATA = ['227234.161117.12083.100_B', '58336.161117.127.100_B',   '777962.161117.1681.100_A', '58336.161117.1062.100_C' , '58336.161117.7744.100_A',  '777962.161117.417.100_B']
+
 rule targ:
 	input:
-		jag = expand("chrsplit/170112_merged.chr{chr}.bed", chr = list(range(1,34)))
+		jag = expand("correct_sex/{chips}.bed", chips=DATA), #runs this whole process for every assay up to merging. 
+		#jag = expand("duplicates_filtered/{chips}.ped", chips=DATA), #runs this whole process for every assay up to merging. 
+
+
+
 
 map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_HD_161214.map",'227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map",'58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map",'76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
 #This map dictionary should be able to remain the same, and we can add new maps for whichever new assays become available in future datasets
@@ -31,19 +37,20 @@ rule filter_duplicate_individuals:
 		ped = "duplicates_filtered/{sample}.ped"
 	shell:
 		"python bin/duplicate_filter.py {input.id} {output.dup} {input.ped} {output.ped}"
-
 #Python Script (duplicate_logging.py) reads the list of duplicated ids produced in filter_duplicate_individuals rule, counts lines, and writes to specified csv that will serve as logging for the rest of the filtering process. 
 #Input File Location: raw_genotypes/dup_ids/
 #Output File Location: filter_logs/
 #output File Type: (.csv)
 rule create_filter_log:
-        input:
-                ped="duplicates_filtered/{sample}.ped",
-                log = "duplicates_filtered/dup_ids/{sample}.txt"
-        output:
-                csv = "filter_logs/{sample}.csv"
-        shell:
-                "python bin/duplicate_logging.py {input.log} {output.csv}"
+	input:
+		ped="duplicates_filtered/{sample}.ped",
+		log = "duplicates_filtered/dup_ids/{sample}.txt"
+	output:
+		csv = "filter_logs/{sample}.csv"
+	shell:
+		"python bin/duplicate_logging.py {input.log} {output.csv}"
+
+
 
 #Dictionaries: This rule takes .map and .ped inputs from dictionaries based on specified output 'wildcard' which is the name of the assay.  
 #PLINK command (freq) -- Determines call rates for each variant in dataset and returns how many times each snp appears in every assay
@@ -55,8 +62,7 @@ rule variant_stats:
 	input:
 		map = mapdicter,
 		dup = "duplicates_filtered/dup_ids/{sample}.txt",
-		input = "duplicates_filtered/{sample}.ped",
-		log = "filter_logs/{sample}.csv",
+		input = "duplicates_filtered/{sample}.ped"
 	params:
 		inprefix = "duplicates_filtered/{sample}",
 		oprefix = "snp_stats/{sample}"
@@ -64,8 +70,6 @@ rule variant_stats:
 		"filter_benchmarks/variant_stats/{sample}.txt"
 	output: 
 		frq = "snp_stats/{sample}.frq",
-		log = "snp_stats/{sample}.log",
-		hh = "snp_stats/{sample}.hh"
 	shell:
 		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --nonfounders --freq --out {params.oprefix}" 
 
@@ -96,15 +100,15 @@ rule snp_call_rate_visualization:
 rule filter_variants:
 	input:	
 		map = mapdicter,
-		dup = "duplicates_filtered/dup_ids/{sample}.txt",
-                input = "duplicates_filtered/{sample}.ped",
+		id = "duplicates_filtered/dup_ids/{sample}.txt",
+		ped = "duplicates_filtered/{sample}.ped",
 		stats = "snp_stats/{sample}.frq",
-		csv = "filter_logs/{sample}.csv",
 		png = "snp_stats/figures/{sample}.snp_call_rate.png"
 	params:
 		inprefix = "duplicates_filtered/{sample}",
 		oprefix="snp_filtered/{sample}",
-		logprefix="filter_logs/{sample}"
+		logprefix="filter_logs/{sample}",
+		csv = "filter_logs/{sample}.csv"
 	benchmark:                 
 		"filter_benchmarks/filter_variants/{sample}.txt"
 	output:
@@ -113,7 +117,7 @@ rule filter_variants:
 		fam="snp_filtered/{sample}.fam",
 		log="snp_filtered/{sample}.log"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {input.csv}"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {params.csv}"
 
 rule convert_chip2seq:
 	input:
@@ -180,15 +184,14 @@ rule individual_call_rate_visualization:
 #Output: output file suffixes will be (.bed, .bim, .fam, .irem, .log, .nosex)
 
 rule filter_individuals:
-        input:
-        	rules.create_filter_log.output,
-		csv="filter_logs/{sample}.csv",
-		bed="snp_filtered/{sample}.bed",
+	input:
+		bed="ref_alt/{sample}.bed",
 		imiss="individual_stats/{sample}.imiss",
 		png="individual_stats/figures/{sample}.individual_call_rate.png"
 	params:
-                inprefix="snp_filtered/{sample}",
-                oprefix="individual_filtered/{sample}",
+		inprefix="ref_alt/{sample}",
+		csv="filter_logs/{sample}.csv",
+		oprefix="individual_filtered/{sample}",
 	benchmark:                 
 		"filter_benchmarks/filter_individuals/{sample}.txt"
 	output:
@@ -198,7 +201,7 @@ rule filter_individuals:
 		log="individual_filtered/{sample}.log"
 		
 	shell:
-		"plink --bfile {params.inprefix} --cow --mind .1 --keep-allele-order --make-bed --out {params.oprefix}; python bin/individual_filtered_log_parsing.py {output.log} {input.csv}"
+		"plink --bfile {params.inprefix} --cow --mind .1 --keep-allele-order --make-bed --out {params.oprefix}; python bin/individual_filtered_log_parsing.py {output.log} {params.csv}"
 
 #Gathers statistics on individual Hardy Weinberg Equilibrium (reports HWE P value at each locus)
 #Input File Location: /individual_filtered/
@@ -207,10 +210,11 @@ rule filter_individuals:
 
 rule hwe_stats:
 	input:
-		csv="filter_logs/{sample}.csv",
 		bed="individual_filtered/{sample}.bed"
 	params:
 		inprefix="individual_filtered/{sample}",
+		csv="filter_logs/{sample}.csv",
+
 		oprefix="hwe_stats/{sample}"
 	benchmark:                 
 		"filter_benchmarks/hwe_stats/{sample}.txt"
@@ -236,11 +240,11 @@ rule filter_hwe_variants:
 	input:
 		bed="individual_filtered/{sample}.bed",
 		stats="hwe_stats/{sample}.hwe",
-		csv="filter_logs/{sample}.csv",
 		png="hwe_stats/figures/{sample}.hwe_pvalues.png"
 	params: 
 		inprefix="individual_filtered/{sample}",
-		oprefix="hwe_filtered/{sample}"
+		oprefix="hwe_filtered/{sample}",
+		csv="filter_logs/{sample}.csv"
 	benchmark:                 
 		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
@@ -249,7 +253,7 @@ rule filter_hwe_variants:
 		fam="hwe_filtered/{sample}.fam",
 		log="hwe_filtered/{sample}.log"
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.00000001 --make-bed --out {params.oprefix}; python bin/hwe_log_parsing.py {output.log} {input.csv}"
+		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.00000001 --make-bed --out {params.oprefix}; python bin/hwe_log_parsing.py {output.log} {params.csv}"
 
 #PLINK function (impute-sex) looks at sex provided by ped file, and at X chromosome heterozygosity (and y chromosome variants if provided), and determines whether an animal is male, female, or unknown. If sex from ped file is unknown, this will impute the sex if possible, and write that into the new bed file that it produces. 
 #Python Scripts: (missexed_animals_filter.py) reads the .sexcheck file produced by impute sex function.  If an individual's sex is changed from known M/F to the opposite sex, it's ID will be written to the {sample}.missexed_animals.txt file, and removed in subsequent step.  (missexed_animals_filter_logging.py) will count lines of filter output, and write to the assay's csv log file.  
@@ -259,11 +263,11 @@ rule filter_hwe_variants:
 rule impute_sex:
 	input:
 		bed="hwe_filtered/{sample}.bed",
-		csv="filter_logs/{sample}.csv"
 	params:
 		logprefix="filter_logs/{sample}",
 		inprefix="hwe_filtered/{sample}",
-		oprefix="sex_impute/{sample}"
+		oprefix="sex_impute/{sample}",
+		csv="filter_logs/{sample}.csv"
 	benchmark:
 		"filter_benchmarks/impute_sex/{sample}.txt"
 	output:
@@ -274,7 +278,7 @@ rule impute_sex:
 		sexcheck="sex_impute/{sample}.sexcheck",
 		txt="sex_impute/{sample}.missexed_animals.txt"
 	shell:
-		"plink --bfile {params.inprefix} --cow --keep-allele-order --impute-sex ycount --make-bed --out {params.oprefix}; python bin/missexed_animals_filter.py {output.sexcheck} {output.txt}; python bin/missexed_animals_filter_logging.py {output.txt} {output.log} {input.csv}" #{params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --keep-allele-order --impute-sex ycount --make-bed --out {params.oprefix}; python bin/missexed_animals_filter.py {output.sexcheck} {output.txt}; python bin/missexed_animals_filter_logging.py {output.txt} {output.log} {params.csv}" #{params.logprefix}.csv"
 
 #PLINK function (remove) takes "sex_impute/{sample}.missexed_animals.txt" and produces new bed file without listed IDs, removing missexed animals
 #Input File Locations: sex_impute/
@@ -299,7 +303,6 @@ rule remove_missexed_animals:
 
 #This list contains the different file names that will be merged together.  
 DATA =['139977.170112.2326.GGPHDV3', '227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '30105.170112.2500.GGPLDV4', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD' ]
-
 #Python Script (file_list_maker.py) searches the correct_sex sub-directory for all of the files made with a .bed suffix, and then writes the file names to a .txt file (allfiles.txt)
 #PLINK function (merge-list) takes this list as an input and merges the different files into a single .bed file
 #Input File Locations: correct_sex/
@@ -349,89 +352,6 @@ rule split_chromosomes:
 		log = "chrsplit/170112_merged.chr{chr}.log"
 	shell:
 		"(plink --bfile {params.inprefix}  --keep-allele-order --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
-
-
-#rule eagle:
-#        input:
-#                bed = "chrsplit/{sample}.chr{chr}.bed",                
-#		bim = "chrsplit/{sample}.chr{chr}.bim",
-#                fam = "chrsplit/{sample}.chr{chr}.fam",
-#                log = "chrsplit/{sample}.chr{chr}.log"
-#        benchmark:
-#		"filter_benchmarks/eagle_phasing/{sample}.chr{chr}.txt"
-#	log:
-#		"snake_logs/eagle_phasing/{sample}.chr{chr}.log"
-#	params: 
-#		inprefix ="chrsplit/{sample}.chr{chr}",
-#                oprefix = "eagle_phased/{sample}.chr{chr}"
-#	threads: 16
-#	output:
-#                sample = "eagle_phased/{sample}.chr{chr}.sample",
-#                haps = "eagle_phased/{sample}.chr{chr}.haps.gz"
-
-##	shell:
-#		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp .95 --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.oprefix}) > {log}"
-
-
-#rule eagle_to_vcf:
-#	input:
-#		haps = "eagle_phased/{sample}.chr{chr}.haps.gz",
-#		sample = "eagle_phased/{sample}.chr{chr}.sample"
-#	params:
-#		inprefix = "eagle_phased/{sample}.chr{chr}",
-#		oprefix = "eagle_vcfs/{sample}.chr{chr}"
-#	benchmark:
-#		"filter_benchmarks/eagle_to_vcf/{sample}.chr{chr}.benchmark.txt"
-#	log:
-#		"snake_logs/eagle_to_vcf/{sample}.chr{chr}.log"
-#	output:
-#		vcf = "eagle_vcfs/{sample}.chr{chr}.phased.vcf",
-#		log = "eagle_vcfs/{sample}.chr{chr}.log"
-#
-#	shell: 
-#		"(guzip {input.haps}; shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
-
-
-#rule vcf_to_plink:
-#	input:
-#		vcf = "eagle_vcfs/{sample}.chr{chr}.phased.vcf"
-#	params:
-#		oprefix = "eagle_plink/{sample}.chr{chr}"
-#	benchmark:
-#		"filter_benchmarks/vcf_to_plink/{sample}.chr{chr}.benchmark.txt"
-#	log:
-#		"snake_logs/vcf_to_plink/{sample}.chr{chr}.log"
-#	output:
-#		bed = "eagle_plink/{sample}.chr{chr}.phased.bed",
-#		bim = "eagle_plink/{sample}.chr{chr}.phased.bim",
-#		fam = "eagle_plink/{sample}.chr{chr}.phased.fam",
-#		log = "eagle_plink/{sample}.chr{chr}.phased.log"
-#	shell:
-#		"plink --vcf {input.vcf} --cow --keep-allele-order --make-bed --out {params.oprefix}"	
-
-#rule run_shapeit:
-#	input:
-#		bed = "chrsplit/{sample}.{chr}.bed",
-		#bim = "chrsplit/{sample}.{chr}.bim",
-		#fam = "chrsplit/{sample}.{chr}.fam"
-#	params:
-#		inprefix = "chrsplit/{sample}.chr",
-#		oprefix="shapetest/{sample}.chr"
-#	output:
-#		haps = "shapetest/{sample}.{chr}.phased.haps",
-#		sample = "shapetest/{sample}.{chr}.phased.sample"
-#	shell:
-#		"for chr in $(seq 1 30); do shapeit --input-bed {params.inprefix}$chr.bed {params.inprefix}$chr.bim {params.inprefix}$chr.fam --duohmm --output-max {params.oprefix}$chr.phased.haps {params.oprefix}$chr.phased.sample; done"
-		
-
-
-
-
-
-
-
-
-
 
 
 
