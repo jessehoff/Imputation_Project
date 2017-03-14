@@ -99,12 +99,12 @@ rule filter_variants:
 		dup = "duplicates_filtered/dup_ids/{sample}.txt",
                 input = "duplicates_filtered/{sample}.ped",
 		stats = "snp_stats/{sample}.frq",
-		csv = "filter_logs/{sample}.csv",
 		png = "snp_stats/figures/{sample}.snp_call_rate.png"
 	params:
 		inprefix = "duplicates_filtered/{sample}",
 		oprefix="snp_filtered/{sample}",
-		logprefix="filter_logs/{sample}"
+		logprefix="filter_logs/{sample}",
+		csv = "filter_logs/{sample}.csv"
 	benchmark:                 
 		"filter_benchmarks/filter_variants/{sample}.txt"
 	output:
@@ -113,7 +113,7 @@ rule filter_variants:
 		fam="snp_filtered/{sample}.fam",
 		log="snp_filtered/{sample}.log"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {input.csv}"
+		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {params.csv}"
 
 
 
@@ -161,13 +161,13 @@ rule individual_call_rate_visualization:
 rule filter_individuals:
         input:
         	rules.create_filter_log.output,
-		csv="filter_logs/{sample}.csv",
 		bed="snp_filtered/{sample}.bed",
 		imiss="individual_stats/{sample}.imiss",
 		png="individual_stats/figures/{sample}.individual_call_rate.png"
 	params:
                 inprefix="snp_filtered/{sample}",
                 oprefix="individual_filtered/{sample}",
+		csv="filter_logs/{sample}.csv"
 	benchmark:                 
 		"filter_benchmarks/filter_individuals/{sample}.txt"
 	output:
@@ -177,7 +177,7 @@ rule filter_individuals:
 		log="individual_filtered/{sample}.log"
 		
 	shell:
-		"plink --bfile {params.inprefix} --cow --mind .1 --keep-allele-order --make-bed --out {params.oprefix}; python bin/individual_filtered_log_parsing.py {output.log} {input.csv}"
+		"plink --bfile {params.inprefix} --cow --mind .1 --keep-allele-order --make-bed --out {params.oprefix}; python bin/individual_filtered_log_parsing.py {output.log} {params.csv}"
 
 #Gathers statistics on individual Hardy Weinberg Equilibrium (reports HWE P value at each locus)
 #Input File Location: /individual_filtered/
@@ -186,7 +186,6 @@ rule filter_individuals:
 
 rule hwe_stats:
 	input:
-		csv="filter_logs/{sample}.csv",
 		bed="individual_filtered/{sample}.bed"
 	params:
 		inprefix="individual_filtered/{sample}",
@@ -215,11 +214,11 @@ rule filter_hwe_variants:
 	input:
 		bed="individual_filtered/{sample}.bed",
 		stats="hwe_stats/{sample}.hwe",
-		csv="filter_logs/{sample}.csv",
 		png="hwe_stats/figures/{sample}.hwe_pvalues.png"
 	params: 
 		inprefix="individual_filtered/{sample}",
-		oprefix="hwe_filtered/{sample}"
+		oprefix="hwe_filtered/{sample}",
+		csv="filter_logs/{sample}.csv",
 	benchmark:                 
 		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
@@ -228,7 +227,7 @@ rule filter_hwe_variants:
 		fam="hwe_filtered/{sample}.fam",
 		log="hwe_filtered/{sample}.log"
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 0.00000001 --make-bed --out {params.oprefix}; python bin/hwe_log_parsing.py {output.log} {input.csv}"
+		"plink --bfile {params.inprefix} --cow --nonfounders  --keep-allele-order --hwe 1e-20 --make-bed --out {params.oprefix}; python bin/hwe_log_parsing.py {output.log} {params.csv}"
 
 #PLINK function (impute-sex) looks at sex provided by ped file, and at X chromosome heterozygosity (and y chromosome variants if provided), and determines whether an animal is male, female, or unknown. If sex from ped file is unknown, this will impute the sex if possible, and write that into the new bed file that it produces. 
 #Python Scripts: (missexed_animals_filter.py) reads the .sexcheck file produced by impute sex function.  If an individual's sex is changed from known M/F to the opposite sex, it's ID will be written to the {sample}.missexed_animals.txt file, and removed in subsequent step.  (missexed_animals_filter_logging.py) will count lines of filter output, and write to the assay's csv log file.  
@@ -237,12 +236,12 @@ rule filter_hwe_variants:
 ##Output: output file suffixes will be (.bed, .bim, .fam, .log, .sexcheck, .missexed_animals.txt)
 rule impute_sex:
 	input:
-		bed="hwe_filtered/{sample}.bed",
-		csv="filter_logs/{sample}.csv"
+		bed="hwe_filtered/{sample}.bed"
 	params:
 		logprefix="filter_logs/{sample}",
 		inprefix="hwe_filtered/{sample}",
-		oprefix="sex_impute/{sample}"
+		oprefix="sex_impute/{sample}",
+		csv="filter_logs/{sample}.csv"
 	benchmark:
 		"filter_benchmarks/impute_sex/{sample}.txt"
 	output:
@@ -253,7 +252,7 @@ rule impute_sex:
 		sexcheck="sex_impute/{sample}.sexcheck",
 		txt="sex_impute/{sample}.missexed_animals.txt"
 	shell:
-		"plink --bfile {params.inprefix} --cow --keep-allele-order --impute-sex ycount --make-bed --out {params.oprefix}; python bin/missexed_animals_filter.py {output.sexcheck} {output.txt}; python bin/missexed_animals_filter_logging.py {output.txt} {output.log} {input.csv}" #{params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --keep-allele-order --impute-sex ycount --make-bed --out {params.oprefix}; python bin/missexed_animals_filter.py {output.sexcheck} {output.txt}; python bin/missexed_animals_filter_logging.py {output.txt} {output.log} {params.csv}" #{params.logprefix}.csv"
 
 #PLINK function (remove) takes "sex_impute/{sample}.missexed_animals.txt" and produces new bed file without listed IDs, removing missexed animals
 #Input File Locations: sex_impute/
