@@ -18,13 +18,13 @@ metadata = infile.split('.')
 action = ['HWE Filtering Step']
 #Regular expressions for locating metadata in log file
 #assay = re.findall(r'individual_filtered/([\w_]+)\n', log) #Locates assay ID
-hwe = re.findall(r'--(hwe\s*[\w.]+)\n', log)#Value of hwe filter
+hwe = re.findall(r'--(hwe\s+\S+)\n', log)#Value of hwe filter
 rem = re.findall(r'([0-9]+) variants removed', log)#Number of variants removed by filter
 start = re.findall(r'([\w]+) variants loaded from ', log)#Number of variants loaded before filtering
 space = [' ']
 time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',log)
-#Concatenates regular expressions above into "stats" list 
-stats = action + hwe + rem + start 
+#Concatenates regular expressions above into "stats" list
+stats = action + hwe + rem + start
 stats.insert(0,metadata[3])
 
 #Calculates proportion of variants removed compared to total then appends to "stats"
