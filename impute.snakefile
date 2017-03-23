@@ -9,12 +9,8 @@ def chunks(end):
 
 rangedict = {'1':chunks(158322647),'2':chunks(136914030),'3':chunks(121412973), '4':chunks(120786530), '5':chunks(121186724), '6':chunks(119454666), '7':chunks(112628884), '8':chunks(113380773), '9':chunks(105701306), '10':chunks(104301732), '11':chunks(107282960), '12':chunks(91155612), '13':chunks(84230359), '14':chunks(84628243), '15':chunks(85272311), '16':chunks(81720984), '17':chunks(75149392), '18':chunks(65999195), '19':chunks(64044783), '20':chunks(71992748), '21':chunks(71594139), '22':chunks(61379134), '23':chunks(52467978), '24':chunks(62685898), '25':chunks(43879707), '26':chunks(51680135), '27':chunks(45402893), '28':chunks(46267578), '29':chunks(51504286)}
 
-#def chrchunker(WC):
-#        return rangedict[WC.chr][int(WC.chunk)[0:]]
-
 def chrchunker(WC):
-    WC = str(WC)
-    return rangedict[WC[0:]]
+        return rangedict[WC.chr][int(WC.chunk)]
 
 DATA =['227234.170112.325.GGPF250', '26504.170112.3126.GGPLDV3', '58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT','777962.170127.483.HD']
 IMPREFS1 =['58336.170112.315.SNP50A', '58336.170112.335.SNP50B', '58336.170112.3399.SNP50C', '76999.170112.3498.GGP90KT']
@@ -26,13 +22,13 @@ targfiles=[]
 for chr in rangedict.keys():
     chunkcounter=0
     for chunk in rangedict.get(chr):
-        chunkcounter = chunkcounter+1
+        chunkcounter = chunkcounter
         file = 'imprun1/imp_round1.chr'+chr+'.'+str(chunkcounter)+'.phased.impute2'
         targfiles.append(file)
-
+#  "imprun1/imp_round1.chr{chr}.{chunk}.phased.impute2"
 rule targ:
 	input:
-        targ=targfiles
+        	targ=targfiles[:1]
         #targ = expand("impute_input/{sample}.chr{chr}.phased.gen.gz", sample = DATA, chr = list(range(1,30)))
 
 
@@ -77,24 +73,29 @@ rule impute_input:
         legend = "impute_input/{sample}.chr{chr}.phased.legend.gz",
         hap = "impute_input/{sample}.chr{chr}.phased.hap.gz",
         gen = "impute_input/{sample}.chr{chr}.phased.gen.gz",
-        sample = "impute_input/{sample}.chr{chr}.phased.gen.sample"
+        #sample = "impute_input/{sample}.chr{chr}.phased.gen.sample"
     shell:
-        "(perl vcf2impute_legend_haps.pl -vcf {input.vcf} -leghap {params.oprefix} -chr {chr}; perl vcf2impute_gen.pl -vcf {input.vcf} -gen {params.genfix} -chr {chr}) > {log}"
+        "(perl bin/vcf2impute_legend_haps.pl -vcf {input.vcf} -leghap {params.oprefix} -chr {chr}; perl bin/vcf2impute_gen.pl -vcf {input.vcf} -gen {params.genfix} -chr {chr}) > {log}"
+#def gener(WC):
+#	genslist = []
+#	for i in IMPGENS1:
+#		genslist.append('impute_input/' + i + '.chr' + WC.chr + '.phased.gen.gz')
+#	return genslist
 
 rule run_impute2_round1:
         input:
-                haps=expand("impute_input/{sample}.chr{chr}.phased.hap.gz", sample=IMPREFS1, chr = list(range(1,30))),
-                legend=expand("impute_input/{sample}.chr{chr}.phased.legend.gz", sample=IMPREFS1, chr = list(range(1,30))),
-                sample=expand("impute_input/{sample}.chr{chr}.phased.gen.sample", sample = IMPGENS1, chr = list(range(1,30))),
-                gens=expand("impute_input/{sample}.chr{chr}.phased.gen.gz", sample = IMPGENS1, chr = list(range(1,30))),
-                maps=expand("impute_maps/imputemap.chr{chr}.map", chr = list(range(1,30)))
+                haps=expand("impute_input/{sample}.chr{{chr}}.phased.hap.gz", sample=IMPREFS1) ,
+                legend=expand("impute_input/{sample}.chr{{chr}}.phased.legend.gz", sample=IMPREFS1),
+                gens= expand("impute_input/{sample}.chr{{chr}}.phased.gen.gz", sample = IMPGENS1),
+                maps="impute_maps/imputemap.chr{chr}.map"
         params:
-                chunk= rangedict[{chr}][0:]
+                chunk= chrchunker
         log:
                 "logs/imprun1/imp_round1.chr{chr}.{chunk}.log"
         benchmark:
                 "benchmarks/imprun1/imp_round1.chr{chr}.{chunk}.log"
         output:
-		      "imprun1/imp_round1.chr{chr}.{chunk}.phased.impute2"
+                imputed="imprun1/imp_round1.chr{chr}.{chunk}.phased.impute2",
+                summary="imprun1/imp_round1.chr{chr}.{chunk}.phased.impute2_summary"
         shell:
-                "(impute2 -merge_ref_panels -m {input.maps} -h {input.haps} -l {input.legend} -use_prephased_g -known_haps_g {input.gens} -int {params.chunk} -Ne 100 -o {output}) > {log}"
+                "(impute2 -merge_ref_panels -m {input.maps} -h {input.haps} -l {input.legend} -use_prephased_g -known_haps_g {input.gens} -int {params.chunk} -Ne 100 -o {output.imputed}) > {log}"
