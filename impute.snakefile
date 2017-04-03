@@ -29,8 +29,8 @@ for chr in rangedict.keys():
 
 rule targ:
 	input:
-		targ=targfiles
-
+		#targ=targfiles #This creates the files for the first round of imputation.  Will maybe have to make another one for subsequent rounds?
+		targ= expand("imprun1/imp_round1.chr{chr}.phased.impute2", chr=list(range(1,30)))
 
 rule decompress:
 	input:
@@ -91,11 +91,35 @@ rule run_impute2_round1:
 	log:
 		"logs/imprun1/imp_round1.chr{chr}.{chunk}.log"
 	benchmark:
-		"benchmarks/imprun1/imp_round1.chr{chr}.{chunk}.log"
+		"benchmarks/imprun1/imp_round1.chr{chr}.{chunk}.benchmark.txt"
 	output:
 		imputed="imprun1/imp_round1.chr{chr}.{chunk}.phased.impute2",
 		summary="imprun1/imp_round1.chr{chr}.{chunk}.phased.impute2_summary"
 	shell:
 		"(impute2 -merge_ref_panels -m {input.maps} -h {input.haps} -l {input.legend} -use_prephased_g -known_haps_g {input.gens} -int {params.chunk} -Ne 200 -o {output.imputed}) > {log}"
 
+filedict = {}
+for chr in rangedict.keys():
+    chunkcounter=-1
+    flist = []
+    for chunk in rangedict.get(chr):
+        chunkcounter = chunkcounter+1
+        file = 'imprun1/imp_round1.chr'+chr+'.'+str(chunkcounter)+'.phased.impute2'
+        flist.append(file)
+    filedict[chr]=flist
+
+def chrfiles(chrom):
+    return filedict[chrom.chr]
+
+
 rule cat_chunks:
+	input:
+		chunks = chrfiles
+	log:
+		"logs/cat_chunks/imp_round1.chr{chr}.log"
+	benchmark:
+		"benchmarks/cat_chunks/imp_round1.chr{chr}.benchmark.txt"
+	output:
+		cat = "imprun1/imp_round1.chr{chr}.phased.impute2"
+	shell:
+		"(cat {input.chunks} > {output.cat}) > {log}"
