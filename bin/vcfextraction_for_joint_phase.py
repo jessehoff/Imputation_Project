@@ -11,10 +11,13 @@ famfile = sys.argv[1]
 imputeanimal = []
 fam = open(famfile)
 for i in fam:
-    imputeanimal.append(i.split()[0])
-samples = glob.glob('../hwe_filtered/*.100*.fam')
-samples=sorted(samples, key=lambda sample: int(sample.split('/')[2].split('.')[0]),reverse=True)
-samples
+    imputeanimal.append(i.split()[1])
+print(imputeanimal[:10])
+
+samples = glob.glob('../dataprepper/testset_data/*hol_testset*.fam')
+print(samples[1].split('/')[3].split('.')[2])
+samples=sorted(samples, key=lambda sample: int(sample.split('/')[3].split('.')[2]),reverse=True)
+print(samples[:10])
 
 peranimal = defaultdict(list)
 for idfile in samples:
@@ -28,13 +31,12 @@ arrayset = defaultdict(list)
 for i in imputeanimal:
     arrayset[peranimal[i][0]].append(i)
 
-prin('check *.100*')
-maps = glob.glob('../hwe_filtered/*.100*.bim')
+maps = glob.glob('../dataprepper/testset_data/*hol_testset*.bim')
 maps
 
 
 for mapfile in maps:
-    name = 'phased_' +  mapfile.lstrip("../hwe_filtered/").rstrip('.bim') + '.vcfregion'
+    name = 'phased_' +  mapfile.lstrip("../dataprepper/testset_data/").rstrip('.bim') + '.vcfregion'
     print(name)
     filout = open(name,'w')
     with open(mapfile) as fp:
@@ -49,7 +51,7 @@ for mapfile in maps:
 
 for k,v in arrayset.items():
     print(k)
-    name = 'phased_' +  k.lstrip("../hwe_filtered/").rstrip('.fam') + '.keepvcf'
+    name = 'phased_' +  k.lstrip("../dataprepper/testset_data/").rstrip('.fam') + '.keepvcf'
     print(name)
     filout = open(name,'w')
     for i in v:
