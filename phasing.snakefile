@@ -3,7 +3,8 @@ DATA =['hol_testset.F250.197', 'hol_testset.GGPLD.788', 'hol_testset.HD.197', 'h
 
 rule targ:
 	input:
-		jag = expand("eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz",sample = DATA,  chr = list(range(1,31)))
+		#jag = expand("eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz",sample = DATA,  chr = list(range(28,31)))
+		jag = expand("vcf_to_assays/{sample}.1.chr{chr}.vcf",sample = DATA,  chr = list(range(1,31))) #phases in parallel then extracts
 
 
 rule split_chromosomes:
@@ -110,23 +111,25 @@ rule run_eagle_merged:
 		"logs/eaglemerged/hol_testset.merge.{run}.chr{chr}.log"
 	output:
 		sample = "eaglemerged/hol_testset.merge.{run}.chr{chr}.sample",
-		haps = "eaglemerged/hol_testset.merge.{run}.chr{chr}.haps.gz",
+		haps = "eaglemerged/hol_testset.merge.{run}.chr{chr}.haps.gz"
 	shell:
-		"(eagle --bfile={params.bed}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .95 --numThreads 16 --outPrefix {params.out})> {log} "
+		"(eagle --bfile={params.bed}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .99 --numThreads 16 --outPrefix {params.out})> {log} "
 
 rule decompress:
 		input:
 			gzhaps = "eaglemerged/{sample}.chr{chr}.haps.gz"
 		log:
 			"logs/decompress/{sample}.chr{chr}.log"
+		benchmark:
+			"benchmarks/decompress/{sample}.chr{chr}.benchmark.txt"
 		output:
 			haps = "eaglemerged/{sample}.chr{chr}.haps"
 		shell: 
-			"(gunzip -c {input.gzhaps} > {output.haps}; rm eaglemerged/*.haps.gz) > {log}"
+			"(gunzip -c {input.gzhaps} > {output.haps}) > {log}"
 
 rule make_vcf:
 	input:
-		haps="eaglemerged/hol_testset.merge.{run}.chr{chr}.haps",
+		haps=temp("eaglemerged/hol_testset.merge.{run}.chr{chr}.haps"),
 	output:
 		vcf="makevcf/hol_testset.merge.{run}.chr{chr}.phased.vcf",
 		log="makevcf/logs/hol_testset.merge.{run}.chr{chr}.log"
@@ -151,3 +154,35 @@ rule bgzip_vcf:
 		"benchmarks/bgzipvcf/hol_testset.merge.{run}.chr{chr}"
 	shell:
 		"(bgzip {input.vcf}; tabix {output.vcfgz}) > {log};"
+		
+#make a script that does this and rule it
+import glob
+def keepmapvcf(shoein):
+        t = shoein.assay
+        name = [i for i in glob.glob('merged_chrsplit/phased*vcfregion') if t in i][0] #the file naming involves the number of sites in the genotype query, and so indicates which map to use.
+        return name
+def keepidsvcf(shoein):
+        t = shoein.assay
+        name = [i for i in glob.glob('merged_chrsplit/phased*keepvcf') if t in i][0]
+        return name
+
+
+
+
+rule vcf_to_assays: #filter the vcfs on a per assay basis
+	input:
+		vcfgz="makevcf/hol_testset.merge.{run}.chr{chr}.phased.vcf.gz",
+		index="makevcf/hol_testset.merge.{run}.chr{chr}.phased.vcf.gz.tbi",
+		keep_maps = keepmapvcf, 
+		keep_ids = keepidsvcf
+	benchmark:
+		"benchmarks/vcf_to_assays/{assay}.{run}.chr{chr}.benchmark.txt"
+	log:
+		"logs/vcf_to_assays/{assay}.{run}.chr{chr}.log"
+	output:
+		vcf = "vcf_to_assays/{assay}.{run}.chr{chr}.vcf",
+	shell:
+		"(bcftools view {input.vcfgz} -R {input.keep_maps}  -S {input.keep_ids} -o {output.vcf}) > {log}"
+
+
+
