@@ -7,14 +7,16 @@ from collections import defaultdict
 import sys
 
 famfile = sys.argv[1]
+run = famfile.split('.')[-3]
 
+print(run,' run\n')
 imputeanimal = []
 fam = open(famfile)
 for i in fam:
     imputeanimal.append(i.split()[1])
 print(imputeanimal[:10])
 
-samples = glob.glob('../dataprepper/testset_data/*hol_testset*.fam')
+samples = glob.glob('./dataprepper/testset_data/*hol_testset*.fam')
 print(samples[1].split('/')[3].split('.')[2])
 samples=sorted(samples, key=lambda sample: int(sample.split('/')[3].split('.')[2]),reverse=True)
 print(samples[:10])
@@ -31,12 +33,12 @@ arrayset = defaultdict(list)
 for i in imputeanimal:
     arrayset[peranimal[i][0]].append(i)
 
-maps = glob.glob('../dataprepper/testset_data/*hol_testset*.bim')
+maps = glob.glob('./dataprepper/testset_data/*hol_testset*.bim')
 maps
 
 
 for mapfile in maps:
-    name = 'phased_' +  mapfile.lstrip("../dataprepper/testset_data/").rstrip('.bim') + '.vcfregion'
+    name = 'merged_chrsplit/phased_' +  mapfile.lstrip("./dataprepper/test_data/").rstrip('.bim') +'.' +run + '' + '.vcfregion'
     print(name)
     filout = open(name,'w')
     with open(mapfile) as fp:
@@ -51,7 +53,7 @@ for mapfile in maps:
 
 for k,v in arrayset.items():
     print(k)
-    name = 'phased_' +  k.lstrip("../dataprepper/testset_data/").rstrip('.fam') + '.keepvcf'
+    name = 'merged_chrsplit/phased_' +  k.lstrip("./dataprepper/test_data/").rstrip('.fam')+'.' +run + '' + '.keepvcf'
     print(name)
     filout = open(name,'w')
     for i in v:
