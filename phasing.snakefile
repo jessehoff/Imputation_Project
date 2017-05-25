@@ -5,8 +5,9 @@ rule targ:
 	input:
 		#jag = expand("eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz",sample = DATA,  chr = list(range(28,31)))
 		#jag = expand("merged_chrsplit/hol_testset.merge.1.chr{chr}.bed", chr=list(range(1,31)))
-		jag = expand("vcf_to_assays/{sample}.1.chr{chr}.vcf",sample = DATA,  chr = list(range(1,30))) #phases in parallel then extracts
-
+		#jag = expand("vcf_to_assays/{sample}.1.chr{chr}.vcf",sample = DATA,  chr = list(range(22,23))) #phases in parallel then extracts animals on a per assay basis. Ran on 5/23, generated all results
+		#lege =expand("vcf_to_hap/{sample}.1.chr{chr}.legend.gz",sample = DATA,  chr = list(range(1,30))) #converts phased outputs to haps legend format
+		hapssam =expand("vcf_to_haps/{sample}.1.chr{chr}.hap.gz",sample = DATA,  chr = list(range(29,30))) #converts phased outputs to haps legend format
 
 rule split_chromosomes:
 	input:
@@ -107,14 +108,14 @@ rule merged_split_chrs:
 #		out="eaglemerged/hol_testset.merge.{run}.chr{chr}"
 #	threads: 16
 #	benchmark:
-#		"benchmarks/eaglemerged/hol_testset.merge.{run}.chr{chr}.benchmark.txt"
-#	log:
-#		"logs/eaglemerged/hol_testset.merge.{run}.chr{chr}.log"
-#	output:
-#		sample = "eaglemerged/hol_testset.merge.{run}.chr{chr}.sample",
-#		haps = "eaglemerged/hol_testset.merge.{run}.chr{chr}.haps.gz"
-#	shell:
-#		"(eagle --bfile={params.bed}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .99 --numThreads 16 --outPrefix {params.out})> {log} "
+# 		"benchmarks/eaglemerged/hol_testset.merge.{run}.chr{chr}.benchmark.txt"
+# 	log:
+# 		"logs/eaglemerged/hol_testset.merge.{run}.chr{chr}.log"
+# 	output:
+# 		sample = "eaglemerged/hol_testset.merge.{run}.chr{chr}.sample",
+# 		haps = "eaglemerged/hol_testset.merge.{run}.chr{chr}.haps.gz"
+# 	shell:
+# 		"(eagle --bfile={params.bed}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .99 --numThreads 16 --outPrefix {params.out})> {log} "
 
 rule decompress:
 		input:
@@ -188,5 +189,45 @@ rule vcf_to_assays: #filter the vcfs on a per assay basis
 	shell:
 		"(bcftools view {input.vcfgz} -R {input.keep_maps}  -S {input.keep_ids} -o {output.vcf}) > {log}"
 
-#snakemake -s phasing.snakefile   --cores 64  &> snakerun101.txt
+rule vcf_to_hap:
+	input:
+		vcf = "vcf_to_assays/{assay}.{run}.chr{chr}.vcf",
+	params:
+		chr = "{chr}",
+		oprefix ="vcf_to_hap/{assay}.{run}.chr{chr}"
+	benchmark:
+		"benchmarks/vcf_to_hap/{assay}.{run}.chr{chr}.benchmark.txt"
+	log:
+		"logs/vcf_to_haps/{assay}.{run}.chr{chr}.log"
+	output:
+		legend = "vcf_to_hap/{assay}.{run}.chr{chr}.legend.gz",
+		haps = "vcf_to_hap/{assay}.{run}.chr{chr}.hap.gz",
+		sample = "vcf_to_hap/{assay}.{run}.chr{chr}.samples"
+	shell:
+		"(bcftools convert   -h {params.oprefix}   {input.vcf}) > {log}"
+
+rule vcf_to_haps: #doesn't approrpriately name "haps" haps
+	input:
+		vcf = "vcf_to_assays/{assay}.{run}.chr{chr}.vcf",
+	params:
+		chr = "{chr}",
+		oprefix ="vcf_to_haps/{assay}.{run}.chr{chr}"
+	benchmark:
+		"benchmarks/vcf_to_haps/{assay}.{run}.chr{chr}.benchmark.txt"
+	log:
+		"logs/vcf_to_haps/{assay}.{run}.chr{chr}.log"
+	output:
+		hap = "vcf_to_haps/{assay}.{run}.chr{chr}.hap.gz",
+		sample = "vcf_to_haps/{assay}.{run}.chr{chr}.sample"
+	shell:
+		"(bcftools convert   {input.vcf} --hapsample {params.oprefix} ) > {log}"
+		#bcftools convert vcf_to_assays/hol_testset.F250.197.1.chr22.vcf --hapsample vcf_to_haps/test.del #produces .hap and .sample
+		#bcftools convert  --hapsample vcf_to_haps/test.del
+		#"(perl ./bin/vcf2impute_legend_haps.pl -vcf {input.vcf} -leghap {params.oprefix} -chr {params.chr}) 0 >{log}" 
+
+
+#perl ./bin/vcf2impute_legend_haps.pl -vcf vcf_to_assays/hol_testset.GGPLD.788.1.chr25.vcf -leghap vcf_to_haps/hol_testset.GGPLD.788.1.chr25 -chr 25 
+
+
+#snakemake -s phasing.snakefile   --cores 64  &> snakerun108.txt
 
