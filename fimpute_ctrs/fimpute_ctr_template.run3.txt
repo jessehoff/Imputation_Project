@@ -1,0 +1,10 @@
+title="hol_testset.run3.chr,";
+genotype_file="fimpute_genotypes/hol_testset.run3.chr,.fimpute";
+snp_info_file="fimpute_maps/run3.Chr,.txt";
+output_folder="fimpute_output/run3.Chr,_holtest";
+gp_thresh=0.1;
+parentage_test/off;
+save_hap_lib ;
+chmod = 777;
+njob=1;
+
