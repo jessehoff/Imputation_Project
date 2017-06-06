@@ -47,6 +47,8 @@ rule bed_to_vcf:
 	shell:
 		"(plink --bfile {params.inprefix}  --keep-allele-order --chr {params.chr} --recode vcf-iid --nonfounders --cow --out {params.oprefix})> {log}"
 
+#plink --bfile merged_chrsplit/hol_testset.merge.2.chr23.bed  --keep-allele-order --chr 23 --recode vcf-iid --nonfounders --cow --out unphased_vcf/hol_testset.run4.chr23
+
 #snakemake -s fimpute.snakefile   --cores 8 -np fimpute_per_chip/hol_testset.F250.197.run3.chr25.fimpute
 # &> snakerun108.txt
 colnums ={'hol_testset.F250.197':2, 'hol_testset.GGPLD.788': 4, 'hol_testset.HD.197' : 1, 'hol_testset.SNP50.788':3}
@@ -93,6 +95,7 @@ rule fimpute_map_make:
 		"fimpute_maps/run{run}.chr{chr}.txt"
 	shell:
 		"(python ./bin/fimpute_map_maker.py {input} {params.chrom} {output}) > {log}"
+		#python ./bin/fimpute_map_maker.py merged_chr 23 fimpute_maps/run4.chr24.txt
 		
 rule job_writer:
 	input:
@@ -112,18 +115,18 @@ rule run_fimpute:
 	log:
 		"logs/run_fimpute/{run}.{chr}.log"
 	benchmark:
-		"benchmarks/run_fimpute/.run{run}.{chr}.benchmark.txt"
+		"benchmarks/run_fimpute/run{run}.{chr}.benchmark.txt"
 	output :
 		"fimpute_output/run{run}.Chr{chr}.{sample}/genotypes_imp.txt"
 	shell:
 		"(FImpute {input.ctr}) > {log}"
 
 
+#snakemake -s fimpute.snakefile   --cores 8  fimpute_output/run3.Chr23.hol_testset/genotypes_imp.txt -r  -R fimpute_catter -np
 
 
 
 #perl ./bin/vcf2impute_legend_haps.pl -vcf vcf_to_assays/hol_testset.GGPLD.788.1.chr25.vcf -leghap vcf_to_haps/hol_testset.GGPLD.788.1.chr25 -chr 25 
 
 
-#snakemake -s phasing.snakefile   --cores 64  &> snakerun108.txt
 

@@ -1,6 +1,0 @@
-GGP90KT, Before Filtering Steps,  ,  , 76999,  ,  , 3498,  , 170112
-GGP90KT, Duplicate Individuals Removed,  ,  ,  ,  , 0, 3498, 0.0
-GGP90KT, SNP Filtering Step, geno .1, 913, 76987, 0.011859145050463066,  ,  ,  , Fri Feb  3 22:00:54 2017
-GGP90KT, Individual Filtering Step, mind .1,  ,  ,  , 0, 3498, 0.0, Fri Feb  3 22:01:19 2017
-GGP90KT, HWE Filtering Step, hwe 0.00000001, 658, 76000, 0.008657894736842106,  ,  ,  , Fri Feb  3 22:01:24 2017
-GGP90KT, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 7, 3498, 0.002001143510577473, Fri Feb  3 22:01:25 2017

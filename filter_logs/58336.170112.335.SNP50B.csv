@@ -1,6 +1,0 @@
-SNP50B, Before Filtering Steps,  ,  , 58336,  ,  , 335,  , 170112
-SNP50B, Duplicate Individuals Removed,  ,  ,  ,  , 0, 335, 0.0
-SNP50B, SNP Filtering Step, geno .1, 2450, 52563, 0.04661073378612332,  ,  ,  , Fri Feb  3 21:59:09 2017
-SNP50B, Individual Filtering Step, mind .1,  ,  ,  , 1, 335, 0.0029850746268656717, Fri Feb  3 21:59:19 2017
-SNP50B, HWE Filtering Step, hwe 0.00000001, 52, 50067, 0.0010386082649250004,  ,  ,  , Fri Feb  3 21:59:26 2017
-SNP50B, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 0, 334, 0.0, Fri Feb  3 21:59:29 2017

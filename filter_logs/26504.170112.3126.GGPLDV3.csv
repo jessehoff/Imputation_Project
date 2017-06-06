@@ -1,6 +1,0 @@
-GGPLDV3, Before Filtering Steps,  ,  , 26504,  ,  , 3126,  , 170112
-GGPLDV3, Duplicate Individuals Removed,  ,  ,  ,  , 1, 3126, 0.0003198976327575176
-GGPLDV3, SNP Filtering Step, geno .1, 1265, 26355, 0.04799848226143047,  ,  ,  , Fri Feb  3 21:59:20 2017
-GGPLDV3, Individual Filtering Step, mind .1,  ,  ,  , 22, 3125, 0.00704, Fri Feb  3 21:59:32 2017
-GGPLDV3, HWE Filtering Step, hwe 0.00000001, 138, 25054, 0.005508102498603017,  ,  ,  , Fri Feb  3 21:59:36 2017
-GGPLDV3, Missexed Animals Filtered, impute-sex ycount,  ,  ,  , 4, 3103, 0.0012890750886239124, Fri Feb  3 21:59:37 2017

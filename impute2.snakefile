@@ -8,7 +8,7 @@ def chunks(end):
 	return [str(i[0]+1)+ ' ' + str(i[1]) for i in parwise(range(0,end,5000000))]
 
 rangedict = {'1':chunks(158322647),'2':chunks(136914030),'3':chunks(121412973), '4':chunks(120786530), '5':chunks(121186724), '6':chunks(119454666), '7':chunks(112628884), '8':chunks(113380773), '9':chunks(105701306), '10':chunks(104301732), '11':chunks(107282960), '12':chunks(91155612), '13':chunks(84230359), '14':chunks(84628243), '15':chunks(85272311), '16':chunks(81720984), '17':chunks(75149392), '18':chunks(65999195), '19':chunks(64044783), '20':chunks(71992748), '21':chunks(71594139), '22':chunks(61379134), '23':chunks(52467978), '24':chunks(62685898), '25':chunks(43879707), '26':chunks(51680135), '27':chunks(45402893), '28':chunks(46267578), '29':chunks(51504286)} #, '30':chunks(143032828)}
-#describes the length of each chromsome so taht it can be chunked into equal sized chunks. 
+#describes the length of each chromsome so taht it can be chunked into equal sized chunks.
 
 def chrchunker(WC):
 	return rangedict[WC.chr][int(WC.chunk)]
@@ -41,9 +41,10 @@ print(targfiles[:10])
 rule targ:
 	input:
 		#targ=targfiles #This creates the f
-		#targ= expand("impute_input/{sample}.chr{chr}.phased.haplotypes", sample = IMPREFS,chr=list(range(1,30)))
-		targ = expand("impute2_chromosome/{sample}.chr{chr}.phased.imputed.gen", sample = IMPGENS, chr = list(range(28,29))) #troys seperate phased runner
-		#targ=targfiles
+		#targ= expand("impute_input/{sample}.chr{chr}.phased.haplotypes", sample = IMPREFS,chr=list(range(20,30)))
+		targ = expand("impute2_chromosome/{sample}.run1.chr{chr}.phased.imputed.gen", sample = IMPGENS, chr = list(range(1,30))) #troys seperate phased runner
+
+		#targ=targfiles[:10]
 
 #snakemake -s impute2.snakefile --cores 34  &> imputationrunone_02.txt
 
@@ -118,20 +119,26 @@ rule run_impute2_round2: #for parralel phasing
 		summary="impute2_imputed/{sample}.run{run}.chr{chr}.{chunk}.phased.impute2_summary"
 	shell:
 		"(impute2 -merge_ref_panels -m {input.maps} -h {input.hap} -l {input.legend} -use_prephased_g -known_haps_g {input.knownhaps} -int {params.chunk} -Ne 200 -o {output.imputed}) > {log}"
+		#-fill_holes
 
 
-filedict = {}
-for chr in rangedict.keys():
-	chunkcounter=-1
-	flist = []
-	for chunk in rangedict.get(chr):
-		chunkcounter = chunkcounter+1
-		file = 'impute2_imputed/'+sample+'.chr'+chr+'.'+str(chunkcounter)+'.phased.impute2'
-		flist.append(file)
-		filedict[chr]=flist
+print(sample)
+print('sample\n')
+sampledict = {}
+for sample in IMPGENS:
+	filedict = {}
+	for chr in rangedict.keys():
+		chunkcounter=-1
+		flist = []
+		for chunk in rangedict.get(chr):
+			chunkcounter = chunkcounter+1
+			file = 'impute2_imputed/'+sample+'.run1.chr'+chr+'.'+str(chunkcounter)+'.phased.impute2'
+			flist.append(file)
+			filedict[chr]=flist
+	sampledict[sample] = filedict
 
 def chrfiles(chrom):
-	return filedict[chrom.chr]
+	return sampledict[chrom.sample][chrom.chr]
 
 rule cat_chunks:
 	input:
@@ -140,17 +147,16 @@ rule cat_chunks:
 	params:
 		#star = "impute2_imputed/{sample}.chr{chr}.*.phased.impute2" What is wrong wit this appraoch
 	log:
-		"logs/cat_chunks/imp_round1.chr{chr}.log"
+		"logs/cat_chunks/{sample}.run1.chr{chr}.log"
 	benchmark:
-		"benchmarks/cat_chunks/{sample}.chr{chr}.benchmark.txt"
+		"benchmarks/cat_chunks/{sample}.run1.chr{chr}.benchmark.txt"
 	output:
-		cat = "impute2_chromosome/{sample}.chr{chr}.phased.imputed.gen"
+		cat = "impute2_chromosome/{sample}.run1.chr{chr}.phased.imputed.gen"
 	shell:
-		"(cat {input.chunks} > {output.cat}) > {log}; cp eagle_phased_assays/*.sample impute2_chromosome/"
-		
-		
+		"(cat {input.chunks} > {output.cat}) > {log};"# cp eagle_phased_assays/*.sample impute2_chromosome/"
+
+
 #maybe needed?
  #bcftools query -l ./vcf_to_assays/hol_testset.F250.197.1.chr10.vcf > ./vcf_to_assays/hol_testset.F250.197.1.samples
- 
-#perl ./bin/vcf2impute_legend_haps.pl -vcf vcf_to_assays/hol_testset.GGPLD.788.1.chr25.vcf -leghap vcf_to_haps/hol_testset.GGPLD.788.1.chr25 -chr 25 
 
+#perl ./bin/vcf2impute_legend_haps.pl -vcf vcf_to_assays/hol_testset.GGPLD.788.1.chr25.vcf -leghap vcf_to_haps/hol_testset.GGPLD.788.1.chr25 -chr 25
