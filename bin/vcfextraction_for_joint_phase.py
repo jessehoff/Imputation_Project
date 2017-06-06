@@ -9,6 +9,7 @@ import sys
 famfile = sys.argv[1]
 run = famfile.split('.')[-3]
 
+
 print(run,' run\n')
 imputeanimal = []
 fam = open(famfile)
@@ -16,13 +17,13 @@ for i in fam:
     imputeanimal.append(i.split()[1])
 print(imputeanimal[:10])
 
-samples = glob.glob('./dataprepper/testset_data/*hol_testset*.fam')
-print(samples[1].split('/')[3].split('.')[2])
-samples=sorted(samples, key=lambda sample: int(sample.split('/')[3].split('.')[2]),reverse=True)
-print(samples[:10])
+samples = glob.glob('testset_assays/*list1.fam')
+print(samples[1].split('/')[0].split('.')[0])
+samples=sorted(samples, key=lambda sample: samples[1].split('/')[1].split('.')[0],reverse=True)
+
 
 peranimal = defaultdict(list)
-for idfile in samples:
+for idfile in samples: #open each output assay and figure out where those animals camefrom
     temp = []
     with open(idfile) as fp:
         for line in fp:
@@ -33,13 +34,13 @@ arrayset = defaultdict(list)
 for i in imputeanimal:
     arrayset[peranimal[i][0]].append(i)
 
-maps = glob.glob('./dataprepper/testset_data/*hol_testset*.bim')
+maps = glob.glob('./testset_assays/*.list1*.bim')
 maps
 
 
-for mapfile in maps:
-    name = 'merged_chrsplit/phased_' +  mapfile.lstrip("./dataprepper/test_data/").rstrip('.bim') +'.' +run + '' + '.vcfregion'
-    print(name)
+for mapfile in maps: 
+    name = 'merged_chrsplit/phased_' +  mapfile[17:-10] +'.' +run + '' + '.vcfregion'
+    print(name,mapfile[17:-10])
     filout = open(name,'w')
     with open(mapfile) as fp:
         for line in fp:
@@ -49,12 +50,12 @@ for mapfile in maps:
     filout.close()
 
 
-
+#merged_chrsplit/phased_snp50.list1.run1.keepvcf
+#merged_chrsplit/phased_snp50.list1.run1.vcfregion
 
 for k,v in arrayset.items():
-    print(k)
-    name = 'merged_chrsplit/phased_' +  k.lstrip("./dataprepper/test_data/").rstrip('.fam')+'.' +run + '' + '.keepvcf'
-    print(name)
+    name = 'merged_chrsplit/phased_' +  k[15:-10]+'.list1.' +run + '' + '.keepvcf'
+    print(name,k[15:-10])
     filout = open(name,'w')
     for i in v:
         filout.write(''.join([i,'\n']))
