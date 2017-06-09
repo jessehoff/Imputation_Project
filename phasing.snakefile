@@ -1,6 +1,6 @@
 #CHROMOSOMES = list(range(1,31))
-DATA =['hol_testset.F250.197', 'hol_testset.GGPLD.788', 'hol_testset.HD.197', 'hol_testset.SNP50.788']
-#DATA =['f250', 'ggpld', 'hd', 'snp50'] #new file names
+#DATA =['hol_testset.F250.197', 'hol_testset.GGPLD.788', 'hol_testset.HD.197', 'hol_testset.SNP50.788']
+DATA =['f250', 'ggpld', 'hd', 'snp50'] #new file names -- these are files that have had ref-alt conversions
 
 rule targ:
 	input:
@@ -14,7 +14,7 @@ rule targ:
 		#jag = expand("eaglemerged/hol_testset.merge.run1.chr{chr}.sample", chr = list(range(1,30)))
 		# eaglemerged/hol_testset.merge.run{run}.chr{chr}.sample
 		# eaglemerged/hol_testset.merge.run{run}.chr{chr}.sample
-		jag = expand("eagle_phased_assays/{sample}.chr{chr}.run{run}.phased.haps.gz", sample = DATA, run =2, chr = list(range(1,30)))
+		jag = expand("eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.haps.gz", sample = DATA, run = 2, chr = list(range(1,30)))
 #snakemake -s phasing.snakefile   --cores 64 -np  &> snakerun108.txt
 #snakemake -s phasing.snakefile -p --forceall --cores 64 &> snake_logs/phasing_0603_01.txt ; tail -n 20  snake_logs/phasing_0603_01.txt
 hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
@@ -33,8 +33,9 @@ def runchoice(WC):
 	if r == '1':
 		location = run_dict[r] + '/hol_testset.merge.' + run + '.chr' + chrom +'.bed'
 	else:
-		location = run_dict[r] + samp + '.chr' + chrom + '.bed'
+		location = run_dict[r] + samp + '.list1.chr' + chrom + '.bed'
 	return location
+
 
 rule downsample:
 	params:
@@ -54,7 +55,7 @@ rule downsample:
 
 rule split_chromosomes:
 	input:
-		bed = expand( "testset_assays/{assay}.list1.bed", assay = DATA),
+		bed = expand("testset_assays/{assay}.list1.bed", assay = DATA),
 	params:
 		inprefix = "testset_assays/{sample}.list1",
 		oprefix = "assay_chrsplit/{sample}.list1.chr{chr}",
@@ -74,44 +75,31 @@ rule split_chromosomes:
 rule run_eagle_single_chrom:
 	input:
 		bed = runchoice
-		#bed = "assay_chrsplit/{sample}.chr{chr}.bed",
-		# bim = "assay_chrsplit/{sample}.chr{chr}.bim",
-		# fam = "assay_chrsplit/{sample}.chr{chr}.fam",
-		# log = "assay_chrsplit/{sample}.chr{chr}.log"
 	params:
-		inprefix = "assay_chrsplit/{sample}.chr{chr}",
-		oprefix = "eagle_phased_assays/{sample}.chr{chr}.phased"
+		inprefix = "assay_chrsplit/{sample}.list1.chr{chr}",
+		oprefix = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased"
 	benchmark:
 		"filter_benchmarks/eagle_phased_assays/{sample}.chr{chr}.benchmark.txt"
 	threads: 8
 	log:
 		"snake_logs/eagle_phased_assays/{sample}.chr{chr}.log"
 	output:
-		sample = "eagle_phased_assays/{sample}.chr{chr}.run{run}.phased.sample",
-		haps = "eagle_phased_assays/{sample}.chr{chr}.run{run}.phased.haps.gz"
+		sample = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.sample",
+		haps = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.haps.gz"
 	shell:
 		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp 1 --maxMissingPerIndiv 1 --numThreads 8 --outPrefix {params.oprefix}) > {log}"
 
-
-
-
-rule eagle_to_vcf:
-	input:
-		haps = "eagle_phased/170112_merged.chr{chr}.run{run}.haps",
-		sample = "eagle_phased/170112_merged.chr{chr}.run{run}.sample"
-	params:
-		inprefix = "eagle_phased/170112_merged.chr{chr}",
-		oprefix = "eagle_vcfs/170112_merged.chr{chr}"
-	benchmark:
-		"filter_benchmarks/eagle_to_vcf/170112_merged.chr{chr}.benchmark.txt"
-	log:
-		"snake_logs/eagle_to_vcf/170112_merged.chr{chr}.log"
-	output:
-		vcf = "eagle_vcfs/170112_merged.chr{chr}.run{run}.phased.vcf",
-		log = "eagle_vcfs/170112_merged.chr{chr}.run{run}.log"
-	shell:
-		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
-
+rule decompress_single_chrom:
+		input:
+			gzhaps = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.haps.gz"
+		log:
+			"logs/decompress/{sample}.run{run}.chr{chr}.log"
+		benchmark:
+			"benchmarks/decompress/{sample}.run{run}.chr{chr}.benchmark.txt"
+		output:
+			haps = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.haps"
+		shell:
+			"(gunzip -c {input.gzhaps} > {output.haps}) > {log}"
 
 rule make_merge_list: #makes a merge list of raw genotypes
 	input:
@@ -215,9 +203,6 @@ rule make_vcf_extract_lists:
 		"python ./bin/vcfextraction_for_joint_phase.py {input.animalset}"
 
 
-
-
-
 rule vcf_to_assays: #filter the vcfs on a per assay basis
 	input:
 		vcfgz="makevcf/hol_testset.merge.run{run}.chr{chr}.phased.vcf.gz",
@@ -244,27 +229,27 @@ rule vcf_to_hap:
 	log:
 		"logs/vcf_to_haps/{assay}.run{run}.chr{chr}.log"
 	output:
-		legend = "vcf_to_hap/{assay}.run{run}.chr{chr}.legend.gz",
-		haps = "vcf_to_hap/{assay}.run{run}.chr{chr}.hap.gz",
-		sample = "vcf_to_hap/{assay}.run{run}.chr{chr}.samples"
+		legend = "vcf_to_hap/{assay}.run{run}.chr{chr}.phased.legend",
+		hap = "vcf_to_hap/{assay}.run{run}.chr{chr}.phased.haplotypes",
+		sample = "vcf_to_hap/{assay}.run{run}.chr{chr}.phased.samples"
 	shell:
-		"(bcftools convert   -h {params.oprefix}   {input.vcf}) > {log}"
+		"(bcftools convert {input.vcf} --haplegendsample {output.hap}, {output.legend}, {output.sample}) > {log}" #Updated these to use the naming conventions that the shapeit tool outputs the run2 hap,leg,samples, so naming is consistent in Impute2.
 
 rule vcf_to_haps: #doesn't approrpriately name "haps" haps
 	input:
 		vcf = "vcf_to_assays/{assay}.run{run}.chr{chr}.vcf",
 	params:
 		chr = "{chr}",
-		oprefix ="vcf_to_haps/{assay}.run{run}.chr{chr}"
+		oprefix ="vcf_to_haps/{assay}.run{run}.chr{chr}.phased"
 	benchmark:
 		"benchmarks/vcf_to_haps/{assay}.run{run}.chr{chr}.benchmark.txt"
 	log:
 		"logs/vcf_to_haps/{assay}.run{run}.chr{chr}.log"
 	output:
-		hap = "vcf_to_haps/{assay}.run{run}.chr{chr}.hap.gz",
-		sample = "vcf_to_haps/{assay}.run{run}.chr{chr}.sample"
+		hap = "vcf_to_haps/{assay}.run{run}.chr{chr}.phased.haps",
+		sample = "vcf_to_haps/{assay}.run{run}.chr{chr}.phased.sample"
 	shell:
-		"(bcftools convert   {input.vcf} --hapsample {params.oprefix} ) > {log}"
+		"(bcftools convert   {input.vcf} --hapsample {output.hap}, {output.sample} ) > {log}"
 		#bcftools convert vcf_to_assays/hol_testset.F250.197.1.chr22.vcf --hapsample vcf_to_haps/test.del #produces .hap and .sample
 		#bcftools convert  --hapsample vcf_to_haps/test.del
 		#"(perl ./bin/vcf2impute_legend_haps.pl -vcf {input.vcf} -leghap {params.oprefix} -chr {params.chr}) 0 >{log}"
@@ -272,5 +257,20 @@ rule vcf_to_haps: #doesn't approrpriately name "haps" haps
 
 #perl ./bin/vcf2impute_legend_haps.pl -vcf vcf_to_assays/hol_testset.GGPLD.788.1.chr25.vcf -leghap vcf_to_haps/hol_testset.GGPLD.788.1.chr25 -chr 25
 
-
-#snakemake -s phasing.snakefile   --cores 64  &> snakerun108.txt
+rule hap_leg:
+	input:
+		haps = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.haps",
+		sample = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.sample"
+	params:
+		inprefix = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased",
+		oprefix = "impute_input/{sample}.run{run}.chr{chr}.phased"
+	log:
+		"snake_logs/hap_leg/{sample}.run{run}.chr{chr}.phased.log"
+	benchmark:
+		"filter_benchmarks/hap_leg/{sample}.run{run}.chr{chr}.phased.benchmark.txt"
+	output:
+		hap = "impute_input/{sample}.run{run}.chr{chr}.phased.haplotypes",
+		leg = "impute_input/{sample}.run{run}.chr{chr}.phased.legend",
+		log = "impute_input/logs/{sample}.run{run}.chr{chr}.phased.log"
+	shell:
+		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
