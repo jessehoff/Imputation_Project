@@ -9,25 +9,15 @@ from sys import argv
 from itertools import islice
 
 script, true, imputed, acc, out = argv
+print(script,true,imputed,acc,out)
 
-truedict = {}
+truedf = pd.read_pickle(true)
+print(truedf.head())
 genskey = {'./.':np.NaN, '0/0':0, '0/1':1 ,'1/1':2}
-with open(true, "r") as t:
-	head = list(islice(t,6))
-	samples = next(t).strip().split()[9:]
-	for line in t:
-		splat = line.strip().split()
-		cp = (splat[0], splat[1])
-		pos = ":".join(cp)
-		gen = splat[9:]
-		alt = [genskey[i] for i in gen]
-		truedict[pos] = alt
-truedf = pd.DataFrame.from_dict(truedict, orient='index')
-truedf.columns = samples
 
 impdict = {}
 with open(imputed, "r") as i:
-	head = list(islice(i,6))
+	head = list(islice(i,5))
 	impsamples = next(i).strip().split()[9:]
 	for line in i:
 		splat = line.strip().split()
@@ -37,7 +27,8 @@ with open(imputed, "r") as i:
 		alt = [genskey[p] for p in gen]
 		impdict[pos] = alt
 impdf = pd.DataFrame.from_dict(impdict, orient='index')
-impdf.columns = impsamples
+print(impsamples[:10])
+impdf.columns = [j.split('_')[1] for j in impsamples]
 
 corrs=impdf.corrwith(truedf, axis = 1)
 cor = pd.DataFrame(corrs)
