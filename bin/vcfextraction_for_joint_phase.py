@@ -7,7 +7,8 @@ from collections import defaultdict
 import sys
 
 famfile = sys.argv[1]
-run = famfile.split('.')[-3]
+nlist = sys.argv[2]
+run = famfile.split('/')[1][3:]
 
 
 print(run,' run\n')
@@ -17,7 +18,8 @@ for i in fam:
     imputeanimal.append(i.split()[1])
 print(imputeanimal[:10])
 
-samples = glob.glob('testset_assays/*list1.fam')
+samples = glob.glob('testset_assays/*list'+nlist + '.fam')
+print(samples)
 print(samples[1].split('/')[0].split('.')[0])
 samples=sorted(samples, key=lambda sample: samples[1].split('/')[1].split('.')[0],reverse=True)
 
@@ -34,12 +36,12 @@ arrayset = defaultdict(list)
 for i in imputeanimal:
     arrayset[peranimal[i][0]].append(i)
 
-maps = glob.glob('./testset_assays/*.list1*.bim')
-maps
+maps = glob.glob('./testset_assays/*.list'+nlist+'*.bim')
+print(maps)
 
 
 for mapfile in maps: 
-    name = 'merged_chrsplit/phased_' +  mapfile[17:-10] +'.' +run + '' + '.vcfregion'
+    name = 'merged_chrsplit/run'+run+'/phased_' +  mapfile[17:-10]   + '.vcfregion'
     print(name,mapfile[17:-10])
     filout = open(name,'w')
     with open(mapfile) as fp:
@@ -54,7 +56,7 @@ for mapfile in maps:
 #merged_chrsplit/phased_snp50.list1.run1.vcfregion
 
 for k,v in arrayset.items():
-    name = 'merged_chrsplit/phased_' +  k[15:-10]+'.list1.' +run + '' + '.keepvcf'
+    name = 'merged_chrsplit/run'+run+'/phased_' +  k[15:-10]+'.keepvcf'
     print(name,k[15:-10])
     filout = open(name,'w')
     for i in v:

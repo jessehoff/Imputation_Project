@@ -1,26 +1,33 @@
 #SAMPLES = ['hol_testset.SNP50.788', 'hol_testset.GGPLD.788', 'hol_testset.F250.197', 'hol_testset.HD.197']
 SAMPLES = ['f250','snp50','ggpld','hd']
 
-rule targ:
+rule impacc:
 	input:
 		#targ = expand("imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv", sample = SAMPLES, run = [1,2], chr = list(range(1,30)))
 		#("imp_acc/{sample}.run{run}.txt:q", sample = SAMPLES, run = )
-		targ = expand("imp_acc_visualization/run{run}/{sample}.run{run}.chr{chr}.histogram.png", sample = SAMPLES, run=[1,2], chr = list(range(1,30)))
+		#targ = expand("imp_acc_visualization/run{run}/{sample}.run{run}.chr{chr}.histogram.png", sample = SAMPLES, run=[1,2], chr = list(range(1,30)))
+		#targ = expand("ref_vcfs/F250_HD_merged.chr{chr}.pickle", chr = list(range(1,30)))
+		#targ = expand("minimac_imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv", run = 2, sample = SAMPLES, chr = list(range(1,30)))
+		#targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 1, sample = SAMPLES)
+		targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 2, sample = SAMPLES)
+
+#include: "mm.snakefile"
+include: "impute2.snakefile"
 
 rule impute2_vcf:
 	input:
-		gen = "impute2_chromosome/{sample}.run{run}.chr{chr}.phased.imputed.gen",
-		#sample = "impute2_chromosome/{sample}.chr{chr}.run{run}.phased.sample"
-		sample = "impute2_chromosome/{sample}.run{run}.chr{chr}.sample"
+		gen = "impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen",
+		sample = "impute2_chromosome/run{run}/{sample}.chr{chr}.phased.sample",
+		#sample = "impute2_chromosome/run{run}/{sample}.chr{chr}.sample"
 	params:
-		oprefix = "impute2_vcf/{sample}.run{run}.chr{chr}.imputed",
+		oprefix = "impute2_vcf/run{run}/{sample}.chr{chr}.imputed",
 		chrom = "{chr}"
 	log:
-		"logs/impute2_vcf/{sample}.run{run}.chr{chr}.txt"
+		"logs/impute2_vcf/run{run}/{sample}.chr{chr}.txt"
 	benchmark:
-		"benchmarks/impute2_vcf/{sample}.run{run}.chr{chr}.benchmark.txt"
+		"benchmarks/impute2_vcf/run{run}/{sample}.chr{chr}.benchmark.txt"
 	output:
-		vcf = "impute2_vcf/{sample}.run{run}.chr{chr}.imputed.vcf"
+		vcf = "impute2_vcf/run{run}/{sample}.chr{chr}.imputed.vcf"
 	shell:
 		"(plink --gen {input.gen} --sample {input.sample} --cow --real-ref-alleles --oxford-single-chr {params.chrom} --recode vcf --out {params.oprefix})>{log}"
 
@@ -74,39 +81,107 @@ rule ref_to_df:
 rule imp_acc:
 	input:
 		true = "ref_vcfs/F250_HD_merged.chr{chr}.pickle",
-		imputed = "impute2_vcf/{sample}.run{run}.chr{chr}.imputed.vcf",
+		imputed = "impute2_vcf/run{run}/{sample}.chr{chr}.imputed.vcf",
 		#imputed = "impute2_vcf/{sample}.chr{chr}.imputed.vcf",
 		frq = "ref_vcfs/F250_HD_merged.chr{chr}.frq",
 	params:
 		chrom = "{chr}",
-		acc = "imp_acc/{run}/{sample}.txt"
+		acc = "imp_acc/run{run}/{sample}.txt"
 	log:
-		"logs/imp_acc/{sample}.run{run}.chr{chr}.txt"
+		"logs/imp_acc/run{run}/{sample}.chr{chr}.txt"
 	benchmark:
 		#"benchmarks/imp_acc/{sample}.chr{chr}.benchmark.txt"
-		"benchmarks/imp_acc/{sample}.run{run}.chr{chr}.benchmark.txt"
+		"benchmarks/imp_acc/run{run}/{sample}.chr{chr}.benchmark.txt"
 	output:
-		corrs = "imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv", # This will contain all of the correlations for each base pair of the assay/run/chromosome
+		corrs = "imp_acc/run{run}/{sample}.chr{chr}.snp_correlations.csv", # This will contain all of the correlations for each base pair of the assay/run/chromosome
 		#corrs = "imp_acc/{sample}.chr{chr}.snp_correlations.csv",
-		#acc = "imp_acc/{run}/{sample}.run{run}.txt" #This file is appended to with each chromosome whose accuracy is calculated, but this can't be a valid output because it doesn't have all the wildcards in it.
+		#acc = "imp_acc/run{run}/{sample}.run{run}.txt" #This file is appended to with each chromosome whose accuracy is calculated, but this can't be a valid output because it doesn't have all the wildcards in it.
 	shell:
 		"(python bin/vcf_impacc.py {input.true} {input.imputed} {params.acc} {output.corrs})>{log}"
 
 rule imp_acc_visualization:
 	input:
-		corrs = "imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv",
+		corrs = "imp_acc/run{run}/{sample}.chr{chr}.snp_correlations.csv",
 		frq = "ref_vcfs/F250_HD_merged.chr{chr}.frq",
 		map = "ref_vcfs/F250_HD_merged.chr{chr}.map"
 	params:
-		acc = "imp_acc_visualization/{run}/{sample}.txt"
+		acc = "imp_acc/run{run}/visualization/{sample}.txt"
 	log:
-		"logs/imp_acc_visualization/{sample}.run{run}.chr{chr}.txt"
+		"logs/imp_acc_visualization/run{run}/{sample}.chr{chr}.txt"
 	benchmark:
-		"benchmarks/imp_acc_visualization/{sample}.run{run}.chr{chr}.benchmark.txt"
+		"benchmarks/imp_acc_visualization/run{run}/{sample}.chr{chr}.benchmark.txt"
 	output:
-		hist = "imp_acc_visualization/run{run}/{sample}.run{run}.chr{chr}.histogram.png",
-		scatter = "imp_acc_visualization/run{run}/{sample}.run{run}.chr{chr}.scatter.png",
-		line = "imp_acc_visualization/run{run}/{sample}.run{run}.chr{chr}.line.png",
-		combo = "imp_acc_visualization/run{run}/{sample}.run{run}.chr{chr}.combo.png"
+		hist = "imp_acc/run{run}/visualization/{sample}.chr{chr}.histogram.png",
+		scatter = "imp_acc/run{run}/visualization/{sample}.chr{chr}.scatter.png",
+		line = "imp_acc/run{run}/visualization/{sample}.chr{chr}.line.png",
+		combo = "imp_acc/run{run}/visualization/{sample}.chr{chr}.combo.png"
 	shell:
 		"(python bin/impacc_visualization.py {input.corrs} {input.frq} {input.map} {output.hist} {output.scatter} {output.line} {output.combo}) > {log}"
+
+rule minimac_decompress:
+	input:
+		vcf = "minimac_imputed/run{run}/{sample}.chr{chr}.imputed.dose.vcf.gz"
+	output:
+		vcf = temp("minimac_imputed/run{run}/{sample}.chr{chr}.imputed.dose.vcf")
+	shell:
+		"gunzip -c {input.vcf} > {output.vcf}"
+
+rule minimac_imp_acc:
+	input:
+		true = "ref_vcfs/F250_HD_merged.chr{chr}.pickle",
+		imputed = "minimac_imputed/run{run}/{sample}.chr{chr}.imputed.dose.vcf",
+		#imputed = "impute2_vcf/{sample}.chr{chr}.imputed.vcf",
+		frq = "ref_vcfs/F250_HD_merged.chr{chr}.frq",
+	params:
+		chrom = "{chr}",
+		acc = "imp_acc/run{run}/{sample}.txt",
+		#vcf = "minimac_imputed/run{run}/{sample}.chr{chr}.imputed.dose.vcf"
+	log:
+		"logs/imp_acc/run{run}/{sample}.chr{chr}.txt"
+	benchmark:
+		#"benchmarks/imp_acc/{sample}.chr{chr}.benchmark.txt"
+		"benchmarks/imp_acc/run{run}/{sample}.chr{chr}.benchmark.txt"
+	output:
+		corrs = "imp_acc/run{run}/{sample}.chr{chr}.snp_correlations.csv", # This will contain all of the correlations for each base pair of the assay/run/chromosome
+		#corrs = "imp_acc/{sample}.chr{chr}.snp_correlations.csv",
+		#acc = "imp_acc/run{run}/{sample}.run{run}.txt" #This file is appended to with each chromosome whose accuracy is calculated, but this can't be a valid output because it doesn't have all the wildcards in it.
+	shell:
+		"(python bin/minimac_impacc.py {input.true} {input.imputed} {params.acc} {output.corrs})>{log}"
+
+rule minimac_imp_acc_visualization:
+	input:
+		corrs = "imp_acc/run{run}/{sample}.chr{chr}.snp_correlations.csv",
+		frq = "ref_vcfs/F250_HD_merged.chr{chr}.frq",
+		map = "ref_vcfs/F250_HD_merged.chr{chr}.map"
+	params:
+		acc = "imp_acc_visualization/run{run}/{sample}.txt"
+	log:
+		"logs/imp_acc_visualization/run{run}/{sample}.chr{chr}.txt"
+	benchmark:
+		"benchmarks/imp_acc_visualization/run{run}/{sample}.chr{chr}.benchmark.txt"
+	output:
+		hist = "imp_acc/run{run}/visualization/{sample}.chr{chr}.histogram.png",
+		scatter = "imp_accvisualization/run{run}/visualization/{sample}.chr{chr}.scatter.png",
+		line = "imp_acc/run{run}/visualization/{sample}.chr{chr}.line.png",
+		combo = "imp_acc/run{run}/visualization/{sample}.chr{chr}.combo.png"
+	shell:
+		"(python bin/impacc_visualization.py {input.corrs} {input.frq} {input.map} {output.hist} {output.scatter} {output.line} {output.combo}) > {log}"
+
+rule all_chrom_impacc:
+	input:
+		corrs = expand("imp_acc/run{{run}}/{{sample}}.chr{chr}.snp_correlations.csv", chr = list(range(1,30)))
+	params:
+		corrprefix = "imp_acc/run{run}/{sample}.chr",
+		frq = "accuracy_test/merged_refs/F250_HD_merged.1970.frq",
+		mapfile = "accuracy_test/merged_refs/F250_HD_merged.1970.map",
+		master = "imp_acc/master_impacc.txt"
+	log:
+		"logs/all_chrom_impacc/run{run}/{sample}.txt"
+	benchmark:
+		"benchmarks/all_chrom_impacc/run{run}/{sample}.benchmark.txt"
+	output:
+		corrout = "imp_acc/run{run}/{sample}.mafcorr.csv",
+		fig = "imp_acc/run{run}/{sample}.mafcorr.png",
+		lowmaf_fig = "imp_acc/run{run}/{sample}.lowmafcorr.png"
+	shell:
+		"(python bin/allchrom_impacc.py {params.corrprefix} {params.frq} {params.mapfile} {output.corrout} {output.fig} {output.lowmaf_fig} {params.master})"

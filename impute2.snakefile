@@ -27,7 +27,7 @@ for sample in IMPGENS:
 			chunkcounter = chunkcounter+1
 			file = 'impute2_imputed/'+sample+'.chr'+chr+'.'+str(chunkcounter)+'.phased.impute2'
 			targfiles.append(file)
-print(len(targfiles))
+#print(len(targfiles))
 targfiles=[] #jesses's runner
 for sample in IMPGENS:
 	for chr in rangedict.keys():
@@ -36,66 +36,78 @@ for sample in IMPGENS:
 			chunkcounter = chunkcounter+1
 			file = 'impute2_imputed/'+sample+'.run2.chr'+chr+'.'+str(chunkcounter)+'.phased.impute2'
 			targfiles.append(file)
-print(len(targfiles))
-print(targfiles[:10])
 
-rule targ:
+rule impute:
 	input:
 		#targ=targfiles #This creates the f
 		#targ= expand("impute_input/{sample}.chr{chr}.phased.haplotypes", sample = IMPREFS,chr=list(range(20,30)))
 		#targ = expand("impute2_chromosome/{sample}.run2.chr{chr}.phased.imputed.gen", sample = IMPGENS, chr = list(range(1,30))) #troys seperate phased runner
-		targ = expand("impute2_chromosome/{sample}.run2.chr{chr}.phased.imputed.gen", sample = IMPGENS, chr = list(range(1,30)))
+		targ = expand("impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen", sample = IMPGENS, run = 6, chr = list(range(1,30)))
 		#targ=targfiles[:10]
+
+include: "phasing.snakefile"
+include: "shapeit.snakefile"
 
 #snakemake -s impute2.snakefile --cores 34  &> imputationrunone_02.txt
 
 #Run 1 (haps, sample) = "vcf_to_haps/{assay}.run{run}.chr{chr}.phased.haps"
 #Run 1 (hap, legend, sample) = "vcf_to_hap/{assay}.run{run}.chr{chr}.phased.legend"
-#Run 2 (hap, legend, sample) = "impute_input/{sample}.run{run}.chr{chr}.phased.legend"
-#Run 2 (haps, sample) = "eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.haps"
+#Run 2 (hap, legend, sample) = "impute_input/run{run}/{sample}.chr{chr}.phased.legend"
+#Run 2 (haps, sample) = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps"
 
 
 
-haps_sample_run = {'1': 'vcf_to_haps', '2': 'eagle_phased_assays'}
-haplegendsample_run = {'1':'vcf_to_hap', '2':'impute_input'}
+haps_sample_run = {'1': 'vcf_to_haps', '2': 'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays'}
+haplegendsample_run = {'1':'vcf_to_hap', '2':'impute_input', '4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input'}
 
 def haps_runlocator(shoein):
-		t = shoein.run
-		samp = shoein.sample
-		chrom = shoein.chr
-		location = haps_sample_run[t] + '/' + samp + 'run'+ t +'.chr' + chr + '.phased.haps'
-		return location
+	loc = []
+	t = shoein.run
+	samp = shoein.sample
+	chrom = shoein.chr
+	location = haps_sample_run[t] + '/run' + t + '/'+ samp  +'.chr' + chrom + '.phased.haps'
+	#print(location)
+	return location
+
 def hap_runlocator(shoein):
+	loc = []
+	for xx in IMPREFS:
 		t = shoein.run
-		samp = shoein.sample
+		samp = xx
 		chrom = shoein.chr
-		location = haplegendsample_run + '/' + samp + 'run'+ t +'.chr' + chr + '.phased.haplotypes'
-		return location
+		location = haplegendsample_run[t] +'/run' + t + '/' + samp + '.chr' + chrom + '.phased.haplotypes'
+		loc.append(location)
+	return loc
+
 def legend_runlocator(shoein):
+	loc = []
+	for xx in IMPREFS:
 		t = shoein.run
-		samp = shoein.sample
+		samp = xx
 		chrom = shoein.chr
-		location = haplegendsample_run[t] + '/' + samp + 'run'+ t +'.chr' + chr + '.phased.legend'
-		return location
+		location = haplegendsample_run[t] +'/run' + t + '/' + samp +'.chr' + chrom + '.phased.legend'
+		loc.append(location)
+	return loc
+
 
 rule run_impute2_run2: #for parralel phasing
 	input:
 		# hap=expand("impute_input/{ref}.run{{run}}.chr{{chr}}.phased.haplotypes", ref=IMPREFS),
 		# legend=expand("impute_input/{ref}.run{{run}}.chr{{chr}}.phased.legend", ref=IMPREFS),
-		# knownhaps="eagle_phased_assays/{sample}.run{run}.chr{chr}.phased.haps", #This will need to be changed in order to
-		hap =
-		legend =
-		knownhaps =
+		# knownhaps="eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps", #This will need to be changed in order to
+		hap = hap_runlocator,				#How are we supposed to expand over a function? Not sure if we can make this as smart as we want it to be?
+		legend = legend_runlocator,
+		knownhaps = haps_runlocator,
 		maps="impute_maps/imputemap.chr{chr}.map"
 	params:
 		chunk= chrchunker
 	log:
-		"logs/impute2/{sample}.{run}.chr{chr}.{chunk}.log"
+		"logs/impute2/run{run}/{sample}.chr{chr}.{chunk}.log"
 	benchmark:
-		"benchmarks/impute2/{sample}.{run}.chr{chr}.{chunk}.benchmark.txt"
+		"benchmarks/impute2/run{run}/{sample}.chr{chr}.{chunk}.benchmark.txt"
 	output:
-		imputed="impute2_imputed/run{run}/{sample}.run{run}.chr{chr}.{chunk}.phased.impute2",
-		summary="impute2_imputed/run{run}/{sample}.run{run}.chr{chr}.{chunk}.phased.impute2_summary"
+		imputed="impute2_imputed/run{run}/{sample}.chr{chr}.{chunk}.phased.impute2",
+		summary="impute2_imputed/run{run}/{sample}.chr{chr}.{chunk}.phased.impute2_summary"
 	shell:
 		"(impute2 -merge_ref_panels -m {input.maps} -h {input.hap} -l {input.legend} -use_prephased_g -known_haps_g {input.knownhaps} -int {params.chunk} -Ne 200 -o {output.imputed}) > {log}"
 
@@ -103,7 +115,7 @@ rule run_impute2_run2: #for parralel phasing
 # 	input:
 # 		hap=expand("vcf_to_hap/{ref}.run{{run}}.chr{{chr}}.hap.gz", ref=IMPREFS),
 # 		legend=expand("vcf_to_hap/{ref}.run{{run}}.chr{{chr}}.legend.gz", ref=IMPREFS),
-# 		knownhaps="vcf_to_haps/{sample}.run{run}.chr{chr}.hap.gz",
+# 		knownhaps="vcf_to_haps/run{run}/{sample}.chr{chr}.hap.gz",
 # 		maps="impute_maps/imputemap.chr{chr}.map"
 # 	params:
 # 		chunk= chrchunker
@@ -112,30 +124,38 @@ rule run_impute2_run2: #for parralel phasing
 # 	benchmark:
 # 		"benchmarks/impute2/{sample}.{run}.chr{chr}.{chunk}.benchmark.txt"
 # 	output:
-# 		imputed="impute2_imputed/{sample}.run{run}.chr{chr}.{chunk}.phased.impute2",
-# 		summary="impute2_imputed/{sample}.run{run}.chr{chr}.{chunk}.phased.impute2_summary"
+# 		imputed="impute2_imputed/run{run}/{sample}.chr{chr}.{chunk}.phased.impute2",
+# 		summary="impute2_imputed/run{run}/{sample}.chr{chr}.{chunk}.phased.impute2_summary"
 # 	shell:
 # 		"(impute2 -merge_ref_panels -m {input.maps} -h {input.hap} -l {input.legend} -use_prephased_g -known_haps_g {input.knownhaps} -int {params.chunk} -Ne 200 -o {output.imputed}) > {log}"
 # 		#-fill_holes
 
 
-print(sample)
-print('sample\n')
-sampledict = {}
-for sample in IMPGENS:
-	filedict = {}
-	for chr in rangedict.keys():
-		chunkcounter=-1
-		flist = []
-		for chunk in rangedict.get(chr):
-			chunkcounter = chunkcounter+1
-			file = 'impute2_imputed/run'+sample+'.run2.chr'+chr+'.'+str(chunkcounter)+'.phased.impute2' #need to edit this to accept run as a wildcard
-			flist.append(file)
-			filedict[chr]=flist
-	sampledict[sample] = filedict
+#print(sample)
+#print('sample\n')
+rundict = {}
+for Run in range(15):
+	run= str(Run)
+	sampledict = {}
+	for sample in IMPGENS:
+		filedict = {}
+		for chr in rangedict.keys():
+			chunkcounter=-1
+			flist = []
+			for chunk in rangedict.get(chr):
+				chunkcounter = chunkcounter+1
+				file = 'impute2_imputed/run'+ run + '/'+sample + '.chr'+chr+'.'+str(chunkcounter)+'.phased.impute2' #need to edit this to accept run as a wildcard
+				flist.append(file)
+				filedict[chr]=flist
+		sampledict[sample] = filedict
+	rundict[run] = sampledict
 
 def chrfiles(chrom):
-	return sampledict[chrom.sample][chrom.chr]
+	# if chrom.chr == '26':
+	# 	print(rundict[chrom.run][chrom.sample][chrom.chr][:4])
+	return rundict[chrom.run][chrom.sample][chrom.chr]
+
+#print(rundict['2']['snp50']['26'][:10])
 
 rule cat_chunks:
 	input:
@@ -144,11 +164,11 @@ rule cat_chunks:
 	params:
 		#star = "impute2_imputed/{sample}.chr{chr}.*.phased.impute2" What is wrong wit this appraoch
 	log:
-		"logs/cat_chunks/{sample}.run2.chr{chr}.log"
+		"logs/cat_chunks/run{run}/{sample}.chr{chr}.log"
 	benchmark:
-		"benchmarks/cat_chunks/{sample}.run2.chr{chr}.benchmark.txt"
+		"benchmarks/cat_chunks/run{run}/{sample}.chr{chr}.benchmark.txt"
 	output:
-		cat = "impute2_chromosome/{sample}.run2.chr{chr}.phased.imputed.gen"
+		cat = "impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen"
 	shell:
 		"(cat {input.chunks} > {output.cat}) > {log}"#; cp eagle_phased_assays/*.run2*.sample impute2_chromosome/"
 

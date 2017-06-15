@@ -13,11 +13,12 @@ print(script,true,imputed,acc,out)
 
 truedf = pd.read_pickle(true)
 print(truedf.head())
-genskey = {'./.':np.NaN, '0/0':0, '0/1':1 ,'1/1':2}
-
+genskey = {'./.':np.NaN, '0/0':0, '0/1':1 ,'1/1':2} 			#unphased genskey
+#genskey = {'.|.':np.NaN, '0|0':0, '1|0': 1, '0|1':1 ,'1|1':2} 	#phased genskey
 impdict = {}
 with open(imputed, "r") as i:
-	head = list(islice(i,5))
+	head = list(islice(i,5)) #commented out for purpose of calculating reference panel accuracy of imputation
+	#head = list(islice(i,8)) #For reference panel accuracy calculation
 	impsamples = next(i).strip().split()[9:]
 	for line in i:
 		splat = line.strip().split()
@@ -29,6 +30,7 @@ with open(imputed, "r") as i:
 impdf = pd.DataFrame.from_dict(impdict, orient='index')
 print(impsamples[:10])
 impdf.columns = [j.split('_')[1] for j in impsamples]
+#impdf.columns = [j for j in impsamples]
 
 corrs=impdf.corrwith(truedf, axis = 1)
 cor = pd.DataFrame(corrs)
