@@ -172,8 +172,8 @@ rule all_chrom_impacc:
 		corrs = expand("imp_acc/run{{run}}/{{sample}}.chr{chr}.snp_correlations.csv", chr = list(range(1,30)))
 	params:
 		corrprefix = "imp_acc/run{run}/{sample}.chr",
-		frq = "accuracy_test/merged_refs/F250_HD_merged.1970.frq",
-		mapfile = "accuracy_test/merged_refs/F250_HD_merged.1970.map",
+		frq = "ref_vcfs/F250_HD_merged.1970.frq",
+		mapfile = "ref_vcfs/F250_HD_merged.1970.map",
 		master = "imp_acc/master_impacc.txt"
 	log:
 		"logs/all_chrom_impacc/run{run}/{sample}.txt"
