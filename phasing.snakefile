@@ -1,8 +1,8 @@
 DATA =['f250', 'ggpld', 'hd', 'snp50'] #new file names -- these are files that have had ref-alt conversions
-
+hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
 rule targ:
 	input:
-		hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
+hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
 def bedchoice(WC):
 	return hd_or_f250[WC.assay]
 
@@ -128,7 +128,7 @@ rule make_merge_list: #makes a merge list of raw genotypes, doesn't need to have
 	input:
 		filelist = expand("assay_chrsplit/{assay}.list{{list}}.chr{{chr}}.bed", assay= DATA )
 	log:
-		"logs/{assay}.chr{chr}.txt"
+		"logs/make_merge_list/list{list}.txt"
 	output:
 		"assay_chrsplit/hol_testset.list{list}.chr{chr}.txt"
 	shell:

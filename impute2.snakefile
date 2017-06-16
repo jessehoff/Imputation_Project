@@ -39,11 +39,7 @@ for sample in IMPGENS:
 
 rule impute:
 	input:
-		#targ=targfiles #This creates the f
-		#targ= expand("impute_input/{sample}.chr{chr}.phased.haplotypes", sample = IMPREFS,chr=list(range(20,30)))
-		#targ = expand("impute2_chromosome/{sample}.run2.chr{chr}.phased.imputed.gen", sample = IMPGENS, chr = list(range(1,30))) #troys seperate phased runner
-		targ = expand("impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen", sample = IMPGENS, run = 6, chr = list(range(1,30)))
-		#targ=targfiles[:10]
+		targ = expand("impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen", sample = IMPGENS, run = 2, chr = list(range(29,30)))
 
 include: "phasing.snakefile"
 include: "shapeit.snakefile"
