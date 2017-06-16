@@ -29,7 +29,7 @@ cor['correlation']  = abs(cor['correlation'])
 total_sites = str(len(cor))
 
 freq = pd.read_table(frq, delim_whitespace=True)
-del freq['A1']
+del freq['A1'] #you can use use_cols to pick which columsn to read in to start. 
 del freq['A2']
 del freq['NCHROBS']
 map = pd.read_table(mapfile, delim_whitespace=True, header=None)
