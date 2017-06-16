@@ -155,7 +155,8 @@ rule eagle_merged:
 	params:
 		bed="merged_chrsplit/run{run}/hol_testset.merge.chr{chr}",
 		out="eagle_merged/run{run}/hol_testset.merge.chr{chr}"
-	threads: 16
+	threads: 10
+	priority: 20
 	benchmark:
 		"benchmarks/eagle_merged/run{run}/hol_testset.merge.chr{chr}.benchmark.txt"
 	log:
@@ -164,7 +165,7 @@ rule eagle_merged:
 		sample = "eagle_merged/run{run}/hol_testset.merge.chr{chr}.sample",
 		haps = "eagle_merged/run{run}/hol_testset.merge.chr{chr}.haps.gz"
 	shell:
-		"(eagle --bfile={params.bed}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .99 --numThreads 16 --outPrefix {params.out})> {log} "
+		"(eagle --bfile={params.bed}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .99 --numThreads 10 --outPrefix {params.out})> {log} "
 
 rule decompress:
 		input:
