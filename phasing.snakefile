@@ -2,7 +2,7 @@ DATA =['f250', 'ggpld', 'hd', 'snp50'] #new file names -- these are files that h
 hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
 rule targ:
 	input:
-hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
+		hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
 def bedchoice(WC):
 	return hd_or_f250[WC.assay]
 
@@ -16,7 +16,8 @@ def runchoice(WC):
 	chrom = WC.chr
 	if r == '1':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
-	if r =='2':
+	if r == ('2') or ('5'):
+		r = '2'
 		location = run_dict[r] + WC.sample + '.list1.chr' + chrom + '.bed'
 	if r =='6':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
@@ -26,7 +27,7 @@ def runchoice(WC):
 def listchoice(WC):
 	r = WC.run
 	chrom = WC.chr
-	if r =='2':
+	if r ==('2') or ('5'):
 		location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
 	if r =='7':
 		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom

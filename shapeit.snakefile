@@ -26,7 +26,7 @@ rule run_shapeit_assay:
 		"benchmarks/shapeit_phased_assays/run{run}/{sample}.chr{chr}.benchmark.txt"
 	threads: 8
 	log:
-		"snake_logs/shapeit_phased_assays/run{run}/{sample}.chr{chr}.log"
+		"logs/shapeit_phased_assays/run{run}/{sample}.chr{chr}.log"
 	output:
 		sample = "shapeit_phased_assays/run{run}/{sample}.chr{chr}.phased.sample",
 		haps = "shapeit_phased_assays/run{run}/{sample}.chr{chr}.phased.haps",
