@@ -28,7 +28,7 @@ cor['correlation']  = abs(cor['correlation'])
 
 total_sites = str(len(cor))
 
-freq = pd.read_table(frq, delim_whitespace=True)
+freq = pd.read_table(frq, delim_whitespace=True) #change to using "use_columns=' in pd.read_table arguments"
 del freq['A1']
 del freq['A2']
 del freq['NCHROBS']
@@ -39,7 +39,10 @@ freq_map_merged.head()
 posmaf = freq_map_merged[["CHR","POS","MAF"]]
 posmaf.index = posmaf.CHR.astype(str).str.cat(posmaf.POS.astype(str), sep = ':')
 del posmaf.index.name
-filter = posmaf["MAF"] <= 0.5
+ #so, this MAF calculation has some lines that are above .5%. Why? well, it was from the non ref_alt aka (ACGT) data, which is not the same basis as the original data. 
+#but, we were telling it to keep-allele-order, meaning that if something got swapped before the merge, one order was chosen, and the minor allele might not be minor. It still reports AF
+# in the ACGT/ref_alt data there are far more "non minor" alleles. 
+	#filter = posmaf["MAF"] <= 0.5
 maffiltered = posmaf[filter]
 mafcor = cor.join(maffiltered)
 
