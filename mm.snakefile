@@ -12,100 +12,63 @@ rangedict = {'1':chunks(158322647),'2':chunks(136914030),'3':chunks(121412973), 
 def chrchunker(WC):
 	return rangedict[WC.chr][int(WC.chunk)]
 
+include: 'phasing.snakefile'
+include: 'impute2.snakefile'
 rule mm_target:
 	input:
-		targ = expand("minimac_imputed/run{run}/{sample}.chr{chr}.imputed.dose.vcf.gz", sample = SAMPLES, run = 5, chr = list(range(1,30)))
+		targ = expand("minimac_imputed/run{run}/{sample}.chr{chr}.imputed.dose.vcf.gz", sample = SAMPLES, run = 5, chr = list(range(29,30)))
 
 #hapleg_location = {'impute_input':'2'}
 
-def haps_runlocator(shoein):
+def haps_runlocator(WC):
 	haps_sample_run = {'5': 'eagle_phased_assays'}
 	haps_location = {'eagle_phased_assays':'2'}
-	t = shoein.run
-	samp = shoein.sample
-	chrom = shoein.chr
-	#location = haps_sample_run[t] + '/run' + haps_sample_run[t][haps_sample_run[t]] + '/'+ samp  +'.chr' + chrom + '.phased.haps'
+	t = WC.run
+	samp = WC.sample
+	chrom = WC.chr
 	location = haps_sample_run[t] + '/run' + haps_location[haps_sample_run[t]] + '/'+ samp  +'.chr' + chrom + '.phased.haps'
 	return location
 
-def sample_runlocator(shoein):
+def haps_runprefix(WC):
+	haps_sample_run = {'5': 'eagle_phased_assays'}
+	haps_location = {'eagle_phased_assays':'2'}
+	t = WC.run
+	samp = WC.sample
+	chrom = WC.chr
+	location = haps_sample_run[t] + '/run' + haps_location[haps_sample_run[t]] + '/'+ samp  +'.chr' + chrom + '.phased'
+	return location
+
+def sample_runlocator(WC):
 	haps_sample_run = {'5': 'eagle_phased_assays'}
 	haps_location = {'eagle_phased_assays':'2'}
 	loc = []
 	for xx in IMPREFS:
-		t = shoein.run
+		t = WC.run
 		samp = xx
-		chrom = shoein.chr
+		chrom = WC.chr
 		location = haps_sample_run[t] + '/run' + haps_location[haps_sample_run[t]] + '/'+ samp  +'.chr' + chrom + '.phased.sample'
 		loc.append(location)
 	return loc
 
-def hap_runlocator(shoein):
-	haplegendsample_run = {'5':'minimac_ref_panel/impute_input'}
-	loc = []
-	for xx in IMPREFS:
-		t = shoein.run
-		samp = xx
-		chrom = shoein.chr
-		location = haplegendsample_run[t] +'/run' + t + '/' + samp + '.chr' + chrom + '.phased.haplotypes'
-		loc.append(location)
-	return loc
+def hap_runlocator(WC):
+	haplegendsample_run = {'5':'impute2_refpanel/run2/'}
+	t = WC.run
+	chrom = WC.chr
+	chunk = WC.chunk
+	location = haplegendsample_run[t] + 'merged_refpanel.chr' + chrom + '.' + chunk + '.phased.hap'
+	return location
 
-def legend_runlocator(shoein):
-	loc = []
-	haplegendsample_run = {'5':'minimac_ref_panel/impute_input'}
-	for xx in IMPREFS:
-		t = shoein.run
-		samp = xx
-		chrom = shoein.chr
-		location = haplegendsample_run[t] +'/run' + t + '/' + samp +'.chr' + chrom + '.phased.legend'
-		loc.append(location)
-	return loc
-
-rule mm_hap_leg:
-	input:
-		# haps = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps",			#This is from the updated naming convention
-		# sample = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.sample"
-		haps = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps",
-		sample = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.sample"
-	params:
-		inprefix = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased",
-		oprefix = "minimac_ref_panel/impute_input/run{run}/{sample}.chr{chr}.phased"
-	log:
-		"logs/refpanel_hap_leg/run{run}/{sample}.chr{chr}.phased.log"
-	# benchmark:
-	# 	"benchmarks/hap_leg/run{run}/{sample}.chr{chr}.phased.benchmark.txt"
-	output:
-		hap = "minimac_ref_panel/impute_input/run{run}/{sample}.chr{chr}.phased.haplotypes",
-		leg = "minimac_ref_panel/impute_input/run{run}/{sample}.chr{chr}.phased.legend",
-		log = "minimac_ref_panel/impute_input/logs/run{run}/{sample}.chr{chr}.phased.log"
-	shell:
-		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
-
-rule impute2_refpanel:
-	input:
-		hap = hap_runlocator,
-		legend = legend_runlocator,
-		#haps = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps",
-		maps="impute_maps/imputemap.chr{chr}.map"
-	log:
-		"logs/refpanel_impute/run{run}/merged_refpanel.chr{chr}.phased.log"
-	params:
-		chunk = chrchunker,
-		oprefix = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.{chunk}.phased"
-	benchmark:
-		"benchmarks/impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.benchmark.txt"
-	output:
-		refhap = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",
-		refleg = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.legend"
-	shell:
-		"(impute2 -merge_ref_panels_output_ref {params.oprefix} -m {input.maps} -h {input.hap} -l {input.legend} -use_prephased_g -int {params.chunk} -Ne 200 -o {params.oprefix}) > {log}"
-# before doing this, I've got to create a concatenated sample file somehow.  go back to phased data I suppose, needs to be in order of animals.
-
+def legend_runlocator(WC):
+	haplegendsample_run = {'5':'impute2_refpanel/run2/'}
+	t = WC.run
+	chrom = WC.chr
+	chunk = WC.chunk
+	location = haplegendsample_run[t] + 'merged_refpanel.chr' + chrom + '.' + chunk + '.phased.legend'
+	return location
 
 rule reformat_leg:
 	input:
-		refleg = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.legend",
+		refleg = legend_runlocator
 	log:
 		"logs/reformat_leg/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.log"
 	params:
@@ -132,7 +95,7 @@ rule cat_sample:
 
 rule ref_panel_vcf:
 	input:
-		hap = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",
+		hap = hap_runlocator,
 		leg = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.reformatted.legend",
 		samp = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.phased.reformatted.sample"
 	log:
@@ -197,13 +160,10 @@ rule ref_panel_impacc:
 
 rule vcf_convert:
 	input:
-		# haps = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps",
-		# sample = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.sample",
 		haps = haps_runlocator
-		#sample =
 	params:
-		#inprefix = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased",
-		inprefix = "eagle_phased_assays/run2/{sample}.chr{chr}.phased",
+		#inprefix = "eagle_phased_assays/run2/{sample}.chr{chr}.phased",
+		inprefix = haps_runprefix,
 		oprefix = "phased_assay_vcf/run{run}/{sample}.chr{chr}.phased"
 	log:
 		"logs/hap_leg/run{run}/{sample}.chr{chr}.phased.log"

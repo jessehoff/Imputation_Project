@@ -85,14 +85,31 @@ def legend_runlocator(shoein):
 		loc.append(location)
 	return loc
 
+rule impute2_refpanel:
+	input:
+		hap = hap_runlocator,
+		legend = legend_runlocator,
+		maps="impute_maps/imputemap.chr{chr}.map"
+	log:
+		"logs/refpanel_impute/run{run}/merged_refpanel.chr{chr}.phased.log"
+	params:
+		chunk = chrchunker,
+		oprefix = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased"
+	benchmark:
+		"benchmarks/impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.benchmark.txt"
+	output:
+		refhap = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",
+		refleg = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.legend"
+	shell:
+		"(impute2 -merge_ref_panels_output_ref {params.oprefix} -m {input.maps} -h {input.hap} -l {input.legend} -int {params.chunk} -Ne 200 -o {params.oprefix}) > {log}"
 
 rule run_impute2_run2: #for parralel phasing
 	input:
 		# hap=expand("impute_input/{ref}.run{{run}}.chr{{chr}}.phased.haplotypes", ref=IMPREFS),
 		# legend=expand("impute_input/{ref}.run{{run}}.chr{{chr}}.phased.legend", ref=IMPREFS),
 		# knownhaps="eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps", #This will need to be changed in order to
-		hap = hap_runlocator,				#How are we supposed to expand over a function? Not sure if we can make this as smart as we want it to be?
-		legend = legend_runlocator,
+		hap = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",				#How are we supposed to expand over a function? Not sure if we can make this as smart as we want it to be?
+		legend = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.legend",
 		knownhaps = haps_runlocator,
 		maps="impute_maps/imputemap.chr{chr}.map"
 	params:

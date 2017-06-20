@@ -14,9 +14,9 @@ def runchoice(WC):
 	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','7':'assay_chrsplit/'}
 	r = WC.run
 	chrom = WC.chr
-	if r == '1': 
+	if r == '1':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
-	if r ==('2') or ('5'):#the sample by sample phasing files identified here need to have their sample referenced in the name, and the combine phasing samples do not have a rule of phasing. 
+	if r ==('2'):# or ('5'):#the sample by sample phasing files identified here need to have their sample referenced in the name, and the combine phasing samples do not have a rule of phasing.
 		r = '2'
 		location = run_dict[r] + WC.sample + '.list1.chr' + chrom + '.bed'
 	if r =='6':
@@ -27,7 +27,7 @@ def runchoice(WC):
 def listchoice(WC):
 	r = WC.run
 	chrom = WC.chr
-	if r ==('2') or ('5'):
+	if r ==('2'):# or ('5'):
 		location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
 	if r =='7':
 		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom
