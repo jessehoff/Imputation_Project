@@ -28,10 +28,7 @@ cor['correlation']  = abs(cor['correlation'])
 
 total_sites = str(len(cor))
 
-freq = pd.read_table(frq, delim_whitespace=True)
-del freq['A1']
-del freq['A2']
-del freq['NCHROBS']
+freq = pd.read_table(frq, delim_whitespace=True, usecols= ['CHR', 'SNP', 'MAF'])
 map = pd.read_table(mapfile, delim_whitespace=True, header=None)
 map.columns = ("CHR", "SNP", "CM", "POS")
 freq_map_merged = pd.merge(map, freq, on=("SNP","CHR"), how='inner')
