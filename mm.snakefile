@@ -21,8 +21,8 @@ rule mm_target:
 #hapleg_location = {'impute_input':'2'}
 
 def haps_runlocator(WC):
-	haps_sample_run = {'5': 'eagle_phased_assays'}
-	haps_location = {'eagle_phased_assays':'2'}
+	haps_sample_run = {'5': 'eagle_phased_assays', '10':'eagle_phased_assays', '8':'vcf_to_haps', '11':'vcf_to_haps'}
+	haps_location = {'eagle_phased_assays':'2', 'eagle_phased_assays':'7', 'vcf_to_haps':'1', 'vcf_to_haps':'6'}
 	t = WC.run
 	samp = WC.sample
 	chrom = WC.chr
@@ -30,8 +30,8 @@ def haps_runlocator(WC):
 	return location
 
 def haps_runprefix(WC):
-	haps_sample_run = {'5': 'eagle_phased_assays'}
-	haps_location = {'eagle_phased_assays':'2'}
+	haps_sample_run = {'5': 'eagle_phased_assays', '10':'eagle_phased_assays', '8':'vcf_to_haps', '11':'vcf_to_haps'}
+	haps_location = {'eagle_phased_assays':'2', 'eagle_phased_assays':'7', 'vcf_to_haps':'1', 'vcf_to_haps':'6'}
 	t = WC.run
 	samp = WC.sample
 	chrom = WC.chr
@@ -39,8 +39,8 @@ def haps_runprefix(WC):
 	return location
 
 def sample_runlocator(WC):
-	haps_sample_run = {'5': 'eagle_phased_assays'}
-	haps_location = {'eagle_phased_assays':'2'}
+	haps_sample_run = {'5': 'eagle_phased_assays', '10':'eagle_phased_assays', '8':'vcf_to_haps', '11':'vcf_to_haps'}
+	haps_location = {'eagle_phased_assays':'2', 'eagle_phased_assays':'7', 'vcf_to_haps':'1', 'vcf_to_haps':'6'}
 	loc = []
 	for xx in IMPREFS:
 		t = WC.run
@@ -51,7 +51,7 @@ def sample_runlocator(WC):
 	return loc
 
 def hap_runlocator(WC):
-	haplegendsample_run = {'5':'impute2_refpanel/run2/'}
+	haplegendsample_run = {'5':'impute2_refpanel/run2/', '8':'impute2_refpanel/run1/', '10':'impute2_refpanel/run7/', '11':'impute2_refpanel/run6/'}
 	t = WC.run
 	chrom = WC.chr
 	chunk = WC.chunk
@@ -59,7 +59,7 @@ def hap_runlocator(WC):
 	return location
 
 def legend_runlocator(WC):
-	haplegendsample_run = {'5':'impute2_refpanel/run2/'}
+	haplegendsample_run = {'5':'impute2_refpanel/run2/', '8':'impute2_refpanel/run1/', '10':'impute2_refpanel/run7', '11':'impute2_refpanel/run6/'}
 	t = WC.run
 	chrom = WC.chr
 	chunk = WC.chunk

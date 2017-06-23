@@ -9,7 +9,7 @@ rule impacc:
 		#targ = expand("ref_vcfs/F250_HD_merged.chr{chr}.pickle", chr = list(range(1,30)))
 		#targ = expand("minimac_imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv", run = 2, sample = SAMPLES, chr = list(range(1,30)))
 		#targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 5, sample = SAMPLES)
-		targ = expand("imp_acc/run{run}/visualization/{sample}.chr{chr}.combo.png", run = 2, sample = SAMPLES, chr = 28)
+		targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 7, sample = SAMPLES)
 		#targ = expand("imp_acc/run{run}/{sample}.lowmafcorr.png", run = 6, sample = SAMPLES)
 include: "mm.snakefile"
 include: "impute2.snakefile"
@@ -30,7 +30,7 @@ include: "impute2.snakefile"
 #sample = "vcf_to_hap/run{run}/{assay}.chr{chr}.phased.samples"
 
 def samplefinder(WC):
-	rundict = {'6':"vcf_to_haps",'1':"vcf_to_haps", '2':'eagle_phased_assays', '4':"shapeit_phased_assays"}
+	rundict = {'6':"vcf_to_haps",'1':"vcf_to_haps", '2':'eagle_phased_assays', '4':"shapeit_phased_assays", '7':'eagle_phased_assays'}
 	r = WC.run
 	chrom = WC.chr
 	if rundict[r] == "vcf_to_haps":
@@ -110,6 +110,24 @@ rule downsample_assay_frqs:
 		"benchmarks/downsample_assay_frqs/{assay}_animals.list{list}.txt"
 	shell: "(plink --bfile {params.iprefix}  --cow --real-ref-alleles --freq {params.idslist} -out {params.assayset})>{log}"
 	#snakemake -s impacc.snakefile ref_vcfs/f250_animals.list1.frq
+
+# rule downsample_assay_frqs:
+# 	input:
+# 		bed = "merge_ref/hol_testset.F250_HD_merged.1970.bed",
+# 		idslist = "dataprepper/{assay}_ids.list{list}.txt"
+# 	params:
+# 		assayset = "ref_vcfs/{assay}_animals.list{list}",
+# 		iprefix = "merge_ref/hol_testset.F250_HD_merged.1970",
+# 		idslist = " --keep dataprepper/{assay}_ids.list{list}.txt"
+# 	output:
+# 		assayset = "ref_vcfs/{assay}_animals.list{list}.frq"
+# 	log:
+# 		"logs/downsample_assay_frqs/{assay}_animals.list{list}"
+# 	benchmark:
+# 		"benchmarks/downsample_assay_frqs/{assay}_animals.list{list}.txt"
+# 	shell: "(plink --bfile {params.iprefix}  --cow --real-ref-alleles --freq {params.idslist} -out {params.assayset})>{log}"
+# 	#snakemake -s impacc.snakefile ref_vcfs/f250_animals.list1.frq
+
 
 rule truth_chromsplit:
 	input:

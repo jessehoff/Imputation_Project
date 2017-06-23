@@ -79,6 +79,7 @@ rule eagle_phased_assays:
 	benchmark:
 		"benchmarks/eagle_phased_assays/run{run}/{sample}.chr{chr}.benchmark.txt"
 	threads: 8
+	priority: 100
 	log:
 		"logs/eagle_phased_assays/run{run}/{sample}.chr{chr}.log"
 	output:
