@@ -53,8 +53,8 @@ include: "shapeit.snakefile"
 
 
 
-haps_sample_run = {'1': 'vcf_to_haps', '2': 'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays'}
-haplegendsample_run = {'1':'vcf_to_hap', '2':'impute_input', '4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input'}
+haps_sample_run = {'1': 'vcf_to_haps', '2': 'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays'}
+haplegendsample_run = {'1':'vcf_to_hap', '2':'impute_input', '4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
 
 def haps_runlocator(shoein):
 	loc = []

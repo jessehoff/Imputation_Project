@@ -9,28 +9,15 @@ rule impacc:
 		#targ = expand("ref_vcfs/F250_HD_merged.chr{chr}.pickle", chr = list(range(1,30)))
 		#targ = expand("minimac_imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv", run = 2, sample = SAMPLES, chr = list(range(1,30)))
 		#targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 5, sample = SAMPLES)
-		targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 7, sample = SAMPLES)
+		#targ = expand("imp_acc/run{run}/visualization/{sample}.chr{chr}.combo.png", run = 2, sample = SAMPLES, chr = 28)
+		targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 9, sample = SAMPLES)
 		#targ = expand("imp_acc/run{run}/{sample}.lowmafcorr.png", run = 6, sample = SAMPLES)
 include: "mm.snakefile"
 include: "impute2.snakefile"
 
-#rule sample_file_move:
-#	input:
-#		samp = "/run{run}/{sample}.chr{chr}.phased.sample"	#Need to create some sort of a sample file mover function, also naming convention of phased/imputed data needs to be carried through
-#		samp = "/run
-#	params:
-#		oprefix = "impute2_chromosome/run{run}/"
-#	log:
-#		"logs/sample_file_move/run{run}/{sample}.chr{chr}.log"
-#	output:
-#		samp = "impute2_chromosome/run{run}/{sample}.chr{chr}.phased.sample"
-#	shell:
-#		"cp {input.samp} {params.oprefix}"
-
-#sample = "vcf_to_hap/run{run}/{assay}.chr{chr}.phased.samples"
 
 def samplefinder(WC):
-	rundict = {'6':"vcf_to_haps",'1':"vcf_to_haps", '2':'eagle_phased_assays', '4':"shapeit_phased_assays", '7':'eagle_phased_assays'}
+	rundict = {'6':"vcf_to_haps",'1':"vcf_to_haps", '2':'eagle_phased_assays', '4':"shapeit_phased_assays", '7':'eagle_phased_assays', '9':'shapeit_phased_assays', '10':'eagle_phased_assays', '11':'vcf_to_haps'}
 	r = WC.run
 	chrom = WC.chr
 	if rundict[r] == "vcf_to_haps":
@@ -40,16 +27,17 @@ def samplefinder(WC):
 	return location
 
 def impute2vcffinder(WC):
-	dirdict = {'1':'impute2_vcf', '2':'impute2_vcf', '3':'impute2_vcf', '4':'impute2_vcf','6':'impute2_vcf', '7':'impute2_vcf'}
-	suffdict = {'1':'.imputed.vcf', '2':'.imputed.vcf', '3':'.imputed.vcf', '4':'.imputed.vcf', '6':'.imputed.vcf', '7':'.imputed.vcf'}
+	dirdict = {'1':'impute2_vcf', '2':'impute2_vcf', '3':'impute2_vcf', '4':'impute2_vcf','6':'impute2_vcf', '7':'impute2_vcf', '9':'impute2_vcf'}
+	suffdict = {'1':'.imputed.vcf', '2':'.imputed.vcf', '3':'.imputed.vcf', '4':'.imputed.vcf', '6':'.imputed.vcf', '7':'.imputed.vcf', '9':'.imputed.vcf'}
 	location = dirdict[WC.run] + '/run' + WC.run + '/' + WC.sample + '.chr' + WC.chr + suffdict[WC.run]
 	return location
 
 def minimacvcffinder(WC):
-	dirdict = {'5':'minimac_imputed'}
-	suffdict = {'5':'.imputed.dose.vcf'}
+	dirdict = {'5':'minimac_imputed', '8':'minimac_imputed', '10':'minimac_imputed'}
+	suffdict = {'5':'.imputed.dose.vcf', '8':'.imputed.dose.vcf', '10':'.imputed.dose.vcf'}
 	location = dirdict[WC.run] + '/run' + WC.run + '/' + WC.sample + '.chr' + WC.chr + suffdict[WC.run]
 	return location
+
 rule impute2_vcf:
 	input:
 		gen = "impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen",
@@ -94,6 +82,25 @@ rule ref_pop_frqs:
 		frq = "ref_vcfs/F250_HD_merged.frq"
 	shell: "(plink --bfile {params.iprefix}  --cow --real-ref-alleles --freq -out {params.oprefix};plink --bfile {params.iprefix}  --cow --real-ref-alleles --freqx -out {params.oprefix})>{log}"
 
+rule impref_frq:
+	input:
+		bed = "merge_ref/hol_testset.F250_HD_merged.1970.bed",
+		idslist = "dataprepper/{assay}_ids.list{list}.txt"
+	params:
+		assayset = "ref_vcfs/{assay}_animals.list{list}",
+		iprefix = "merge_ref/hol_testset.F250_HD_merged.1970",
+		idslist = " --keep dataprepper/{assay}_ids.list{list}.txt"
+	output:
+#		assayset = "ref_vcfs/{assay}_animals.list{list}.frq"
+	log:
+		"logs/downsample_assay_frqs/{assay}_animals.list{list}"
+	benchmark:
+		"benchmarks/downsample_assay_frqs/{assay}_animals.list{list}.txt"
+	shell: "(plink --bfile {params.iprefix}  --cow --real-ref-alleles --freq {params.idslist} -out {params.assayset})>{log}"
+	#snakemake -s impacc.snakefile ref_vcfs/f250_animals.list1.frq
+
+
+
 rule downsample_assay_frqs:
 	input:
 		bed = "merge_ref/hol_testset.F250_HD_merged.1970.bed",
@@ -110,23 +117,6 @@ rule downsample_assay_frqs:
 		"benchmarks/downsample_assay_frqs/{assay}_animals.list{list}.txt"
 	shell: "(plink --bfile {params.iprefix}  --cow --real-ref-alleles --freq {params.idslist} -out {params.assayset})>{log}"
 	#snakemake -s impacc.snakefile ref_vcfs/f250_animals.list1.frq
-
-# rule downsample_assay_frqs:
-# 	input:
-# 		bed = "merge_ref/hol_testset.F250_HD_merged.1970.bed",
-# 		idslist = "dataprepper/{assay}_ids.list{list}.txt"
-# 	params:
-# 		assayset = "ref_vcfs/{assay}_animals.list{list}",
-# 		iprefix = "merge_ref/hol_testset.F250_HD_merged.1970",
-# 		idslist = " --keep dataprepper/{assay}_ids.list{list}.txt"
-# 	output:
-# 		assayset = "ref_vcfs/{assay}_animals.list{list}.frq"
-# 	log:
-# 		"logs/downsample_assay_frqs/{assay}_animals.list{list}"
-# 	benchmark:
-# 		"benchmarks/downsample_assay_frqs/{assay}_animals.list{list}.txt"
-# 	shell: "(plink --bfile {params.iprefix}  --cow --real-ref-alleles --freq {params.idslist} -out {params.assayset})>{log}"
-# 	#snakemake -s impacc.snakefile ref_vcfs/f250_animals.list1.frq
 
 
 rule truth_chromsplit:

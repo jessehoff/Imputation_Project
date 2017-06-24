@@ -11,7 +11,7 @@ def snpset(WC):
 	return pull_or_not[WC.assay]
 
 def runchoice(WC):
-	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','7':'assay_chrsplit/'}
+	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit'}
 	r = WC.run
 	chrom = WC.chr
 	if r == '1':
@@ -21,7 +21,7 @@ def runchoice(WC):
 		location = run_dict[r] + WC.sample + '.list1.chr' + chrom + '.bed'
 	if r =='6':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
-	if r =='7':
+	if r ==('7') or ('9'):
 		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
 	return location
 def listchoice(WC):
@@ -29,7 +29,7 @@ def listchoice(WC):
 	chrom = WC.chr
 	if r ==('2'):# or ('5'):
 		location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
-	if r =='7':
+	if r ==('7') or ('9'):
 		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom
 	if r =='12':
 		location =  'assay_chrsplit/' + WC.sample +'.list3.chr' + chrom
@@ -49,7 +49,7 @@ rule downsample:
 	output:
 		bed = "downsample/{assay}.list{list}.bed"
 	shell:
-		"(plink --bfile {params.bfile}  --real-ref-alleles {params.idslist} {params.extract}  --make-bed  --cow --out {params.oprefix})> {log}"
+		"(plink --bfile {params.bfile}  --real-ref-alleles {params.idslist} {params.extract} --make-bed  --cow --out {params.oprefix})> {log}"
 
 rule assay_chrsplit:
 	input:

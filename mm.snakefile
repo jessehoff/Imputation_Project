@@ -21,32 +21,32 @@ rule mm_target:
 #hapleg_location = {'impute_input':'2'}
 
 def haps_runlocator(WC):
-	haps_sample_run = {'5': 'eagle_phased_assays', '10':'eagle_phased_assays', '8':'vcf_to_haps', '11':'vcf_to_haps'}
-	haps_location = {'eagle_phased_assays':'2', 'eagle_phased_assays':'7', 'vcf_to_haps':'1', 'vcf_to_haps':'6'}
+	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}}
 	t = WC.run
 	samp = WC.sample
 	chrom = WC.chr
-	location = haps_sample_run[t] + '/run' + haps_location[haps_sample_run[t]] + '/'+ samp  +'.chr' + chrom + '.phased.haps'
+	directory = list(haps_sample_run[t])[0]
+	location = directory + '/run' + haps_sample_run[t][directory] + '/'+ samp  +'.chr' + chrom + '.phased.haps'
 	return location
 
 def haps_runprefix(WC):
-	haps_sample_run = {'5': 'eagle_phased_assays', '10':'eagle_phased_assays', '8':'vcf_to_haps', '11':'vcf_to_haps'}
-	haps_location = {'eagle_phased_assays':'2', 'eagle_phased_assays':'7', 'vcf_to_haps':'1', 'vcf_to_haps':'6'}
+	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}}
 	t = WC.run
 	samp = WC.sample
 	chrom = WC.chr
-	location = haps_sample_run[t] + '/run' + haps_location[haps_sample_run[t]] + '/'+ samp  +'.chr' + chrom + '.phased'
+	directory = list(haps_sample_run[t])[0]
+	location = directory + '/run' + haps_sample_run[t][directory] + '/'+ samp  +'.chr' + chrom + '.phased'
 	return location
 
 def sample_runlocator(WC):
-	haps_sample_run = {'5': 'eagle_phased_assays', '10':'eagle_phased_assays', '8':'vcf_to_haps', '11':'vcf_to_haps'}
-	haps_location = {'eagle_phased_assays':'2', 'eagle_phased_assays':'7', 'vcf_to_haps':'1', 'vcf_to_haps':'6'}
+	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}}
 	loc = []
 	for xx in IMPREFS:
 		t = WC.run
 		samp = xx
 		chrom = WC.chr
-		location = haps_sample_run[t] + '/run' + haps_location[haps_sample_run[t]] + '/'+ samp  +'.chr' + chrom + '.phased.sample'
+		directory = list(haps_sample_run[t])[0]
+		location = directory + '/run' + haps_sample_run[t][directory] + '/'+ samp  +'.chr' + chrom + '.phased.sample'
 		loc.append(location)
 	return loc
 
@@ -59,7 +59,7 @@ def hap_runlocator(WC):
 	return location
 
 def legend_runlocator(WC):
-	haplegendsample_run = {'5':'impute2_refpanel/run2/', '8':'impute2_refpanel/run1/', '10':'impute2_refpanel/run7', '11':'impute2_refpanel/run6/'}
+	haplegendsample_run = {'5':'impute2_refpanel/run2/', '8':'impute2_refpanel/run1/', '10':'impute2_refpanel/run7/', '11':'impute2_refpanel/run6/'}
 	t = WC.run
 	chrom = WC.chr
 	chunk = WC.chunk
@@ -103,7 +103,7 @@ rule ref_panel_vcf:
 	benchmark:
 		"benchmarks/ref_panel_vcf/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.benchmark.txt"
 	output:
-		vcf = "minimac_ref_panel/ref_panel_chunks_vcf/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.vcf"
+		vcf = temp("minimac_ref_panel/ref_panel_chunks_vcf/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.vcf")
 	shell:
 		"(bcftools convert -H {input.hap},{input.leg},{input.samp} -o {output.vcf})"
 
@@ -132,7 +132,7 @@ rule cat_vcfs:
 	benchmark:
 		"benchmarks/cat_vcfs/run{run}/merged_refpanel.chr{chr}.phased.benchmark.txt"
 	output:
-		vcf = "minimac_ref_panel/ref_panel_chrom_vcf/run{run}/merged_refpanel.chr{chr}.phased.vcf"
+		vcf = temp("minimac_ref_panel/ref_panel_chrom_vcf/run{run}/merged_refpanel.chr{chr}.phased.vcf")
 	shell:
 		"(bcftools concat {input.vcf} -o {output.vcf})"
 
@@ -170,7 +170,7 @@ rule vcf_convert:
 	benchmark:
 		"benchmarks/vcf_convert/run{run}/{sample}.chr{chr}.phased.benchmark.txt"
 	output:
-		vcf = "phased_assay_vcf/run{run}/{sample}.chr{chr}.phased.vcf",
+		vcf = temp("phased_assay_vcf/run{run}/{sample}.chr{chr}.phased.vcf"),
 		log = "phased_assay_vcf/logs/run{run}/{sample}.chr{chr}.phased.log"
 	shell:
 		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
