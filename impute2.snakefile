@@ -53,8 +53,8 @@ include: "shapeit.snakefile"
 
 
 
-haps_sample_run = {'1': 'vcf_to_haps', '2': 'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays'}
-haplegendsample_run = {'1':'vcf_to_hap', '2':'impute_input', '4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
+haps_sample_run = {'1': 'vcf_to_haps','12': 'vcf_to_haps', '2': 'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays'}
+haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input', '4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
 
 def haps_runlocator(shoein):
 	loc = []
@@ -105,9 +105,6 @@ rule impute2_refpanel:
 
 rule run_impute2_run2: #for parralel phasing
 	input:
-		# hap=expand("impute_input/{ref}.run{{run}}.chr{{chr}}.phased.haplotypes", ref=IMPREFS),
-		# legend=expand("impute_input/{ref}.run{{run}}.chr{{chr}}.phased.legend", ref=IMPREFS),
-		# knownhaps="eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps", #This will need to be changed in order to
 		hap = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",				#How are we supposed to expand over a function? Not sure if we can make this as smart as we want it to be?
 		legend = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.legend",
 		knownhaps = haps_runlocator,
