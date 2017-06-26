@@ -10,14 +10,14 @@ rule impacc:
 		#targ = expand("minimac_imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv", run = 2, sample = SAMPLES, chr = list(range(1,30)))
 		#targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 5, sample = SAMPLES)
 		#targ = expand("imp_acc/run{run}/visualization/{sample}.chr{chr}.combo.png", run = 2, sample = SAMPLES, chr = 28)
-		targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 12, sample = SAMPLES)
+		targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 13, sample = SAMPLES)
 		#targ = expand("imp_acc/run{run}/{sample}.lowmafcorr.png", run = 6, sample = SAMPLES)
 include: "mm.snakefile"
 include: "impute2.snakefile"
 
 
 def samplefinder(WC):
-	rundict = {'6':"vcf_to_haps",'1':"vcf_to_haps",'12':"vcf_to_haps", '2':'eagle_phased_assays', '4':"shapeit_phased_assays", '7':'eagle_phased_assays', '9':'shapeit_phased_assays', '10':'eagle_phased_assays', '11':'vcf_to_haps'}
+	rundict = {'6':"vcf_to_haps",'1':"vcf_to_haps",'12':"vcf_to_haps", '2':'eagle_phased_assays','13':'eagle_phased_assays', '4':"shapeit_phased_assays", '7':'eagle_phased_assays', '9':'shapeit_phased_assays', '10':'eagle_phased_assays', '11':'vcf_to_haps'}
 	r = WC.run
 	chrom = WC.chr
 	if rundict[r] == "vcf_to_haps":
@@ -29,7 +29,7 @@ def samplefinder(WC):
 def impute2vcffinder(WC):
 	dirdict = {'1':'impute2_vcf', '2':'impute2_vcf', '3':'impute2_vcf', '4':'impute2_vcf','6':'impute2_vcf', '7':'impute2_vcf', '9':'impute2_vcf','12':'impute2_vcf','9':'impute2_vcf'}
 	suffdict = {'1':'.imputed.vcf','12':'.imputed.vcf', '2':'.imputed.vcf', '3':'.imputed.vcf', '4':'.imputed.vcf', '6':'.imputed.vcf', '7':'.imputed.vcf', '9':'.imputed.vcf'}
-	location = dirdict[WC.run] + '/run' + WC.run + '/' + WC.sample + '.chr' + WC.chr + suffdict[WC.run]
+	location = 'impute2_vcf' + '/run' + WC.run + '/' + WC.sample + '.chr' + WC.chr + '.imputed.vcf' 
 	return location
 
 def minimacvcffinder(WC):

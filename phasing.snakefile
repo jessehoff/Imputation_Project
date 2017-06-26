@@ -11,7 +11,7 @@ def snpset(WC):
 	return pull_or_not[WC.assay]
 
 def runchoice(WC):
-	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit','12':'merged_chrsplit'}
+	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','13':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit','12':'merged_chrsplit'}
 	r = WC.run
 	chrom = WC.chr
 	if r == '1':
@@ -22,6 +22,8 @@ def runchoice(WC):
 	if r =='6':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
 	if r ==('7'):
+		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
+	if r ==('13'):
 		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
 	if r ==('9'):
 		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
@@ -35,8 +37,9 @@ def listchoice(WC):
 		location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
 	if r ==('7') or ('9'):
 		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom
-	if r =='12': #not sure this is the right one?
+	if r =='13': #not sure this is the right one?
 		location =  'assay_chrsplit/' + WC.sample +'.list3.chr' + chrom
+	
 	return location
 
 
