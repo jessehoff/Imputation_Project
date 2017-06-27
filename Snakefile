@@ -1,6 +1,9 @@
 rule targ:
 	input:
-		jag = expand("correct_sex/{sample}.bed", sample = ['227234.170519.1970.GGPF250', '777962.170519.1970.HD'])
+		#jag = expand("correct_sex/{sample}.bed", sample = ['227234.170619.1255.129_A', '227234.170619.12703.100_A', '227234.170619.1351.101_A', '227234.170619.1667.550_A', '227234.170619.172.103_A', '227234.170619.1994.200_A', '227234.170619.219.102_A', '227234.170619.442.112_A', '227234.170619.500.104_A', '227234.170619.74.124_A', '777962.170619.10.129_C', '777962.170619.11.550_A', '777962.170619.136.124_A', '777962.170619.1681.100_A', '777962.170619.213.129_A', '777962.170619.241.102_A', '777962.170619.26.103_A', '777962.170619.2779.200_A', '777962.170619.315.112_A', '777962.170619.40.129_B', '777962.170619.408.550_B', '777962.170619.41.101_B', '777962.170619.411.200_B', '777962.170619.417.100_B', '777962.170619.477.104_A', '777962.170619.552.101_A', '777962.170619.99.103_B'])
+		targ = expand("correct_sex/{sample}.bed", sample = ['58336.170626.1339.200.A', '58336.170626.16709.200.X', '58336.170626.4359.200.Y', '58336.170626.13134.200.Z'])
+
+		#58336.170626.94.200.B removed from target because issues were coming up without any sex chromosomes
 
 map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_HD_161214.map",'227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map",'58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map",'76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
 #This map dictionary should be able to remain the same, and we can add new maps for whichever new assays become available in future datasets
@@ -54,7 +57,6 @@ rule variant_stats:
 	output:
 		frq = "snp_stats/{sample}.frq",
 		log = "snp_stats/{sample}.log",
-		hh = "snp_stats/{sample}.hh"
 	shell:
 		"plink --file {params.inprefix} --map {input.map} --keep-allele-order --cow --nonfounders --freq --out {params.oprefix}"
 
@@ -106,13 +108,13 @@ rule filter_variants:
 		"plink --file {params.inprefix} --map {input.map} --threads 4 --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {params.csv}"
 
 rule convert_chip2seq:
-		input:  
+		input:
 			bed="snp_filtered/{sample}.bed",
 			bim="snp_filtered/{sample}.bim",
 			fam="snp_filtered/{sample}.fam",
 			refalt = "ref_alt/update_all_alleles_170531.txt",
 			log="snp_filtered/{sample}.log"
-		params: 
+		params:
 				iprefix="snp_filtered/{sample}",
 				oprefix = "ref_alt/{sample}"
 		threads : 4
@@ -120,31 +122,31 @@ rule convert_chip2seq:
 				"benchmarks/convert_chip2seq/{sample}.txt"
 		log:
 				"logs/convert_chip2seq/{sample}.log"
-		output: 
+		output:
 				bed="ref_alt/{sample}.bed",
 				bim="ref_alt/{sample}.bim",
 				fam="ref_alt/{sample}.fam",
 				log="ref_alt/{sample}.log"
-		shell:  
+		shell:
 				"(plink --bfile {params.iprefix} --cow  --threads 4 --out {params.oprefix} --exclude ref_alt/no_ref_alt_170603.txt  --update-alleles {input.refalt}  --make-bed)> {log}"
-				
+
 rule update_ref:
-		input:  
+		input:
 			rules.convert_chip2seq.output,
 			updateref = "ref_alt/update_all_refs_170531.txt"
-		params: 
+		params:
 				iprefix="ref_alt/{sample}",
 				oprefix = "ref_set/{sample}"
 		benchmark:
 				"benchmarks/update_ref/{sample}.txt"
 		log:
 				"logs/update_ref/{sample}.log"
-		output: 
+		output:
 				bed="ref_set/{sample}.bed",
 				bim="ref_set/{sample}.bim",
 				fam="ref_set/{sample}.fam",
 				log="ref_set/{sample}.log"
-		shell:  
+		shell:
 				"(plink --bfile {params.iprefix} --cow  --out {params.oprefix} --a1-allele {input.updateref}  --make-bed)> {log}"
 
 
@@ -247,7 +249,7 @@ rule filter_hwe_variants:
 	input:
 		bed="individual_filtered/{sample}.bed",
 		stats="hwe_stats/{sample}.hwe",
-		png="hwe_stats/figures/{sample}.hwe_pvalues.png"
+#		png="hwe_stats/figures/{sample}.hwe_pvalues.png"
 	params:
 		inprefix="individual_filtered/{sample}",
 		oprefix="hwe_filtered/{sample}",
