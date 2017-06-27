@@ -1,5 +1,6 @@
 DATA =['f250', 'ggpld', 'hd', 'snp50'] #new file names -- these are files that have had ref-alt conversions
 hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
+
 rule targ:
 	input:
 		hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
@@ -11,27 +12,36 @@ def snpset(WC):
 	return pull_or_not[WC.assay]
 
 def runchoice(WC):
-	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','7':'assay_chrsplit/'}
+	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','13':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit','12':'merged_chrsplit'}
 	r = WC.run
 	chrom = WC.chr
 	if r == '1':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
 	if r ==('2'):# or ('5'):#the sample by sample phasing files identified here need to have their sample referenced in the name, and the combine phasing samples do not have a rule of phasing.
-		r = '2'
 		location = run_dict[r] + WC.sample + '.list1.chr' + chrom + '.bed'
 	if r =='6':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
-	if r =='7':
+	if r ==('7'):
+		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
+	if r ==('13'):
+		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
+	if r ==('9'):
+		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
+	if r ==('12'):
+		location = run_dict[r] + '/run' + r + '/hol_testset.merge.chr' + chrom +'.bed'
+	if r ==('10'):
+		r = '7'
 		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
 	return location
+
 def listchoice(WC):
 	r = WC.run
 	chrom = WC.chr
 	if r ==('2'):# or ('5'):
 		location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
-	if r =='7':
+	if r ==('7') or ('10'):
 		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom
-	if r =='12':
+	if r =='13': #not sure this is the right one?
 		location =  'assay_chrsplit/' + WC.sample +'.list3.chr' + chrom
 	return location
 
@@ -49,7 +59,7 @@ rule downsample:
 	output:
 		bed = "downsample/{assay}.list{list}.bed"
 	shell:
-		"(plink --bfile {params.bfile}  --real-ref-alleles {params.idslist} {params.extract}  --make-bed  --cow --out {params.oprefix})> {log}"
+		"(plink --bfile {params.bfile}  --real-ref-alleles {params.idslist} {params.extract} --make-bed  --cow --out {params.oprefix})> {log}"
 
 rule assay_chrsplit:
 	input:
@@ -79,6 +89,7 @@ rule eagle_phased_assays:
 	benchmark:
 		"benchmarks/eagle_phased_assays/run{run}/{sample}.chr{chr}.benchmark.txt"
 	threads: 8
+	priority: 100
 	log:
 		"logs/eagle_phased_assays/run{run}/{sample}.chr{chr}.log"
 	output:
@@ -118,7 +129,7 @@ rule hap_leg:
 		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
 
 def findmergelist(wc):
-	listdict = {'6':'2','1':'1','2':'1','3':'1'}
+	listdict = {'6':'2','1':'1','2':'1','3':'1','12': '3'}
 	run = wc.run
 	list = listdict[run]
 	locate = 'assay_chrsplit/hol_testset.list' + list+'.chr'+wc.chr+'.txt'
@@ -157,7 +168,7 @@ rule eagle_merged:
 		bed="merged_chrsplit/run{run}/hol_testset.merge.chr{chr}",
 		out="eagle_merged/run{run}/hol_testset.merge.chr{chr}"
 	threads: 10
-	priority: 20
+	priority: 30
 	benchmark:
 		"benchmarks/eagle_merged/run{run}/hol_testset.merge.chr{chr}.benchmark.txt"
 	log:
@@ -209,7 +220,7 @@ rule bgzip_vcf:
 		"(bgzip {input.vcf}; tabix {output.vcfgz}) > {log};"
 
 def pickidsforlist(wc):
-	listdict = {'6':'2','1':'1','2':'1','3':'1'}
+	listdict = {'6':'2','1':'1','2':'1','3':'1','12':'3'}
 	run = wc.run
 	list = listdict[run]
 	return list
