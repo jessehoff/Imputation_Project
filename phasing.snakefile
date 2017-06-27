@@ -1,5 +1,6 @@
 DATA =['f250', 'ggpld', 'hd', 'snp50'] #new file names -- these are files that have had ref-alt conversions
 hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
+
 rule targ:
 	input:
 		hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
@@ -17,7 +18,6 @@ def runchoice(WC):
 	if r == '1':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
 	if r ==('2'):# or ('5'):#the sample by sample phasing files identified here need to have their sample referenced in the name, and the combine phasing samples do not have a rule of phasing.
-		r = '2'
 		location = run_dict[r] + WC.sample + '.list1.chr' + chrom + '.bed'
 	if r =='6':
 		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
@@ -28,18 +28,21 @@ def runchoice(WC):
 	if r ==('9'):
 		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
 	if r ==('12'):
-		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
+		location = run_dict[r] + '/run' + r + '/hol_testset.merge.chr' + chrom +'.bed'
+	if r ==('10'):
+		r = '7'
+		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
 	return location
+
 def listchoice(WC):
 	r = WC.run
 	chrom = WC.chr
 	if r ==('2'):# or ('5'):
 		location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
-	if r ==('7') or ('9'):
+	if r ==('7') or ('10'):
 		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom
 	if r =='13': #not sure this is the right one?
 		location =  'assay_chrsplit/' + WC.sample +'.list3.chr' + chrom
-	
 	return location
 
 

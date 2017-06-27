@@ -184,7 +184,7 @@ rule run_minimac:
 		chrom = "{chr}"
 	threads: 8
 	log:
-		"logs/minimac/{sample}.{run}.chr{chr}.phased.log"
+		"logs/minimac/run{run}/{sample}.chr{chr}.phased.log"
 	benchmark:
 		"benchmarks/minimac/run{run}/{sample}.chr{chr}.phased.benchmark.txt"
 	output:

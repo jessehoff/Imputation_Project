@@ -53,10 +53,11 @@ include: "shapeit.snakefile"
 
 
 
-haps_sample_run = {'1': 'vcf_to_haps','12': 'vcf_to_haps', '2': 'eagle_phased_assays','13':'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays'}
-haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
+# haps_sample_run = {'1': 'vcf_to_haps','12': 'vcf_to_haps', '2': 'eagle_phased_assays','13':'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays'}
+# haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
 
 def haps_runlocator(shoein):
+	haps_sample_run = {'1': 'vcf_to_haps','12': 'vcf_to_haps', '2': 'eagle_phased_assays','13':'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays'}
 	loc = []
 	t = shoein.run
 	samp = shoein.sample
@@ -66,6 +67,7 @@ def haps_runlocator(shoein):
 	return location
 
 def hap_runlocator(shoein):
+	haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
 	loc = []
 	for xx in IMPREFS:
 		t = shoein.run
@@ -76,6 +78,7 @@ def hap_runlocator(shoein):
 	return loc
 
 def legend_runlocator(shoein):
+	haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
 	loc = []
 	for xx in IMPREFS:
 		t = shoein.run
@@ -105,7 +108,7 @@ rule impute2_refpanel:
 
 rule run_impute2_run2: #for parralel phasing
 	input:
-		hap = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",				#How are we supposed to expand over a function? Not sure if we can make this as smart as we want it to be?
+		hap = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",	#How are we supposed to expand over a function? Not sure if we can make this as smart as we want it to be?
 		legend = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.legend",
 		knownhaps = haps_runlocator,
 		maps="impute_maps/imputemap.chr{chr}.map"
@@ -181,7 +184,6 @@ rule cat_chunks:
 		cat = "impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen"
 	shell:
 		"(cat {input.chunks} > {output.cat}) > {log}"#; cp eagle_phased_assays/*.run2*.sample impute2_chromosome/"
-
 
 #maybe needed?
  #bcftools query -l ./vcf_to_assays/hol_testset.F250.197.1.chr10.vcf > ./vcf_to_assays/hol_testset.F250.197.1.samples
