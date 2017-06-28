@@ -110,7 +110,7 @@ rule ref_panel_vcf:
 
 def chrfiles(chrom):
 	rundict = {}
-	for Run in range(15):
+	for Run in range(20):
 		run= str(Run)
 		filedict = {}
 		for chr in rangedict.keys():
