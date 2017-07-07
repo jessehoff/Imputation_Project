@@ -57,7 +57,7 @@ include: "shapeit.snakefile"
 # haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
 
 def haps_runlocator(shoein):
-	haps_sample_run = {'1': 'vcf_to_haps','12': 'vcf_to_haps', '2': 'eagle_phased_assays','13':'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays'}
+	haps_sample_run = {'1': 'vcf_to_haps','12': 'vcf_to_haps', '2': 'eagle_phased_assays','13':'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays','14':'shapeit_phased_assays'}
 	loc = []
 	t = shoein.run
 	samp = shoein.sample
@@ -67,7 +67,7 @@ def haps_runlocator(shoein):
 	return location
 
 def hap_runlocator(shoein):
-	haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
+	haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input','14':'shapeit_phased_assays/impute_input'}
 	loc = []
 	for xx in IMPREFS:
 		t = shoein.run
@@ -78,7 +78,7 @@ def hap_runlocator(shoein):
 	return loc
 
 def legend_runlocator(shoein):
-	haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
+	haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input','14':'shapeit_phased_assays/impute_input'}
 	loc = []
 	for xx in IMPREFS:
 		t = shoein.run

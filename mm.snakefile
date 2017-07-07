@@ -21,7 +21,7 @@ rule mm_target:
 #hapleg_location = {'impute_input':'2'}
 
 def haps_runlocator(WC):
-	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}}
+	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}, '15':{'eagle_phased_assays':'13'}, '16':{'vcf_to_haps':'12'}}
 	t = WC.run
 	samp = WC.sample
 	chrom = WC.chr
@@ -30,7 +30,7 @@ def haps_runlocator(WC):
 	return location
 
 def haps_runprefix(WC):
-	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}}
+	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}, '15':{'eagle_phased_assays':'13'}, '16':{'vcf_to_haps':'12'}}
 	t = WC.run
 	samp = WC.sample
 	chrom = WC.chr
@@ -39,7 +39,7 @@ def haps_runprefix(WC):
 	return location
 
 def sample_runlocator(WC):
-	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}}
+	haps_sample_run = {'5':{'eagle_phased_assays':'2'}, '10':{'eagle_phased_assays':'7'}, '8':{'vcf_to_haps':'1'}, '11':{'vcf_to_haps':'6'}, '15':{'eagle_phased_assays':'13'}, '16':{'vcf_to_haps':'12'}}
 	loc = []
 	for xx in IMPREFS:
 		t = WC.run
@@ -51,7 +51,7 @@ def sample_runlocator(WC):
 	return loc
 
 def hap_runlocator(WC):
-	haplegendsample_run = {'5':'impute2_refpanel/run2/', '8':'impute2_refpanel/run1/', '10':'impute2_refpanel/run7/', '11':'impute2_refpanel/run6/'}
+	haplegendsample_run = {'5':'impute2_refpanel/run2/', '8':'impute2_refpanel/run1/', '10':'impute2_refpanel/run7/', '11':'impute2_refpanel/run6/', '15':'impute2_refpanel/run13/', '16':'impute2_refpanel/run12/'}
 	t = WC.run
 	chrom = WC.chr
 	chunk = WC.chunk
@@ -59,7 +59,7 @@ def hap_runlocator(WC):
 	return location
 
 def legend_runlocator(WC):
-	haplegendsample_run = {'5':'impute2_refpanel/run2/', '8':'impute2_refpanel/run1/', '10':'impute2_refpanel/run7/', '11':'impute2_refpanel/run6/'}
+	haplegendsample_run = {'5':'impute2_refpanel/run2/', '8':'impute2_refpanel/run1/', '10':'impute2_refpanel/run7/', '11':'impute2_refpanel/run6/', '15':'impute2_refpanel/run13/', '16':'impute2_refpanel/run12/'}
 	t = WC.run
 	chrom = WC.chr
 	chunk = WC.chunk
@@ -110,7 +110,7 @@ rule ref_panel_vcf:
 
 def chrfiles(chrom):
 	rundict = {}
-	for Run in range(15):
+	for Run in range(20):
 		run= str(Run)
 		filedict = {}
 		for chr in rangedict.keys():

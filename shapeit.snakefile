@@ -4,7 +4,7 @@ rule shape_targ:
 	input:
 		targ = expand("shapeit_phased_assays/run{run}/{sample}.chr{chr}.phased.haps", run =4, sample = DATA, chr = list(range(1,30)))
 
-run_dict = {'1':'merged_chrsplit', '2':'assay_chrsplit/', '3':'assay_chrsplit/', '4':'assay_chrsplit/', '9':'assay_chrsplit/'}
+run_dict = {'1':'merged_chrsplit', '2':'assay_chrsplit/', '3':'assay_chrsplit/', '4':'assay_chrsplit/', '9':'assay_chrsplit/', '14':'assay_chrsplit/'}
 def runchoice(WC):
 	r = WC.run
 	chrom = WC.chr
@@ -15,6 +15,8 @@ def runchoice(WC):
 		location = run_dict[r] + WC.sample + '.list1.chr' + chrom + '.bed'
 	if r == '9':
 		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
+	if r == '14':
+		location = run_dict[r] + WC.sample + '.list3.chr' + chrom + '.bed'
 	return location
 
 rule run_shapeit_assay:
