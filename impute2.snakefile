@@ -181,7 +181,7 @@ rule cat_chunks:
 	benchmark:
 		"benchmarks/cat_chunks/run{run}/{sample}.chr{chr}.benchmark.txt"
 	output:
-		cat = "impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen"
+		cat = temp("impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen")
 	shell:
 		"(cat {input.chunks} > {output.cat}) > {log}"#; cp eagle_phased_assays/*.run2*.sample impute2_chromosome/"
 
