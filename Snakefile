@@ -28,7 +28,7 @@ rule filter_duplicate_individuals:
 		"filter_benchmarks/duplicates_filtered/{sample}.txt"
 	output:
 		dup = "duplicates_filtered/dup_ids/{sample}.txt",
-		ped = "duplicates_filtered/{sample}.ped",
+		ped = temp("duplicates_filtered/{sample}.ped"),
 		csv = "filter_logs/{sample}.csv"
 	shell:
 		"python bin/duplicate_filter.py {input.id} {output.dup} {input.ped} {output.ped}; python bin/duplicate_logging.py {output.dup} {output.csv}"
@@ -98,21 +98,21 @@ rule filter_variants:
 	benchmark:
 		"filter_benchmarks/filter_variants/{sample}.txt"
 	output:
-		bed="snp_filtered/{sample}.bed",
-		bim="snp_filtered/{sample}.bim",
-		fam="snp_filtered/{sample}.fam",
+		bed=temp("snp_filtered/{sample}.bed"),
+		bim=temp("snp_filtered/{sample}.bim"),
+		fam=temp("snp_filtered/{sample}.fam"),
 		log="snp_filtered/{sample}.log"
 	shell:
 		"plink --file {params.inprefix} --map {input.map} --threads 4 --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {params.csv}"
 
 rule convert_chip2seq:
-		input:  
+		input:
 			bed="snp_filtered/{sample}.bed",
 			bim="snp_filtered/{sample}.bim",
 			fam="snp_filtered/{sample}.fam",
 			refalt = "ref_alt/update_all_alleles_170531.txt",
 			log="snp_filtered/{sample}.log"
-		params: 
+		params:
 				iprefix="snp_filtered/{sample}",
 				oprefix = "ref_alt/{sample}"
 		threads : 4
@@ -120,31 +120,31 @@ rule convert_chip2seq:
 				"benchmarks/convert_chip2seq/{sample}.txt"
 		log:
 				"logs/convert_chip2seq/{sample}.log"
-		output: 
-				bed="ref_alt/{sample}.bed",
-				bim="ref_alt/{sample}.bim",
-				fam="ref_alt/{sample}.fam",
+		output:
+				bed=temp("ref_alt/{sample}.bed"),
+				bim=temp("ref_alt/{sample}.bim"),
+				fam=temp("ref_alt/{sample}.fam"),
 				log="ref_alt/{sample}.log"
-		shell:  
+		shell:
 				"(plink --bfile {params.iprefix} --cow  --threads 4 --out {params.oprefix} --exclude ref_alt/no_ref_alt_170603.txt  --update-alleles {input.refalt}  --make-bed)> {log}"
-				
+
 rule update_ref:
-		input:  
+		input:
 			rules.convert_chip2seq.output,
 			updateref = "ref_alt/update_all_refs_170531.txt"
-		params: 
+		params:
 				iprefix="ref_alt/{sample}",
 				oprefix = "ref_set/{sample}"
 		benchmark:
 				"benchmarks/update_ref/{sample}.txt"
 		log:
 				"logs/update_ref/{sample}.log"
-		output: 
-				bed="ref_set/{sample}.bed",
-				bim="ref_set/{sample}.bim",
-				fam="ref_set/{sample}.fam",
+		output:
+				bed=temp("ref_set/{sample}.bed"),
+				bim=temp("ref_set/{sample}.bim"),
+				fam=temp("ref_set/{sample}.fam"),
 				log="ref_set/{sample}.log"
-		shell:  
+		shell:
 				"(plink --bfile {params.iprefix} --cow  --out {params.oprefix} --a1-allele {input.updateref}  --make-bed)> {log}"
 
 
@@ -202,9 +202,9 @@ rule filter_individuals:
 	benchmark:
 		"filter_benchmarks/filter_individuals/{sample}.txt"
 	output:
-		bed="individual_filtered/{sample}.bed",
-		bim="individual_filtered/{sample}.bim",
-		fam="individual_filtered/{sample}.fam",
+		bed=temp("individual_filtered/{sample}.bed"),
+		bim=temp("individual_filtered/{sample}.bim"),
+		fam=temp("individual_filtered/{sample}.fam"),
 		log="individual_filtered/{sample}.log"
 
 	shell:
@@ -255,9 +255,9 @@ rule filter_hwe_variants:
 	benchmark:
 		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
-		bed="hwe_filtered/{sample}.bed",
-		bim="hwe_filtered/{sample}.bim",
-		fam="hwe_filtered/{sample}.fam",
+		bed=temp("hwe_filtered/{sample}.bed"),
+		bim=temp("hwe_filtered/{sample}.bim"),
+		fam=temp("hwe_filtered/{sample}.fam"),
 		log="hwe_filtered/{sample}.log"
 	shell:
 		"plink --bfile {params.inprefix} --cow --nonfounders  --real-ref-alleles --hwe 1e-20 --make-bed --out {params.oprefix}; python bin/hwe_log_parsing.py {output.log} {params.csv}"
@@ -278,9 +278,9 @@ rule impute_sex:
 	benchmark:
 		"filter_benchmarks/impute_sex/{sample}.txt"
 	output:
-		bed="sex_impute/{sample}.bed",
-		bim="sex_impute/{sample}.bim",
-		fam="sex_impute/{sample}.fam",
+		bed=temp("sex_impute/{sample}.bed"),
+		bim=temp("sex_impute/{sample}.bim"),
+		fam=temp("sex_impute/{sample}.fam"),
 		log="sex_impute/{sample}.log",
 		sexcheck="sex_impute/{sample}.sexcheck",
 		txt="sex_impute/{sample}.missexed_animals.txt"
@@ -300,10 +300,10 @@ rule remove_missexed_animals:
 		inprefix="sex_impute/{sample}",
 		oprefix="correct_sex/{sample}"
 	output:
-		bed="correct_sex/{sample}.bed",
-                bim="correct_sex/{sample}.bim",
-                fam="correct_sex/{sample}.fam",
-                log="correct_sex/{sample}.log",
+		bed=temp("correct_sex/{sample}.bed"),
+		bim=temp("correct_sex/{sample}.bim"),
+		fam=temp("correct_sex/{sample}.fam"),
+		log=temp("correct_sex/{sample}.log"),
 	shell:
 		"plink --bfile {params.inprefix} --cow --remove {input.txt} --real-ref-alleles --make-bed --out {params.oprefix}"
 
@@ -326,10 +326,10 @@ rule merge_assays:
 		oprefix="merged_files/170112_merged"
 	output:
 		#mergefilelist= "correct_sex/allfiles.txt"
-                bim = "merged_files/170112_merged.bim",
-                fam = "merged_files/170112_merged.fam",
-                log = "merged_files/170112_merged.log",
-                bed = "merged_files/170112_merged.bed"
+		bim = "merged_files/170112_merged.bim",
+		fam = "merged_files/170112_merged.fam",
+		log = "merged_files/170112_merged.log",
+		bed = "merged_files/170112_merged.bed"
 	shell:
 		"python bin/file_list_maker.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --real-ref-alleles --make-bed --out {params.oprefix}"
 
@@ -364,23 +364,23 @@ rule split_chromosomes:
 
 
 rule assay_chromosomes:
-        input:
-                bed = expand( "correct_sex/{assay}.bed", assay = DATA),
-                bim = expand("correct_sex/{assay}.bim", assay = DATA),
-                fam = expand("correct_sex/{assay}.fam", assay = DATA),
-                log = expand("correct_sex/{assay}.log", assay = DATA)
-        params:
-                inprefix = "correct_sex/{sample}",
-                oprefix = "eagle_chrsplit/{sample}.chr{chr}",
-                chr = "{chr}"
-        benchmark:
-                "filter_benchmarks/eagle_chrsplit/{sample}.chr{chr}.txt"
-        log:
-                "snake_logs/eagle_split_chromosomes/{sample}.chr{chr}.log"
-        output:
-                bed = "assay_chrsplit/{sample}.chr{chr}.bed",
-                bim = "assay_chrsplit/{sample}.chr{chr}.bim",
-                fam = "assay_chrsplit/{sample}.chr{chr}.fam",
-                log = "assay_chrsplit/{sample}.chr{chr}.log"
-        shell:
-                "(plink --bfile {params.inprefix}  --real-ref-alleles --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
+	input:
+		bed = expand( "correct_sex/{assay}.bed", assay = DATA),
+		bim = expand("correct_sex/{assay}.bim", assay = DATA),
+		fam = expand("correct_sex/{assay}.fam", assay = DATA),
+		log = expand("correct_sex/{assay}.log", assay = DATA)
+	params:
+		inprefix = "correct_sex/{sample}",
+		oprefix = "eagle_chrsplit/{sample}.chr{chr}",
+		chr = "{chr}"
+	benchmark:
+		"filter_benchmarks/eagle_chrsplit/{sample}.chr{chr}.txt"
+	log:
+		"snake_logs/eagle_split_chromosomes/{sample}.chr{chr}.log"
+	output:
+		bed = "assay_chrsplit/{sample}.chr{chr}.bed",
+		bim = "assay_chrsplit/{sample}.chr{chr}.bim",
+		fam = "assay_chrsplit/{sample}.chr{chr}.fam",
+		log = "assay_chrsplit/{sample}.chr{chr}.log"
+	shell:
+		"(plink --bfile {params.inprefix}  --real-ref-alleles --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"

@@ -121,8 +121,8 @@ rule hap_leg:
 	benchmark:
 		"benchmarks/hap_leg/run{run}/{sample}.chr{chr}.phased.benchmark.txt"
 	output:
-		hap = "impute_input/run{run}/{sample}.chr{chr}.phased.haplotypes",
-		leg = "impute_input/run{run}/{sample}.chr{chr}.phased.legend",
+		hap = temp("impute_input/run{run}/{sample}.chr{chr}.phased.haplotypes"),
+		leg = temp("impute_input/run{run}/{sample}.chr{chr}.phased.legend"),
 		log = "impute_input/run{run}/logs/{sample}.chr{chr}.phased.log"
 	shell:
 		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
@@ -200,7 +200,7 @@ rule eagle_merged_vcf:
 	params:
 		haps="eagle_merged/run{run}/hol_testset.merge.chr{chr}"
 	output:
-		vcf="eagle_merged_vcf/run{run}/hol_testset.merge.chr{chr}.phased.vcf",
+		vcf=temp("eagle_merged_vcf/run{run}/hol_testset.merge.chr{chr}.phased.vcf"),
 		log="eagle_merged_vcf/logs/run{run}/hol_testset.merge.chr{chr}.log"
 	shell:
 		"(shapeit -convert --input-haps {params.haps} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
@@ -213,8 +213,8 @@ rule bgzip_vcf:
 	benchmark:
 		"benchmarks/bgzip_vcf/run{run}/hol_testset.merge.chr{chr}"
 	output:
-		vcfgz="eagle_merged_vcf/run{run}/hol_testset.merge.chr{chr}.phased.vcf.gz",
-		index="eagle_merged_vcf/run{run}/hol_testset.merge.chr{chr}.phased.vcf.gz.tbi"
+		vcfgz=temp("eagle_merged_vcf/run{run}/hol_testset.merge.chr{chr}.phased.vcf.gz"),
+		index=temp("eagle_merged_vcf/run{run}/hol_testset.merge.chr{chr}.phased.vcf.gz.tbi")
 	shell:
 		"(bgzip {input.vcf}; tabix {output.vcfgz}) > {log};"
 
@@ -252,7 +252,7 @@ rule vcf_per_assay: #filter the vcfs on a per assay basis
 	log:
 		"logs/vcf_per_assay/run{run}/{assay}.chr{chr}.log"
 	output:
-		vcf = "vcf_per_assay/run{run}/{assay}.chr{chr}.vcf",
+		vcf = temp("vcf_per_assay/run{run}/{assay}.chr{chr}.vcf"),
 	shell:
 		"(bcftools view {input.vcfgz} -R {input.keep_maps}  -S {input.keep_ids} -o {output.vcf}) > {log}"
 
@@ -267,9 +267,9 @@ rule vcf_to_hap:
 	log:
 		"logs/vcf_to_hap/run{run}/{assay}.chr{chr}.log"
 	output:
-		legend = "vcf_to_hap/run{run}/{assay}.chr{chr}.phased.legend",
-		haps = "vcf_to_hap/run{run}/{assay}.chr{chr}.phased.haplotypes",
-		sample = "vcf_to_hap/run{run}/{assay}.chr{chr}.phased.samples"
+		legend = temp("vcf_to_hap/run{run}/{assay}.chr{chr}.phased.legend"),
+		haps = temp("vcf_to_hap/run{run}/{assay}.chr{chr}.phased.haplotypes"),
+		sample = temp("vcf_to_hap/run{run}/{assay}.chr{chr}.phased.samples")
 	shell:
 		"(bcftools convert {input.vcf} --haplegendsample {output.haps},{output.legend},{output.sample}) > {log}" #Updated these to use the naming conventions that the shapeit tool outputs the run2 hap,leg,samples, so naming is consistent in Impute2.
 
@@ -284,7 +284,7 @@ rule vcf_to_haps: #doesn't approrpriately name "haps" haps
 	log:
 		"logs/vcf_to_haps/run{run}/{assay}.chr{chr}.log"
 	output:
-		hap = "vcf_to_haps/run{run}/{assay}.chr{chr}.phased.haps",
-		sample = "vcf_to_haps/run{run}/{assay}.chr{chr}.phased.sample"
+		hap = temp("vcf_to_haps/run{run}/{assay}.chr{chr}.phased.haps"),
+		sample = temp("vcf_to_haps/run{run}/{assay}.chr{chr}.phased.sample")
 	shell:
 		"(bcftools convert {input.vcf} --hapsample {output.hap},{output.sample} ) > {log}"

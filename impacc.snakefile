@@ -51,7 +51,7 @@ rule impute2_vcf:
 	benchmark:
 		"benchmarks/impute2_vcf/run{run}/{sample}.chr{chr}.benchmark.txt"
 	output:
-		vcf = "impute2_vcf/run{run}/{sample}.chr{chr}.imputed.vcf"
+		vcf = temp("impute2_vcf/run{run}/{sample}.chr{chr}.imputed.vcf")
 	shell:
 		"(plink --gen {input.gen} --sample {input.sample} --cow --real-ref-alleles --oxford-single-chr {params.chrom} --recode vcf --out {params.oprefix})>{log}"
 

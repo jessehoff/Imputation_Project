@@ -76,7 +76,7 @@ rule reformat_leg:
 	benchmark:
 		"benchmarks/reformat_leg/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.benchmark.txt"
 	output:
-		newleg = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.reformatted.legend"
+		newleg = temp("minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.reformatted.legend")
 	shell:
 		"(python bin/bcftools_legend_converter.py {params.chr} {input.refleg} {output.newleg}) > {log}"
 
@@ -89,7 +89,7 @@ rule cat_sample:
 	benchmark:
 		"benchmarks/reformat_samp/run{run}/merged_refpanel.chr{chr}.phased.benchmark.txt"
 	output:
-		newsample = "minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.phased.reformatted.sample"
+		newsample = temp("minimac_ref_panel/ref_panels/run{run}/merged_refpanel.chr{chr}.phased.reformatted.sample")
 	shell:
 		"(python bin/bcftools_sample_converter.py {input.samples} {output.newsample}) > {log}"
 
