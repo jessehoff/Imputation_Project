@@ -1,11 +1,17 @@
-rule targ:
+SNP50 = ['58336.170626.1009.104.A', '58336.170626.108.124.A', '58336.170626.1082.100.C', '58336.170626.11.112.A', '58336.170626.1113.112.C', '58336.170626.1241.101.C', '58336.170626.127.100.B', '58336.170626.1308.103.C', '58336.170626.13134.200.Z', '58336.170626.1339.200.A', '58336.170626.15.129.B', '58336.170626.16709.200.X', '58336.170626.191.102.C', '58336.170626.2090.550.C', '58336.170626.2203.101.A', '58336.170626.273.550.B', '58336.170626.3.104.B', '58336.170626.3.112.B', '58336.170626.32.101.B', '58336.170626.3245.104.C', '58336.170626.395.129.C', '58336.170626.42.129.A', '58336.170626.4359.200.Y', '58336.170626.45.102.B', '58336.170626.67.124.C', '58336.170626.770.103.A', '58336.170626.7744.100.A', '58336.170626.85.550.A']
+#'58336.170626.2714.102.A' having issues with ped file in filtering
+#'58336.170626.46.103.B', having issues with no sex chromosomes
+REF = ['227234.170619.1255.129_A', '227234.170619.12703.100_A', '227234.170619.1351.101_A', '227234.170619.1667.550_A', '227234.170619.172.103_A', '227234.170619.1994.200_A', '227234.170619.219.102_A', '227234.170619.442.112_A', '227234.170619.500.104_A', '227234.170619.74.124_A', '777962.170619.10.129_C', '777962.170619.11.550_A', '777962.170619.136.124_A', '777962.170619.1681.100_A', '777962.170619.213.129_A', '777962.170619.241.102_A', '777962.170619.26.103_A', '777962.170619.2779.200_A', '777962.170619.315.112_A', '777962.170619.40.129_B', '777962.170619.408.550_B', '777962.170619.41.101_B', '777962.170619.411.200_B', '777962.170619.417.100_B', '777962.170619.477.104_A', '777962.170619.552.101_A', '777962.170619.99.103_B']
+
+rule filter_target:
 	input:
-		#jag = expand("correct_sex/{sample}.bed", sample = ['227234.170619.1255.129_A', '227234.170619.12703.100_A', '227234.170619.1351.101_A', '227234.170619.1667.550_A', '227234.170619.172.103_A', '227234.170619.1994.200_A', '227234.170619.219.102_A', '227234.170619.442.112_A', '227234.170619.500.104_A', '227234.170619.74.124_A', '777962.170619.10.129_C', '777962.170619.11.550_A', '777962.170619.136.124_A', '777962.170619.1681.100_A', '777962.170619.213.129_A', '777962.170619.241.102_A', '777962.170619.26.103_A', '777962.170619.2779.200_A', '777962.170619.315.112_A', '777962.170619.40.129_B', '777962.170619.408.550_B', '777962.170619.41.101_B', '777962.170619.411.200_B', '777962.170619.417.100_B', '777962.170619.477.104_A', '777962.170619.552.101_A', '777962.170619.99.103_B'])
-		targ = expand("correct_sex/{sample}.bed", sample = ['58336.170626.1339.200.A', '58336.170626.16709.200.X', '58336.170626.4359.200.Y', '58336.170626.13134.200.Z'])
+	#jag = expand("filter_logs/{sample}.txt", sample = REF)
+		targ = expand("filter_logs/{sample}.txt", sample = SNP50)
+	#targ = expand("correct_sex/{sample}.bed", sample = ['58336.170626.1339.200.A', '58336.170626.16709.200.X', '58336.170626.4359.200.Y', '58336.170626.13134.200.Z'])
 
-		#58336.170626.94.200.B removed from target because issues were coming up without any sex chromosomes
+#58336.170626.94.200.B removed from target because issues were coming up without any sex chromosomes
 
-map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_HD_161214.map",'227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map",'58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map",'76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
+map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_HD_161214.map", '227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map", '58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map", '76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
 #This map dictionary should be able to remain the same, and we can add new maps for whichever new assays become available in future datasets
 
 #should be adapted to just parse the filename for the info, and have as many dict keys as maps available
@@ -29,12 +35,14 @@ rule filter_duplicate_individuals:
 		ped = "raw_genotypes/{sample}.ped"
 	benchmark:
 		"filter_benchmarks/duplicates_filtered/{sample}.txt"
+	log:
+		"logs/duplicate_filter/{sample}.log"
 	output:
 		dup = "duplicates_filtered/dup_ids/{sample}.txt",
 		ped = "duplicates_filtered/{sample}.ped",
-		csv = "filter_logs/{sample}.csv"
 	shell:
-		"python bin/duplicate_filter.py {input.id} {output.dup} {input.ped} {output.ped}; python bin/duplicate_logging.py {output.dup} {output.csv}"
+		"python bin/duplicate_filter.py {input.id} {output.dup} {input.ped} {output.ped}"#; python bin/duplicate_logging.py {output.dup} {output.csv}"
+
 
 
 #Dictionaries: This rule takes .map and .ped inputs from dictionaries based on specified output 'wildcard' which is the name of the assay.
@@ -95,8 +103,7 @@ rule filter_variants:
 	params:
 		inprefix = "duplicates_filtered/{sample}",
 		oprefix="snp_filtered/{sample}",
-		logprefix="filter_logs/{sample}",
-		csv = "filter_logs/{sample}.csv"
+		logprefix="filter_logs/{sample}"
 	benchmark:
 		"filter_benchmarks/filter_variants/{sample}.txt"
 	output:
@@ -105,7 +112,7 @@ rule filter_variants:
 		fam="snp_filtered/{sample}.fam",
 		log="snp_filtered/{sample}.log"
 	shell:
-		"plink --file {params.inprefix} --map {input.map} --threads 4 --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}; python bin/snp_filtered_log_parsing.py {output.log} {params.csv}"
+		"plink --file {params.inprefix} --map {input.map} --threads 4 --keep-allele-order --cow --not-chr 0 --exclude maps/map_issues/snp_ids_to_exclude.txt --geno .1 --make-bed --out {params.oprefix}"#; python bin/snp_filtered_log_parsing.py {output.log} {params.csv}"
 
 rule convert_chip2seq:
 		input:
@@ -199,8 +206,7 @@ rule filter_individuals:
 		png="individual_stats/figures/{sample}.individual_call_rate.png"
 	params:
 		inprefix="ref_set/{sample}",
-		oprefix="individual_filtered/{sample}",
-		csv="filter_logs/{sample}.csv"
+		oprefix="individual_filtered/{sample}"
 	benchmark:
 		"filter_benchmarks/filter_individuals/{sample}.txt"
 	output:
@@ -210,7 +216,7 @@ rule filter_individuals:
 		log="individual_filtered/{sample}.log"
 
 	shell:
-		"plink --bfile {params.inprefix} --cow --mind .1 --real-ref-alleles  --make-bed --out {params.oprefix}; python bin/individual_filtered_log_parsing.py {output.log} {params.csv}"
+		"plink --bfile {params.inprefix} --cow --mind .1 --real-ref-alleles  --make-bed --out {params.oprefix}"#; python bin/individual_filtered_log_parsing.py {output.log} {params.csv}"
 
 
 
@@ -252,8 +258,7 @@ rule filter_hwe_variants:
 #		png="hwe_stats/figures/{sample}.hwe_pvalues.png"
 	params:
 		inprefix="individual_filtered/{sample}",
-		oprefix="hwe_filtered/{sample}",
-		csv="filter_logs/{sample}.csv",
+		oprefix="hwe_filtered/{sample}"
 	benchmark:
 		"filter_benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
@@ -262,7 +267,7 @@ rule filter_hwe_variants:
 		fam="hwe_filtered/{sample}.fam",
 		log="hwe_filtered/{sample}.log"
 	shell:
-		"plink --bfile {params.inprefix} --cow --nonfounders  --real-ref-alleles --hwe 1e-20 --make-bed --out {params.oprefix}; python bin/hwe_log_parsing.py {output.log} {params.csv}"
+		"plink --bfile {params.inprefix} --cow --nonfounders  --real-ref-alleles --hwe 1e-20 --make-bed --out {params.oprefix}"# python bin/hwe_log_parsing.py {output.log} {params.csv}"
 
 #PLINK function (impute-sex) looks at sex provided by ped file, and at X chromosome heterozygosity (and y chromosome variants if provided), and determines whether an animal is male, female, or unknown. If sex from ped file is unknown, this will impute the sex if possible, and write that into the new bed file that it produces.
 #Python Scripts: (missexed_animals_filter.py) reads the .sexcheck file produced by impute sex function.  If an individual's sex is changed from known M/F to the opposite sex, it's ID will be written to the {sample}.missexed_animals.txt file, and removed in subsequent step.  (missexed_animals_filter_logging.py) will count lines of filter output, and write to the assay's csv log file.
@@ -275,8 +280,7 @@ rule impute_sex:
 	params:
 		logprefix="filter_logs/{sample}",
 		inprefix="hwe_filtered/{sample}",
-		oprefix="sex_impute/{sample}",
-		csv="filter_logs/{sample}.csv"
+		oprefix="sex_impute/{sample}"
 	benchmark:
 		"filter_benchmarks/impute_sex/{sample}.txt"
 	output:
@@ -287,7 +291,7 @@ rule impute_sex:
 		sexcheck="sex_impute/{sample}.sexcheck",
 		txt="sex_impute/{sample}.missexed_animals.txt"
 	shell:
-		"plink --bfile {params.inprefix} --cow --real-ref-alleles --impute-sex ycount --make-bed --out {params.oprefix}; python bin/missexed_animals_filter.py {output.sexcheck} {output.txt}; python bin/missexed_animals_filter_logging.py {output.txt} {output.log} {params.csv}" #{params.logprefix}.csv"
+		"plink --bfile {params.inprefix} --cow --real-ref-alleles --impute-sex ycount --make-bed --out {params.oprefix}; python bin/missexed_animals_filter.py {output.sexcheck} {output.txt}"# python bin/missexed_animals_filter_logging.py {output.txt} {output.log} {params.csv}" #{params.logprefix}.csv"
 
 #PLINK function (remove) takes "sex_impute/{sample}.missexed_animals.txt" and produces new bed file without listed IDs, removing missexed animals
 #Input File Locations: sex_impute/
@@ -303,12 +307,29 @@ rule remove_missexed_animals:
 		oprefix="correct_sex/{sample}"
 	output:
 		bed="correct_sex/{sample}.bed",
-                bim="correct_sex/{sample}.bim",
-                fam="correct_sex/{sample}.fam",
-                log="correct_sex/{sample}.log",
+		bim="correct_sex/{sample}.bim",
+		fam="correct_sex/{sample}.fam",
+		log="correct_sex/{sample}.log",
 	shell:
 		"plink --bfile {params.inprefix} --cow --remove {input.txt} --real-ref-alleles --make-bed --out {params.oprefix}"
 
+rule filter_logging:
+	input:
+		dup = "duplicates_filtered/dup_ids/{sample}.txt",
+		snp = "snp_filtered/{sample}.log",
+		ind = "individual_filtered/{sample}.log",
+		hwe = "hwe_filtered/{sample}.log",
+		sex = "sex_impute/{sample}.log",
+		mis = "sex_impute/{sample}.missexed_animals.txt",
+		cor = "correct_sex/{sample}.bed"
+	benchmark:
+		"filter_benchmarks/filter_logging/{sample}.txt"
+	log:
+		"logs/filter_logging/{sample}.log"
+	output:
+		log = "filter_logs/{sample}.txt"
+	shell:
+		"(python bin/combined_filter_logging.py {input.dup} {input.snp} {input.ind} {input.hwe} {input.sex} {input.mis} {output.log}) > {log}"
 
 #This list contains the different file names that will be merged together.
 DATA =['227234.170519.1970.GGPF250', '777962.170519.1970.HD']
