@@ -16,6 +16,7 @@ joinmap = joinmap.sort_values([2])
 joinmap=joinmap.drop_duplicates()
 print(joinmap.tail())
 joinmap.columns = ['position','cM']
+joinmap = joinmap.sort_values(['position'])
 joinmap['Genetic_Map(cM)'] = joinmap.position / 1000000
 joinmap['COMBINED_rate(cM/Mb)'] = 1.0
 outmap = joinmap.reindex(columns=['position','COMBINED_rate(cM/Mb)','Genetic_Map(cM)'])

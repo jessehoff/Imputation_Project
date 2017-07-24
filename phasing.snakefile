@@ -3,7 +3,9 @@ hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/2
 
 rule targ:
 	input:
-		hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
+		#hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
+		phasehd = expand("eagle_phased_assays/run21/hd.chr{chr}.phased.sample", chr = range(1,30))
+
 def bedchoice(WC):
 	return hd_or_f250[WC.assay]
 
@@ -12,7 +14,7 @@ def snpset(WC):
 	return pull_or_not[WC.assay]
 
 def runchoice(WC):
-	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','13':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit','12':'merged_chrsplit', '14':'assay_chrsplit'}
+	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','13':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit','12':'merged_chrsplit', '14':'assay_chrsplit','21':'assay_chrsplit/'}
 	r = WC.run
 	chrom = WC.chr
 	if r == '1':
@@ -31,6 +33,11 @@ def runchoice(WC):
 		location = run_dict[r] + '/run' + r + '/hol_testset.merge.chr' + chrom +'.bed'
 	if r ==('14'):
 		location = run_dict[r] + WC.sample + '.list3.chr' + chrom + '.bed'
+	if r ==('21'):
+		if ((WC.sample == 'snp50') or (WC.sample == 'ggpld')):
+			location = run_dict[r] +  WC.sample + '.list1.chr' + chrom + '.bed'
+		if ((WC.sample == 'f250') or (WC.sample == 'hd')):
+			location = run_dict[r] +  WC.sample + '.list4.chr' + chrom + '.bed'
 	return location
 
 def listchoice(WC):
@@ -38,12 +45,33 @@ def listchoice(WC):
 	chrom = WC.chr
 	if r ==('2'):# or ('5'):
 		location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
-	if r ==('7') or ('10'):
+	if r ==('7') :
+		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom
+	if r ==('10'):
 		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom
 	if r =='13': #not sure this is the right one?
 		location =  'assay_chrsplit/' + WC.sample +'.list3.chr' + chrom
+	if r ==('21'):
+		if ((WC.sample == 'snp50') or (WC.sample == 'ggpld')):
+			location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
+		if ((WC.sample == 'f250') or (WC.sample == 'hd')):
+			location =  'assay_chrsplit/' + WC.sample +'.list4.chr' + chrom
 	return location
 
+rule supplement_extract:
+	input:
+		bed = "correct_sex/{sample}.bed"
+	params:
+		inprefix = "correct_sex/{sample}",
+		oprefix = "supplement_extract/{sample}"
+	benchmark:
+		"benchmarks/supplement_extract/{sample}.benchmark.txt"
+	log:
+		"logs/supplement_extract/{sample}.log"
+	output:
+		bed = "supplement_extract/{sample}.bed"
+	shell:
+		"(plink --bfile {params.inprefix} --cow --real-ref-alleles --remove raw_genotypes/hol.1970.txt --make-bed --out {params.oprefix})>{log}"
 
 rule downsample:
 	params:
@@ -58,13 +86,57 @@ rule downsample:
 	output:
 		bed = "downsample/{assay}.list{list}.bed"
 	shell:
-		"(plink --bfile {params.bfile}  --real-ref-alleles {params.idslist} {params.extract} --make-bed  --cow --out {params.oprefix})> {log}"
+		"(plink --bfile {params.bfile} --real-ref-alleles {params.idslist} {params.extract} --make-bed  --cow --out {params.oprefix})> {log}"
+
+files = ['correct_sex/227234.170619.1255.129_A', 'correct_sex/227234.170619.12703.100_A', 'correct_sex/227234.170619.1351.101_A', 'correct_sex/227234.170619.1667.550_A', 'correct_sex/227234.170619.172.103_A', 'correct_sex/227234.170619.219.102_A', 'correct_sex/227234.170619.442.112_A', 'correct_sex/227234.170619.500.104_A', 'correct_sex/227234.170619.74.124_A', 'supplement_extract/227234.170619.1994.200_A','correct_sex/777962.170619.11.550_A', 'correct_sex/777962.170619.136.124_A', 'correct_sex/777962.170619.1681.100_A', 'correct_sex/777962.170619.213.129_A', 'correct_sex/777962.170619.241.102_A', 'correct_sex/777962.170619.26.103_A', 'correct_sex/777962.170619.315.112_A', 'correct_sex/777962.170619.40.129_B', 'correct_sex/777962.170619.408.550_B', 'correct_sex/777962.170619.41.101_B', 'correct_sex/777962.170619.417.100_B', 'correct_sex/777962.170619.477.104_A', 'correct_sex/777962.170619.552.101_A', 'correct_sex/777962.170619.99.103_B', 'supplement_extract/777962.170619.2779.200_A', 'supplement_extract/777962.170619.411.200_B']
+
+mergelists = {'hd':"hd_assays.txt", "f250":"f250_assays.txt"}
+def listpicker(WC):
+	assay = WC.sample
+	return mergelists[assay]
+
+oldnewlist = {'4':'1', '5':'2', '6':'3'}
+def oldnew(WC):
+	name = "downsample/" + WC.sample + ".list" + oldnewlist[WC.list]
+	return name
+
+def oldnewbed(WC):
+	name = "downsample/" + WC.sample + ".list" + oldnewlist[WC.list] + '.bed'
+	return name
+
+rule across_breed_assay_combine: #makes a single file for each assay, combining animals across breed, and the holstein test data. 
+	input:
+		sup = expand("{sample}.bed", sample = files), #all files, just to trigger generation of other rules. 
+		down = oldnewbed
+	params:
+		list = listpicker,
+		inprefix = oldnew,
+		oprefix = "across_breed_assay_combine/{sample}.list{list}"
+	benchmark:
+		"benchmarks/across_breed_assay_combine/{sample}.benchmark.txt"
+	log:
+		"logs/across_breed_assay_combine/{sample}.log"
+	output:
+		combined = "across_breed_assay_combine/{sample}.list{list}.bed"
+	shell:
+		"plink --bfile {params.inprefix} --cow --real-ref-alleles --merge-list {params.list} --make-bed --out {params.oprefix}"
+
+def downsample_orcombine(WC):
+	if WC.sample == 'snp50':
+		bed  = 'downsample/snp50.list' + WC.list + '.bed'
+	if WC.sample == 'ggpld':
+		bed  = 'downsample/ggpld.list' + WC.list + '.bed'
+	if WC.sample == 'hd':
+		bed  = 'across_breed_assay_combine/hd.list' + WC.list + '.bed'
+	if WC.sample == 'f250':
+		bed  = 'across_breed_assay_combine/f250.list' + WC.list + '.bed'
+	return bed
 
 rule assay_chrsplit:
 	input:
-		bed = expand("downsample/{assay}.list{{list}}.bed", assay = DATA),
+		downsample_orcombine
 	params:
-		inprefix = "downsample/{sample}.list{list}",
+		inprefix = "across_breed_assay_combine/{sample}.list{list}",
 		oprefix = "assay_chrsplit/{sample}.list{list}.chr{chr}",
 		chr = "{chr}"
 	benchmark:
@@ -128,7 +200,7 @@ rule hap_leg:
 		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
 
 def findmergelist(wc):
-	listdict = {'6':'2','1':'1','2':'1','3':'1','12': '3'}
+	listdict = {'6':'2','1':'1','2':'1','3':'1','12': '3','21':4}
 	run = wc.run
 	list = listdict[run]
 	locate = 'assay_chrsplit/hol_testset.list' + list+'.chr'+wc.chr+'.txt'

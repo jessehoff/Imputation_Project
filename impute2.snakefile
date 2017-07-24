@@ -16,7 +16,7 @@ def chrchunker(WC):
 # IMPGENS =['hol_testset.SNP50.788', 'hol_testset.GGPLD.788', 'hol_testset.F250.197', 'hol_testset.HD.197']
 # IMPREFS =['hol_testset.F250.197', 'hol_testset.HD.197']
 IMPREFS = ['f250','hd']
-IMPGENS = ['snp50','ggpld','f250','hd']
+IMPGENS = ['snp50','ggpld'] #this gets changed when we need to impute the f250 data with large HD. 
 
 
 targfiles=[] #troy's runner
@@ -57,42 +57,93 @@ include: "shapeit.snakefile"
 # haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input'}
 
 def haps_runlocator(shoein):
-	haps_sample_run = {'1': 'vcf_to_haps','12': 'vcf_to_haps', '2': 'eagle_phased_assays','13':'eagle_phased_assays', '4':'shapeit_phased_assays','6':'vcf_to_haps','7':'eagle_phased_assays', '9':'shapeit_phased_assays','14':'shapeit_phased_assays'}
+	phased_across_assay = ['1','12','6'] # vcf_to_haps
+	phased_within_assay = ['2','13','21','7'] #eagle_phased_assays
+	shapeit_within_assay = ['4','9','14'] #shapeit_phased_assays
 	loc = []
 	t = shoein.run
+	for xx in IMPREFS:
+		t = shoein.run
+		if t in phased_across_assay:
+			directory = 'vcf_to_haps'
+		if t in phased_within_assay:
+			directory = 'eagle_phased_assays'
+		if t in shapeit_within_assay:
+			directory = 'shapeit_phased_assays'
 	samp = shoein.sample
 	chrom = shoein.chr
-	location = haps_sample_run[t] + '/run' + t + '/'+ samp  +'.chr' + chrom + '.phased.haps'
+	location = directory + '/run' + t + '/'+ samp  +'.chr' + chrom + '.phased.haps'
 	#print(location)
 	return location
 
 def hap_runlocator(shoein):
-	haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input','14':'shapeit_phased_assays/impute_input'}
+	phased_across_assay = ['1','12','6'] #'vcf_to_hap'
+	phased_within_assay = ['2','13','21','7'] #'impute_input'
+	shapeit_within_assay = ['4','9','14'] #'shapeit_phased_assays/impute_input'
 	loc = []
 	for xx in IMPREFS:
 		t = shoein.run
+		if t in phased_across_assay:
+			directory = 'vcf_to_hap'
+		if t in phased_within_assay:
+			directory = 'impute_input'
+		if t in shapeit_within_assay:
+			directory = 'shapeit_phased_assays/impute_input'
 		samp = xx
 		chrom = shoein.chr
-		location = haplegendsample_run[t] +'/run' + t + '/' + samp + '.chr' + chrom + '.phased.haplotypes'
+		location = directory +'/run' + t + '/' + samp + '.chr' + chrom + '.phased.haplotypes'
 		loc.append(location)
 	return loc
 
 def legend_runlocator(shoein):
-	haplegendsample_run = {'1':'vcf_to_hap','12': 'vcf_to_hap', '2':'impute_input','13':'impute_input','4':'shapeit_phased_assays/impute_input','6':'vcf_to_hap', '7':'impute_input', '9':'shapeit_phased_assays/impute_input','14':'shapeit_phased_assays/impute_input'}
+	phased_across_assay = ['1','12','6'] #'vcf_to_hap'
+	phased_within_assay = ['2','13','21','7'] #'impute_input'
+	shapeit_within_assay = ['4','9','14'] #'shapeit_phased_assays/impute_input'
 	loc = []
 	for xx in IMPREFS:
 		t = shoein.run
+		if t in phased_across_assay:
+			directory = 'vcf_to_hap'
+		if t in phased_within_assay:
+			directory = 'impute_input'
+		if t in shapeit_within_assay:
+			directory = 'shapeit_phased_assays/impute_input'
 		samp = xx
 		chrom = shoein.chr
-		location = haplegendsample_run[t] +'/run' + t + '/' + samp +'.chr' + chrom + '.phased.legend'
+		location = directory +'/run' + t + '/' + samp +'.chr' + chrom + '.phased.legend'
 		loc.append(location)
 	return loc
+
+
+def imputemapfinder(WC):
+	phased_across_assay = ['1','12','6'] #'vcf_to_hap'
+	phased_within_assay = ['2','13','21','7'] #'impute_input'
+	shapeit_within_assay = ['4','9','14'] #'shapeit_phased_assays/impute_input'
+	four = ['21','22']
+	if WC.run in four:
+		list = '4'
+	file = 'impute_maps/list' + list  + '.chr' + WC.chr + '.map'
+	return file
+
+rule impute_mapmaker:
+	input:
+		hd_input = 'assay_chrsplit/hd.list{list}.chr{chr}.bim',
+		f250_input ='assay_chrsplit/f250.list{list}.chr{chr}.bim'
+	log:
+		"logs/impute_mapmaker/list{list}.chr{chr}.txt"
+	benchmark:
+		"benchmarks/impute_mapmaker/list{list}.chr{chr}.txt"
+	output:
+		'impute_maps/list{list}.chr{chr}.map'
+	shell:
+		"(python ./bin/map_maker.py {input.hd_input} {input.f250_input} {output}) > {log}"
+	
 
 rule impute2_refpanel:
 	input:
 		hap = hap_runlocator,
 		legend = legend_runlocator,
-		maps="impute_maps/imputemap.chr{chr}.map"
+		maps=imputemapfinder
 	log:
 		"logs/refpanel_impute/run{run}/merged_refpanel.chr{chr}.phased.log"
 	params:
@@ -104,14 +155,14 @@ rule impute2_refpanel:
 		refhap = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",
 		refleg = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.legend"
 	shell:
-		"(impute2 -merge_ref_panels_output_ref {params.oprefix} -m {input.maps} -h {input.hap} -l {input.legend} -int {params.chunk} -Ne 200 -o {params.oprefix}) > {log}"
+		"(impute2 -merge_ref_panels_output_ref {params.oprefix} -m {input.maps} -h {input.hap} -l {input.legend} -int {params.chunk} -Ne 1000 -o {params.oprefix}) > {log}"
 
 rule run_impute2_run2: #for parralel phasing
 	input:
 		hap = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.hap",	#How are we supposed to expand over a function? Not sure if we can make this as smart as we want it to be?
 		legend = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.legend",
 		knownhaps = haps_runlocator,
-		maps="impute_maps/imputemap.chr{chr}.map"
+		maps=imputemapfinder
 	params:
 		chunk= chrchunker
 	log:
@@ -124,30 +175,9 @@ rule run_impute2_run2: #for parralel phasing
 	shell:
 		"(impute2 -merge_ref_panels -m {input.maps} -h {input.hap} -l {input.legend} -use_prephased_g -known_haps_g {input.knownhaps} -int {params.chunk} -Ne 200 -o {output.imputed}) > {log}"
 
-# rule run_impute2_round2: #for parralel phasing
-# 	input:
-# 		hap=expand("vcf_to_hap/{ref}.run{{run}}.chr{{chr}}.hap.gz", ref=IMPREFS),
-# 		legend=expand("vcf_to_hap/{ref}.run{{run}}.chr{{chr}}.legend.gz", ref=IMPREFS),
-# 		knownhaps="vcf_to_haps/run{run}/{sample}.chr{chr}.hap.gz",
-# 		maps="impute_maps/imputemap.chr{chr}.map"
-# 	params:
-# 		chunk= chrchunker
-# 	log:
-# 		"logs/impute2/{sample}.{run}.chr{chr}.{chunk}.log"
-# 	benchmark:
-# 		"benchmarks/impute2/{sample}.{run}.chr{chr}.{chunk}.benchmark.txt"
-# 	output:
-# 		imputed="impute2_imputed/run{run}/{sample}.chr{chr}.{chunk}.phased.impute2",
-# 		summary="impute2_imputed/run{run}/{sample}.chr{chr}.{chunk}.phased.impute2_summary"
-# 	shell:
-# 		"(impute2 -merge_ref_panels -m {input.maps} -h {input.hap} -l {input.legend} -use_prephased_g -known_haps_g {input.knownhaps} -int {params.chunk} -Ne 200 -o {output.imputed}) > {log}"
-# 		#-fill_holes
 
-
-#print(sample)
-#print('sample\n')
 rundict = {}
-for Run in range(15):
+for Run in range(24):
 	run= str(Run)
 	sampledict = {}
 	for sample in IMPGENS:

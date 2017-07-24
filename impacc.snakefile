@@ -1,42 +1,36 @@
 #SAMPLES = ['hol_testset.SNP50.788', 'hol_testset.GGPLD.788', 'hol_testset.F250.197', 'hol_testset.HD.197']
-SAMPLES = ['f250','snp50','ggpld','hd']
+SAMPLES = ['snp50','ggpld']
 
-rule impacc:
+rule impacc: #this rule must be changed to specify the run every time. 
 	input:
-		#targ = expand("imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv", sample = SAMPLES, run = [1,2], chr = list(range(1,30)))
-		#("imp_acc/{sample}.run{run}.txt:q", sample = SAMPLES, run = )
-		#targ = expand("imp_acc_visualization/run{run}/{sample}.run{run}.chr{chr}.histogram.png", sample = SAMPLES, run=[1,2], chr = list(range(1,30)))
-		#targ = expand("ref_vcfs/F250_HD_merged.chr{chr}.pickle", chr = list(range(1,30)))
-		#targ = expand("minimac_imp_acc/{run}/{sample}.run{run}.chr{chr}.snp_correlations.csv", run = 2, sample = SAMPLES, chr = list(range(1,30)))
-		#targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 5, sample = SAMPLES)
-		#targ = expand("imp_acc/run{run}/visualization/{sample}.chr{chr}.combo.png", run = 10, sample = SAMPLES, chr = 28)
-		targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 16, sample = SAMPLES)
+		targ = expand("imp_acc/run{run}/{sample}.mafcorr.csv", run = 21, sample = SAMPLES)
 		#targ = expand("imp_acc/run{run}/{sample}.lowmafcorr.png", run = 6, sample = SAMPLES)
 include: "mm.snakefile"
 include: "impute2.snakefile"
 
 
 def samplefinder(WC):
-	rundict = {'6':"vcf_to_haps",'1':"vcf_to_haps",'12':"vcf_to_haps", '2':'eagle_phased_assays','13':'eagle_phased_assays', '4':"shapeit_phased_assays", '7':'eagle_phased_assays', '9':'shapeit_phased_assays', '14':'shapeit_phased_assays'}
+	rundict = {'6':"vcf_to_haps",'1':"vcf_to_haps",'12':"vcf_to_haps", '2':'eagle_phased_assays','13':'eagle_phased_assays', '4':"shapeit_phased_assays", '7':'eagle_phased_assays', '9':'shapeit_phased_assays', '14':'shapeit_phased_assays','21':'eagle_phased_assays'}
 	r = WC.run
 	chrom = WC.chr
 	location = rundict[r] + '/run' + r+'/' + WC.sample+'.chr' + chrom+'.phased.sample'
 	return location
 
 def impaccscript(WC):
-	scriptdict = {'1':'bin/vcf_impacc.py', '2':'bin/vcf_impacc.py', '3':'bin/vcf_impacc.py', '4':'bin/vcf_impacc.py', '5':'bin/minimac_impacc.py', '6':'bin/vcf_impacc.py', '7':'bin/vcf_impacc.py', '8':'bin/minimac_impacc.py', '9':'bin/vcf_impacc.py', '10':'bin/minimac_impacc.py', '11':'bin/minimac_impacc.py', '12':'bin/vcf_impacc.py', '13':'bin/vcf_impacc.py', '14':'bin/vcf_impacc.py', '15':'bin/minimac_impacc.py', '16':'bin/minimac_impacc.py'}
+	scriptdict = {'1':'bin/vcf_impacc.py', '2':'bin/vcf_impacc.py', '3':'bin/vcf_impacc.py', '4':'bin/vcf_impacc.py', '5':'bin/minimac_impacc.py', '6':'bin/vcf_impacc.py', '7':'bin/vcf_impacc.py', '8':'bin/minimac_impacc.py', '9':'bin/vcf_impacc.py', '10':'bin/minimac_impacc.py', '11':'bin/minimac_impacc.py', '12':'bin/vcf_impacc.py', '13':'bin/vcf_impacc.py', '14':'bin/vcf_impacc.py', '15':'bin/minimac_impacc.py', '16':'bin/minimac_impacc.py','21':'bin/vcf_impacc.py'}
 	script = scriptdict[WC.run]
 	return script
-# def impute2vcffinder(WC):
-# 	dirdict = {'1':'impute2_vcf', '2':'impute2_vcf', '3':'impute2_vcf', '4':'impute2_vcf','6':'impute2_vcf', '7':'impute2_vcf', '9':'impute2_vcf','12':'impute2_vcf','9':'impute2_vcf'}
-# 	suffdict = {'1':'.imputed.vcf','12':'.imputed.vcf', '2':'.imputed.vcf', '3':'.imputed.vcf', '4':'.imputed.vcf', '6':'.imputed.vcf', '7':'.imputed.vcf', '9':'.imputed.vcf'}
-# 	location = 'impute2_vcf' + '/run' + WC.run + '/' + WC.sample + '.chr' + WC.chr + '.imputed.vcf'
-# 	return location
-#
+
 def vcffinder(WC):
-	dirdict = {'1':'impute2_vcf', '2':'impute2_vcf', '3':'impute2_vcf', '4':'impute2_vcf','5':'minimac_imputed', '6':'impute2_vcf', '7':'impute2_vcf', '8':'minimac_imputed', '9':'impute2_vcf', '10':'minimac_imputed', '11':'minimac_imputed', '12':'impute2_vcf','13':'impute2_vcf','14':'impute2_vcf', '15':'minimac_imputed', '16':'minimac_imputed'}
-	suffdict = {'1':'.imputed.vcf', '2':'.imputed.vcf', '3':'.imputed.vcf', '4':'.imputed.vcf', '6':'.imputed.vcf', '7':'.imputed.vcf', '9':'.imputed.vcf', '5':'.imputed.dose.vcf', '8':'.imputed.dose.vcf', '10':'.imputed.dose.vcf', '11':'.imputed.dose.vcf','12':'.imputed.vcf','13':'.imputed.vcf','14':'.imputed.vcf', '15':'.imputed.dose.vcf', '16':'.imputed.dose.vcf'}
-	location = dirdict[WC.run] + '/run' + WC.run + '/' + WC.sample + '.chr' + WC.chr + suffdict[WC.run]
+	minimacs = ['5','8','10','15','16'] 
+	impute2s = ['1','2','3','4','7','6','9','12','13','14','21']
+	if WC.run in minimacs:
+		prefix = 'minimac_imputed'
+		suffix = '.imputed.dose.vcf'
+	if WC.run in impute2s:
+		prefix = 'impute2_vcf'
+		suffix = '.imputed.vcf'
+	location = prefix + '/run' + WC.run + '/' + WC.sample + '.chr' + WC.chr + suffix
 	return location
 
 rule impute2_vcf:
@@ -57,7 +51,7 @@ rule impute2_vcf:
 
 rule merge_ref: #makes a merge list of raw genotypes
 	input:
-		HD = "correct_sex/777962.170519.1970.HD.bed",
+		HD = "correct_sex/777962.170519.1970.HD.bed", #needs to always be the raw genotype inputs to imputation
 		F250 = "correct_sex/227234.170519.1970.GGPF250.bed"
 	params:
 		bfile = "--bfile correct_sex/227234.170519.1970.GGPF250",
