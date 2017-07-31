@@ -3,6 +3,8 @@ import sys
 import os
 output=sys.argv[-1]
 inputs= sys.argv[1:-1]
+if len(inputs) <2:
+	raise ValueError('Please give an input')
 print(inputs)
 
 curd = os.getcwd() 

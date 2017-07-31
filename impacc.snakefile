@@ -218,7 +218,7 @@ rule imp_acc_visualization:
 
 rule all_chrom_impacc:
 	input:
-		corrs = expand("imp_acc/run{{run}}/{{sample}}.chr{chr}.snp_correlations.csv", chr = list(range(1,30)))
+		corrs = expand("imp_acc/run{{run}}/{{sample}}.chr{chr}.snp_correlations.csv", chr = list(range(29,30)))
 	params:
 		corrprefix = "imp_acc/run{run}/{sample}.chr",
 		frq = "accuracy_test/merged_refs/F250_HD_merged.1970.frq",

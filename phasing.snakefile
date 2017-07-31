@@ -14,7 +14,7 @@ def snpset(WC):
 	return pull_or_not[WC.assay]
 
 def runchoice(WC):
-	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','13':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit','12':'merged_chrsplit', '14':'assay_chrsplit','21':'assay_chrsplit/'}
+	run_dict = {'1':'merged_chrsplit','22':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','13':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit','12':'merged_chrsplit', '14':'assay_chrsplit','21':'assay_chrsplit/'}
 	r = WC.run
 	chrom = WC.chr
 	if r == '1':
@@ -38,6 +38,8 @@ def runchoice(WC):
 			location = run_dict[r] +  WC.sample + '.list1.chr' + chrom + '.bed'
 		if ((WC.sample == 'f250') or (WC.sample == 'hd')):
 			location = run_dict[r] +  WC.sample + '.list4.chr' + chrom + '.bed'
+	if r == '22':
+		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
 	return location
 
 def listchoice(WC):
@@ -95,7 +97,7 @@ def listpicker(WC):
 	assay = WC.sample
 	return mergelists[assay]
 
-oldnewlist = {'4':'1', '5':'2', '6':'3'}
+oldnewlist = {'4':'1', '5':'2', '6':'3','1':'1'}
 def oldnew(WC):
 	name = "downsample/" + WC.sample + ".list" + oldnewlist[WC.list]
 	return name
@@ -130,6 +132,10 @@ def downsample_orcombine(WC):
 		bed  = 'across_breed_assay_combine/hd.list' + WC.list + '.bed'
 	if WC.sample == 'f250':
 		bed  = 'across_breed_assay_combine/f250.list' + WC.list + '.bed'
+	if WC.sample == 'bigholsnp50':
+		bed = 'bigholsnp50/bigholsnp50.list' + WC.list + '.bed'
+	##plink --merge-list correct_sex/bighol.list --nonfounders -real-ref-alleles --cow --make-bed --out across_breed_assay_combine/bigholsnp50.list5
+	#to make the bighol combined 
 	return bed
 
 rule assay_chrsplit:
@@ -200,22 +206,28 @@ rule hap_leg:
 		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
 
 def findmergelist(wc):
-	listdict = {'6':'2','1':'1','2':'1','3':'1','12': '3','21':4}
+	listdict = {'6':'2','1':'1','2':'1','3':'1','12': '3','21':'4','22':'5'}
 	run = wc.run
 	list = listdict[run]
 	locate = 'assay_chrsplit/hol_testset.list' + list+'.chr'+wc.chr+'.txt'
 	#print(locate)
 	return locate
 
+#for the data in the bigphase going to include stuff from list5 and list1
+#basically its going to be list 1 + the 50k holsteins (list 5). List 1 data taken directly from the original directoy
+
+DATA =['f250', 'ggpld', 'hd', 'snp50'] 		
+
 rule make_merge_list: #makes a merge list of raw genotypes, doesn't need to have a run because its just going to be a list related thing.
 	input:
-		filelist = expand("assay_chrsplit/{assay}.list{{list}}.chr{{chr}}.bed", assay= DATA )
+		filelist = "assay_chrsplit/bigholsnp50.list{list}.chr{chr}.bed" ,
+		filelist2 = expand("assay_chrsplit/{assay}.list1.chr{{chr}}.bed", assay= DATA )
 	log:
 		"logs/make_merge_list/list{list}.txt"
 	output:
 		"assay_chrsplit/hol_testset.list{list}.chr{chr}.txt"
 	shell:
-		"python ./bin/merge_file_maker.py {input.filelist} {output}"
+		"python ./bin/merge_file_maker.py  {input.filelist2} {input.filelist}  {output}"
 
 rule merged_chrsplit:
 	input:
