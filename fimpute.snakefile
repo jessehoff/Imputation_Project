@@ -1,53 +1,12 @@
 #CHROMOSOMES = list(range(1,31))
 DATA =['hol_testset.HD.197','hol_testset.F250.197' , 'hol_testset.SNP50.788','hol_testset.GGPLD.788',]
-#DATA = ['hol_testset.SNP50.788','hol_testset.GGPLD.788',]
 
 rule targ:
 	input:
 		#lege =expand("vcf_to_hap/{sample}.1.chr{chr}.legend.gz",sample = DATA,  chr = list(range(1,30))) #converts phased outputs to haps legend format
 
-rule split_chromosomes:
-	input:
-		bed = expand( "dataprepper/testset_data/{assay}.bed", assay = DATA),
-		bim = expand("dataprepper/testset_data/{assay}.bim", assay = DATA),
-		fam = expand("dataprepper/testset_data/{assay}.fam", assay = DATA),
-		log = expand("dataprepper/testset_data/{assay}.log", assay = DATA)
-	params:
-		inprefix = "dataprepper/testset_data/{sample}",
-		oprefix = "assay_chrsplit/{sample}.chr{chr}",
-		chr = "{chr}"
-	benchmark:
-		"filter_benchmarks/assay_chrsplit/{sample}.chr{chr}.txt"
-	log:
-		"snake_logs/eagle_split_chromosomes/{sample}.chr{chr}.log"
-	output:
-		bed = "assay_chrsplit/{sample}.chr{chr}.bed",
-		bim = "assay_chrsplit/{sample}.chr{chr}.bim",
-		fam = "assay_chrsplit/{sample}.chr{chr}.fam",
-		log = "assay_chrsplit/{sample}.chr{chr}.log"
-	shell:
-		"(plink --bfile {params.inprefix}  --keep-allele-order --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
 
-rule bed_to_vcf:
-	input:
-		bed = "assay_chrsplit/{sample}.chr{chr}.bed",
-		bim = "assay_chrsplit/{sample}.chr{chr}.bim",
-		fam = "assay_chrsplit/{sample}.chr{chr}.fam",
-		log = "assay_chrsplit/{sample}.chr{chr}.log"
-	params:
-		inprefix = "assay_chrsplit/{sample}.chr{chr}",
-		oprefix = "unphased_vcf/{sample}.run{run}.chr{chr}",
-		chr = "{chr}"
-	benchmark:
-		"bed_to_vcf/bed_tovcf/{sample}.chr{chr}.txt"
-	log:
-		"logs/bed_to_vcf/{sample}.chr{chr}.log"
-	output:
-		vcf = "unphased_vcf/{sample}.run{run}.chr{chr}.vcf"
-	shell:
-		"(plink --bfile {params.inprefix}  --keep-allele-order --chr {params.chr} --recode vcf-iid --nonfounders --cow --out {params.oprefix})> {log}"
 
-#plink --bfile merged_chrsplit/hol_testset.merge.2.chr23.bed  --keep-allele-order --chr 23 --recode vcf-iid --nonfounders --cow --out unphased_vcf/hol_testset.run4.chr23
 
 #snakemake -s fimpute.snakefile   --cores 8 -np fimpute_per_chip/hol_testset.F250.197.run3.chr25.fimpute
 # &> snakerun108.txt
@@ -56,8 +15,8 @@ colnums ={'hol_testset.F250.197':2, 'hol_testset.GGPLD.788': 4, 'hol_testset.HD.
 def colnummer(wildcards):
 	return colnums[wildcards.sample]
 
-	
-rule vcf_to_fimpute:
+# need to make an fimpute type file, so any out of step1 needs to go to vcf. This script should work. 
+rule vcf_to_fimpute: 
 		input:  
 			vcf="unphased_vcf/{sample}.run{run}.chr{chr}.vcf",
 		params: 
