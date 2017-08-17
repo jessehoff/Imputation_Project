@@ -94,7 +94,7 @@ rule impute2_refpanel:
 		legend = legend_runlocator,
 		maps="impute_maps/imputemap.chr{chr}.map"
 	log:
-		"logs/refpanel_impute/run{run}/merged_refpanel.chr{chr}.phased.log"
+		"logs/refpanel_impute/run{run}/merged_refpanel.chr{chr}.{chunk}.phased.log"
 	params:
 		chunk = chrchunker,
 		oprefix = "impute2_refpanel/run{run}/merged_refpanel.chr{chr}.{chunk}.phased"
