@@ -3,7 +3,9 @@ hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/2
 
 rule targ:
 	input:
-		hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
+		targ = expand("impute_input/run2/{sample}.chr{chr}.phased.haplotypes", sample = DATA, chr = list(range(1,30)))
+
+hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
 def bedchoice(WC):
 	return hd_or_f250[WC.assay]
 
@@ -12,36 +14,72 @@ def snpset(WC):
 	return pull_or_not[WC.assay]
 
 def runchoice(WC):
-	run_dict = {'1':'merged_chrsplit','6':'merged_chrsplit', '2':'assay_chrsplit/','13':'assay_chrsplit/','7':'assay_chrsplit/', '9':'assay_chrsplit','12':'merged_chrsplit', '14':'assay_chrsplit'}
-	r = WC.run
-	chrom = WC.chr
-	if r == '1':
-		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
-	if r ==('2'):# or ('5'):#the sample by sample phasing files identified here need to have their sample referenced in the name, and the combine phasing samples do not have a rule of phasing.
-		location = run_dict[r] + WC.sample + '.list1.chr' + chrom + '.bed'
-	if r =='6':
-		location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
-	if r ==('7'):
-		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
-	if r ==('13'):
-		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
-	if r ==('9'):
-		location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
-	if r ==('12'):
-		location = run_dict[r] + '/run' + r + '/hol_testset.merge.chr' + chrom +'.bed'
-	if r ==('14'):
-		location = run_dict[r] + WC.sample + '.list3.chr' + chrom + '.bed'
+	assay = ['2', '5', '7', '10', '13', '15', '4', '9', '14', '17', '18', '19', '30']
+	combined = ['1', '6', '8', '11', '12', '16']
+	if WC.run in assay:
+		list1 = ['1', '2', '3', '4', '5', '8', '17', '30']
+		list2 = ['6','7', '9', '10', '11', '18']
+		list3 = ['12', '13', '14', '15', '16', '19']
+		if WC.run in list1:
+			group = 'list1'
+		if WC.run in list2:
+			group = 'list2'
+		if WC.run in list3:
+			group = 'list3'
+		directory = 'assay_chrsplit/'
+		sample = WC.sample
+		location = directory + sample + '.'+ group + '.chr' + WC.chr + '.bed'
+	if WC.run in combined:
+		directory = 'merged_chrsplit/'
+		sample = 'run' + WC.run +'/hol_testset.merge'
+		location = directory + sample + '.chr' + WC.chr + '.bed'
 	return location
 
+	# if r == '1':
+	# 	location = run_dict[r] + '/run' + r + '/hol_testset.merge.chr' + chrom +'.bed'
+	# if r ==('2'):# or ('5'):#the sample by sample phasing files identified here need to have their sample referenced in the name, and the combine phasing samples do not have a rule of phasing.
+	# 	location = run_dict[r] + WC.sample + '.list1.chr' + chrom + '.bed'
+	# if r =='6':
+	# 	location = run_dict[r] + '/run' + r+'/hol_testset.merge.chr' + chrom +'.bed'
+	# if r ==('7'):
+	# 	location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
+	# if r ==('13'):
+	# 	location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
+	# if r ==('9'):
+	# 	location = run_dict[r] + WC.sample + '.list2.chr' + chrom + '.bed'
+	# if r ==('12'):
+	# 	location = run_dict[r] + '/run' + r + '/hol_testset.merge.chr' + chrom +'.bed'
+	# if r ==('14'):
+	# 	location = run_dict[r] + WC.sample + '.list3.chr' + chrom + '.bed'#
 def listchoice(WC):
-	r = WC.run
-	chrom = WC.chr
-	if r ==('2'):# or ('5'):
-		location =  'assay_chrsplit/' + WC.sample +'.list1.chr' + chrom
-	if r ==('7') or ('10'):
-		location =  'assay_chrsplit/'+ WC.sample + '.list2.chr' + chrom
-	if r =='13': #not sure this is the right one?
-		location =  'assay_chrsplit/' + WC.sample +'.list3.chr' + chrom
+	# list1 = ['1', '2', '3', '4', '5', '8', '17', '30']
+	# list2 = ['6','7', '9', '10', '11', '18']
+	# list3 = ['12', '13', '14', '15', '16', '19']
+	# if WC.run in list1:
+	# 	group = 'list1'
+	# if WC.run in list2:
+	# 	group = 'list2'
+	# if WC.run in list3:
+	# 	group = 'list3'
+	assay = ['2', '5', '7', '10', '13', '15', '4', '9', '14', '17', '18', '19', '30']
+	combined = ['1', '6', '8', '11', '12', '16']
+	if WC.run in assay:
+		list1 = ['1', '2', '3', '4', '5', '8', '17', '30']
+		list2 = ['6','7', '9', '10', '11', '18']
+		list3 = ['12', '13', '14', '15', '16', '19']
+		if WC.run in list1:
+			group = 'list1'
+		if WC.run in list2:
+			group = 'list2'
+		if WC.run in list3:
+			group = 'list3'
+		directory = 'assay_chrsplit/'
+		sample = WC.sample
+		location = directory + sample + '.'+ group + '.chr' + WC.chr
+	if WC.run in combined:
+		directory = 'merged_chrsplit/'
+		sample = 'run' + WC.run +'/hol_testset.merge'
+		location = directory + sample + '.chr' + WC.chr
 	return location
 
 
@@ -99,7 +137,7 @@ rule eagle_phased_assays:
 
 rule decompress_single_chrom:
 		input:
-			gzhaps = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps.gz"
+			gzhaps = "eagle_phased_assays/run{run}/{sample}.chr{chr}.phased.haps.gz"		# inprefix = listchoice,
 		log:
 			"logs/decompress/run{run}/{sample}.chr{chr}.log"
 		benchmark:
@@ -131,7 +169,7 @@ def findmergelist(wc):
 	listdict = {'6':'2','1':'1','2':'1','3':'1','12': '3'}
 	run = wc.run
 	list = listdict[run]
-	locate = 'assay_chrsplit/hol_testset.list' + list+'.chr'+wc.chr+'.txt'
+	locate = 'assay_chrsplit/hol_testset.list' + list + '.chr'+ wc.chr + '.txt'
 	#print(locate)
 	return locate
 
@@ -164,7 +202,6 @@ rule eagle_merged:
 	input:
 		bed = runchoice
 	params:
-		bed="merged_chrsplit/run{run}/hol_testset.merge.chr{chr}",
 		out="eagle_merged/run{run}/hol_testset.merge.chr{chr}"
 	threads: 10
 	priority: 30
@@ -180,13 +217,13 @@ rule eagle_merged:
 
 rule decompress:
 		input:
-			gzhaps = "eagle_merged/run{run}/{sample}.chr{chr}.haps.gz"
+			gzhaps = "eagle_merged/run{run}/hol_testset.merge.chr{chr}.haps.gz"
 		log:
-			"logs/decompress/run{run}/{sample}.chr{chr}.log"
+			"logs/decompress/run{run}/hol_testset.merge.chr{chr}.log"
 		benchmark:
-			"benchmarks/decompress/run{run}/{sample}.chr{chr}.benchmark.txt"
+			"benchmarks/decompress/run{run}/hol_testset.merge.chr{chr}.benchmark.txt"
 		output:
-			haps = temp("eagle_merged/run{run}/{sample}.chr{chr}.haps")
+			haps = temp("eagle_merged/run{run}/hol_testset.merge.chr{chr}.haps")
 		shell:
 			"(gunzip -c {input.gzhaps} > {output.haps}) > {log}"
 

@@ -42,7 +42,7 @@ rule impute:
 		targ = expand("impute2_chromosome/run{run}/{sample}.chr{chr}.phased.imputed.gen", sample = IMPGENS, run = 2, chr = list(range(29,30)))
 
 include: "phasing.snakefile"
-include: "shapeit.snakefile"
+#include: "shapeit.snakefile"
 
 #snakemake -s impute2.snakefile --cores 34  &> imputationrunone_02.txt
 
