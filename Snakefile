@@ -2,11 +2,7 @@ FILES = []
 
 rule filter_target:
 	input:
-	#jag = expand("filter_logs/{sample}.txt", sample = REF)
 		targ = expand("filter_logs/{sample}.txt", sample = SNP50)
-	#targ = expand("correct_sex/{sample}.bed", sample = ['58336.170626.1339.200.A', '58336.170626.16709.200.X', '58336.170626.4359.200.Y', '58336.170626.13134.200.Z'])
-
-#58336.170626.94.200.B removed from target because issues were coming up without any sex chromosomes
 
 map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_HD_161214.map", '227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map", '58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map", '76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
 #This map dictionary should be able to remain the same, and we can add new maps for whichever new assays become available in future datasets
@@ -154,8 +150,6 @@ rule update_ref:
 				"(plink --bfile {params.iprefix} --cow  --out {params.oprefix} --a1-allele {input.updateref}  --make-bed)> {log}"
 
 
-
-
 #PLINK statistic (missing) -- Gathers statistics on individual call rates (reports proportion of missing genotypes for each individual)
 #Input File Location: /snp_filtered/
 #Output: output file suffixes will be (.imiss, .lmiss, .log, .nosex)
@@ -252,7 +246,6 @@ rule filter_hwe_variants:
 	input:
 		bed="individual_filtered/{sample}.bed",
 		stats="hwe_stats/{sample}.hwe",
-#		png="hwe_stats/figures/{sample}.hwe_pvalues.png"
 	params:
 		inprefix="individual_filtered/{sample}",
 		oprefix="hwe_filtered/{sample}"
@@ -302,6 +295,8 @@ rule remove_missexed_animals:
 	params:
 		inprefix="sex_impute/{sample}",
 		oprefix="correct_sex/{sample}"
+	benchmark:
+		"filter_benchmarks/remove_missexed_animals/{sample}.txt"
 	output:
 		bed="correct_sex/{sample}.bed",
 		bim="correct_sex/{sample}.bim",
@@ -329,7 +324,6 @@ rule filter_logging:
 		"(python bin/combined_filter_logging.py {input.dup} {input.snp} {input.ind} {input.hwe} {input.sex} {input.mis} {output.log}) > {log}"
 
 #This list contains the different file names that will be merged together.
-DATA =['227234.170519.1970.GGPF250', '777962.170519.1970.HD']
 
 #Python Script (file_list_maker.py) searches the correct_sex sub-directory for all of the files made with a .bed suffix, and then writes the file names to a .txt file (allfiles.txt)
 #PLINK function (merge-list) takes this list as an input and merges the different files into a single .bed file
