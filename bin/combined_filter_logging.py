@@ -25,9 +25,10 @@ with open(individuals, 'r') as i:
 	ind = i.read()
 mind = re.findall(r'--(mind\s*[\w.]+)', ind)[0]
 rem = re.findall(r'([0-9]+)\s+[\w.]+ removed due to missing genotype data', ind)[0]
-start = re.findall (r'([0-9]+) cattle \(', ind)[0]
+start = re.findall (r'([0-9]+) c\w+\s\(', ind)[0]
+#start = re.findall (r'([0-9]+) cattle ', ind)[0]
 time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',ind)[0]
-indlist = '\t'.join([data, 'Individual Call Rate',mind ,'','','',rem , start, str(int(rem)/int(start)), time])
+indlist = '\t'.join([data, 'Individual Call Rate',mind ,'','','',rem, start, str(int(rem)/int(start)), time])
 
 with open(hwe, 'r') as h:
 	hardy = h.read()
@@ -42,7 +43,7 @@ with open(sex, 'r') as s: #This is the sexcheck file that PLINK generates
 with open(missexed, 'r') as m: #This is the file that has the IDs of missexed animals that my script creates
 	rem = str(len(m.readlines()))
 impute_sex = re.findall(r'--(impute-sex ycount)\n', ms)[0]
-start = re.findall(r'([0-9]+) cattle \(', ms)[0]
+start = re.findall(r'([0-9]+) c\w+\s\(', ms)[0]
 time = re.findall(r'Start time: ([0-9 a-z A-Z : .]+)',ms)[0]
 missexedlist = '\t'.join([data, 'Missexed Individuals',impute_sex ,'','','',rem , start, str(int(rem)/int(start)), time])
 
