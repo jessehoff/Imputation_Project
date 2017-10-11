@@ -1,80 +1,77 @@
-DATA =['f250', 'ggpld', 'hd', 'snp50'] #new file names -- these are files that have had ref-alt conversions
-hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
-
 rule targ:
 	input:
-		hd_or_f250  = {'snp50':"correct_sex/777962.170519.1970.HD",'f250':"correct_sex/227234.170519.1970.GGPF250", 'ggpld':"correct_sex/777962.170519.1970.HD", 'hd':"correct_sex/777962.170519.1970.HD"}
 
-rule assay_chrsplit:
-	input:
-		bed = expand("downsample/{sample}.bed", assay = DATA),
-	params:
-		inprefix = "downsample/{sample}",
-		oprefix = "assay_chrsplit/{sample}.chr{chr}",
-		chr = "{chr}"
-	benchmark:
-		"benchmarks/assay_chrsplit/{sample}.chr{chr}.txt"
-	log:
-		"logs/eagle_split_chromosomes/{sample}.chr{chr}.log"
-	output:
-		bed = "assay_chrsplit/{sample}.chr{chr}.bed",
-		bim = "assay_chrsplit/{sample}.chr{chr}.bim",
-		fam = "assay_chrsplit/{sample}.chr{chr}.fam",
-		log = "assay_chrsplit/{sample}.chr{chr}.log"
-	shell:
-		"(plink --bfile {params.inprefix}  --real-ref-alleles --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
+# Below this line are instructions for phasing on an assay-by-assay manner
+# rule assay_chrsplit:
+# 	input:
+# 		bed = expand("downsample/{sample}.bed", assay = DATA),
+# 	params:
+# 		inprefix = "downsample/{sample}",
+# 		oprefix = "assay_chrsplit/{sample}.chr{chr}",
+# 		chr = "{chr}"
+# 	benchmark:
+# 		"benchmarks/assay_chrsplit/{sample}.chr{chr}.txt"
+# 	log:
+# 		"logs/eagle_split_chromosomes/{sample}.chr{chr}.log"
+# 	output:
+# 		bed = "assay_chrsplit/{sample}.chr{chr}.bed",
+# 		bim = "assay_chrsplit/{sample}.chr{chr}.bim",
+# 		fam = "assay_chrsplit/{sample}.chr{chr}.fam",
+# 		log = "assay_chrsplit/{sample}.chr{chr}.log"
+# 	shell:
+# 		"(plink --bfile {params.inprefix}  --real-ref-alleles --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
+#
+# rule eagle_phased_assays:
+# 	input:
+# 		bed = "assay_chrsplit/{sample}.chr{chr}.bed"
+# 	params:
+# 		inprefix = "assay_chrsplit/{sample}.chr{chr}",
+# 		oprefix = "eagle_phased_assays/{sample}.chr{chr}.phased"
+# 	benchmark:
+# 		"benchmarks/eagle_phased_assays/{sample}.chr{chr}.benchmark.txt"
+# 	log:
+# 		"logs/eagle_phased_assays/{sample}.chr{chr}.log"
+# 	threads: 8
+# 	priority: 100
+# 	output:
+# 		sample = "eagle_phased_assays/{sample}.chr{chr}.phased.sample",
+# 		haps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz"
+# 	shell:
+# 		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp 1 --maxMissingPerIndiv 1 --numThreads 8 --outPrefix {params.oprefix}) > {log}"
+#
+# rule decompress_single_chrom:
+# 	input:
+# 		gzhaps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz"
+# 	benchmark:
+# 		"benchmarks/decompress/{sample}.chr{chr}.benchmark.txt"
+# 	log:
+# 		"logs/decompress/{sample}.chr{chr}.log"
+# 	output:
+# 		haps = temp("eagle_phased_assays/{sample}.chr{chr}.phased.haps")
+# 	shell:
+# 		"(gunzip -c {input.gzhaps} > {output.haps}) > {log}"
+#
+# rule hap_leg:
+# 	input:
+# 		haps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps",
+# 		sample = "eagle_phased_assays/{sample}.chr{chr}.phased.sample"
+# 	params:
+# 		inprefix = "eagle_phased_assays/{sample}.chr{chr}.phased",
+# 		oprefix = "impute_input/{sample}.chr{chr}.phased"
+# 	log:
+# 		"logs/hap_leg/{sample}.chr{chr}.phased.log"
+# 	benchmark:
+# 		"benchmarks/hap_leg/{sample}.chr{chr}.phased.benchmark.txt"
+# 	output:
+# 		hap = temp("impute_input/{sample}.chr{chr}.phased.haplotypes"),
+# 		leg = temp("impute_input/{sample}.chr{chr}.phased.legend"),
+# 		log = "impute_input/logs/{sample}.chr{chr}.phased.log"
+# 	shell:
+# 		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
 
-rule eagle_phased_assays:
+rule make_merge_list: #How are we doing this on a repeated basis?
 	input:
-		bed = "assay_chrsplit/{sample}.chr{chr}.bed"
-	params:
-		inprefix = "assay_chrsplit/{sample}.chr{chr}",
-		oprefix = "eagle_phased_assays/{sample}.chr{chr}.phased"
-	benchmark:
-		"benchmarks/eagle_phased_assays/{sample}.chr{chr}.benchmark.txt"
-	log:
-		"logs/eagle_phased_assays/{sample}.chr{chr}.log"
-	threads: 8
-	priority: 100
-	output:
-		sample = "eagle_phased_assays/{sample}.chr{chr}.phased.sample",
-		haps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz"
-	shell:
-		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp 1 --maxMissingPerIndiv 1 --numThreads 8 --outPrefix {params.oprefix}) > {log}"
-
-rule decompress_single_chrom:
-	input:
-		gzhaps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz"
-	benchmark:
-		"benchmarks/decompress/{sample}.chr{chr}.benchmark.txt"
-	log:
-		"logs/decompress/{sample}.chr{chr}.log"
-	output:
-		haps = temp("eagle_phased_assays/{sample}.chr{chr}.phased.haps")
-	shell:
-		"(gunzip -c {input.gzhaps} > {output.haps}) > {log}"
-
-rule hap_leg:
-	input:
-		haps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps",
-		sample = "eagle_phased_assays/{sample}.chr{chr}.phased.sample"
-	params:
-		inprefix = "eagle_phased_assays/{sample}.chr{chr}.phased",
-		oprefix = "impute_input/{sample}.chr{chr}.phased"
-	log:
-		"logs/hap_leg/{sample}.chr{chr}.phased.log"
-	benchmark:
-		"benchmarks/hap_leg/{sample}.chr{chr}.phased.benchmark.txt"
-	output:
-		hap = temp("impute_input/{sample}.chr{chr}.phased.haplotypes"),
-		leg = temp("impute_input/{sample}.chr{chr}.phased.legend"),
-		log = "impute_input/logs/{sample}.chr{chr}.phased.log"
-	shell:
-		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
-
-rule make_merge_list: #How are we doing this on a repeated basis? 
-	input:
-		filelist = expand("assay_chrsplit/{assay}.chr{{chr}}.bed", assay= DATA )
+		filelist = expand("assay_chrsplit/{assay}.chr{{chr}}.bed", assay= ASSAYS )
 	log:
 		"logs/make_merge_list/list{list}.txt"
 	output:

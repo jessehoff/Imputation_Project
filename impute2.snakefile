@@ -13,13 +13,13 @@ rangedict = {'1':chunks(158322647),'2':chunks(136914030),'3':chunks(121412973), 
 def chrchunker(WC):
 	return rangedict[WC.chr][int(WC.chunk)]
 
-IMPREFS = ['f250','hd']
-IMPGENS = ['snp50','ggpld','f250','hd']
+IMPREFS = []
+IMPGENS = []
 
 
 rule impute:
 	input:
-		targ = expand("impute2_chromosome/{sample}.chr{chr}.phased.imputed.gen", sample = IMPGENS, run = 2, chr = list(range(29,30)))
+		targ = expand("impute2_chromosome/{sample}.chr{chr}.phased.imputed.gen", sample = IMPGENS, chr = list(range(1,30)))
 
 include: "phasing.snakefile"
 include: "shapeit.snakefile"
@@ -40,7 +40,7 @@ rule impute2_refpanel:
 		refhap = "impute2_refpanel/merged_refpanel.chr{chr}.{chunk}.phased.hap",
 		refleg = "impute2_refpanel/merged_refpanel.chr{chr}.{chunk}.phased.legend"
 	shell:
-		"(impute2 -merge_ref_panels_output_ref {params.oprefix} -m {input.maps} -h {input.hap} -l {input.legend} -int {params.chunk} -Ne 200 -o {params.oprefix}) > {log}"
+		"(impute2 -merge_ref_panels_output_ref {params.oprefix} -m {input.maps} -h {input.hap} -l {input.legend} -int {params.chunk} -Ne 20000 -o {params.oprefix}) > {log}"
 
 rule run_impute2_run2: #for parralel phasing
 	input:
@@ -56,10 +56,22 @@ rule run_impute2_run2: #for parralel phasing
 		"benchmarks/impute2/{sample}.chr{chr}.{chunk}.benchmark.txt"
 	output:
 		imputed="impute2_imputed/{sample}.chr{chr}.{chunk}.gen",
-		phasedimputed="impute2_imputed/{sample}.chr{chr}.{chunk}.phased.gen_haps"
-		summary="impute2_imputed/{sample}.chr{chr}.{chunk}.phased.impute2_summary"
+		phasedimputed="impute2_imputed/{sample}.chr{chr}.{chunk}.gen_haps"
 	shell:
-		"(impute2 -merge_ref_panels -m {input.maps} -h {input.hap} -l {input.legend} -use_prephased_g -known_haps_g {input.knownhaps} -int {params.chunk} -phase -Ne 200 -o {output.imputed}) > {log}"
+		"(impute2 -merge_ref_panels -m {input.maps} -h {input.hap} -l {input.legend} -use_prephased_g -known_haps_g {input.knownhaps} -int {params.chunk} -phase -Ne 20000 -o {output.imputed}) > {log}"
+
+hapssampledict = {}
+for sample in IMPGENS:
+	hapsfiledict = {}
+	for chr in rangedict.keys():
+		chunkcounter=-1
+		flist = []
+		for chunk in rangedict.get(chr):
+			chunkcounter = chunkcounter+1
+			file = 'impute2_imputed/'+sample + '.chr'+chr+'.'+str(chunkcounter)+'.gen_haps'
+			flist.append(file)
+			hapsfiledict[chr]=flist
+	hapssampledict[sample] = hapsfiledict
 
 sampledict = {}
 for sample in IMPGENS:
@@ -69,9 +81,9 @@ for sample in IMPGENS:
 		flist = []
 		for chunk in rangedict.get(chr):
 			chunkcounter = chunkcounter+1
-			file = 'impute2_imputed/'+sample + '.chr'+chr+'.'+str(chunkcounter)+'.phased.gen_haps'
+			file = 'impute2_imputed/'+sample + '.chr'+chr+'.'+str(chunkcounter)+'.gen'
 			flist.append(file)
-			filedict[chr]=flist
+			hapsfiledict[chr]=flist
 	sampledict[sample] = filedict
 
 def chrfiles(WC):

@@ -2,7 +2,7 @@ FILES = []
 
 rule filter_target:
 	input:
-		targ = expand("filter_logs/{sample}.txt", sample = SNP50)
+		targ = expand("filter_logs/{sample}.txt", sample = FILES)
 
 map_dict = {'777962':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_HD_161214.map", '227234':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPF250_161214.map", '58336':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_SNP50_161214.map", '139977':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPHDv3_161214.map", '26504':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDv3_161214.map", '30105':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGPLDV4_161214.map", '76999':"/CIFS/MUG01_N/taylorjerr/PLINK_FILES/9913_GGP90KT_161214.map"}
 #This map dictionary should be able to remain the same, and we can add new maps for whichever new assays become available in future datasets
@@ -47,11 +47,13 @@ rule filter_duplicate_individuals:
 rule variant_stats:
 	input:
 		map = mapdicter,
-		dup = "duplicates_filtered/dup_ids/{sample}.txt",
-		input = "duplicates_filtered/{sample}.ped",
+		input = "../{sample}.ped"
+		# dup = "duplicates_filtered/dup_ids/{sample}.txt",
+		# input = "duplicates_filtered/{sample}.ped",
 	threads : 4
 	params:
-		inprefix = "duplicates_filtered/{sample}",
+		#inprefix = "duplicates_filtered/{sample}",
+		inprefix = "../{sample}"
 		oprefix = "snp_stats/{sample}"
 	benchmark:
 		"filter_benchmarks/variant_stats/{sample}.txt"
@@ -88,13 +90,15 @@ rule snp_call_rate_visualization:
 rule filter_variants:
 	input:
 		map = mapdicter,
-		dup = "duplicates_filtered/dup_ids/{sample}.txt",
-		dupped = "duplicates_filtered/{sample}.ped",
+		# dup = "duplicates_filtered/dup_ids/{sample}.txt",
+		# dupped = "duplicates_filtered/{sample}.ped",
+		ped = "../{sample}.ped",
 		stats = "snp_stats/{sample}.frq",
 		png = "snp_stats/figures/{sample}.snp_call_rate.png"
 	threads : 4
 	params:
-		inprefix = "duplicates_filtered/{sample}",
+		#inprefix = "duplicates_filtered/{sample}",
+		inprefix = "../{sample}"
 		oprefix="snp_filtered/{sample}",
 		logprefix="filter_logs/{sample}"
 	benchmark:
