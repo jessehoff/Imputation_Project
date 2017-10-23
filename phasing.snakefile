@@ -69,11 +69,84 @@ rule targ:
 # 	shell:
 # 		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
 
+DATA = ['139977.170831.1.100.B', '139977.170831.1.129.C', '139977.170831.359.112.C', '139977.170831.648.112.B', '227234.170831.559.112.A', '26504.170831.2165.112.F', '26504.170831.776.112.A', '30105.170831.1.100.C', '30105.170831.3055.112.C', '30105.170831.3098.112.D', '58336.170831.11.112.A', '58336.170831.1113.112.C', '58336.170831.3.112.B', '58336.170831.7.100.C', '76999.170831.862.112.A', '777962.170831.315.112.A']
+
+rule targ:
+	input:
+		expand("vcf_to_haps/{sample}.chr{chr}.phased.sample", sample = DATA, chr = 29)
+
+rule assay_chrsplit:
+	input:
+		bed = expand("correct_sex/{sample}.bed", sample = DATA),
+	params:
+		inprefix = "correct_sex/{sample}",
+		oprefix = "assay_chrsplit/{sample}.chr{chr}",
+		chr = "{chr}"
+	benchmark:
+		"benchmarks/assay_chrsplit/{sample}.chr{chr}.txt"
+	log:
+		"logs/eagle_split_chromosomes/{sample}.chr{chr}.log"
+	output:
+		bed = "assay_chrsplit/{sample}.chr{chr}.bed",
+		bim = "assay_chrsplit/{sample}.chr{chr}.bim",
+		fam = "assay_chrsplit/{sample}.chr{chr}.fam",
+		log = "assay_chrsplit/{sample}.chr{chr}.log"
+	shell:
+		"(plink --bfile {params.inprefix}  --real-ref-alleles --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
+
+rule eagle_phased_assays:
+	input:
+		bed = "assay_chrsplit/{sample}.chr{chr}.bed"
+	params:
+		inprefix = "assay_chrsplit/{sample}.chr{chr}",
+		oprefix = "eagle_phased_assays/{sample}.chr{chr}.phased"
+	benchmark:
+		"benchmarks/eagle_phased_assays/{sample}.chr{chr}.benchmark.txt"
+	log:
+		"logs/eagle_phased_assays/{sample}.chr{chr}.log"
+	threads: 8
+	priority: 100
+	output:
+		sample = "eagle_phased_assays/{sample}.chr{chr}.phased.sample",
+		haps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz"
+	shell:
+		"(eagle --bfile={params.inprefix} --geneticMapFile=USE_BIM --maxMissingPerSnp 1 --maxMissingPerIndiv 1 --numThreads 8 --outPrefix {params.oprefix}) > {log}"
+
+rule decompress_single_chrom:
+	input:
+		gzhaps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps.gz"
+	benchmark:
+		"benchmarks/decompress/{sample}.chr{chr}.benchmark.txt"
+	log:
+		"logs/decompress/{sample}.chr{chr}.log"
+	output:
+		haps = temp("eagle_phased_assays/{sample}.chr{chr}.phased.haps")
+	shell:
+		"(gunzip -c {input.gzhaps} > {output.haps}) > {log}"
+
+rule hap_leg:
+	input:
+		haps = "eagle_phased_assays/{sample}.chr{chr}.phased.haps",
+		sample = "eagle_phased_assays/{sample}.chr{chr}.phased.sample"
+	params:
+		inprefix = "eagle_phased_assays/{sample}.chr{chr}.phased",
+		oprefix = "impute_input/{sample}.chr{chr}.phased"
+	log:
+		"logs/hap_leg/{sample}.chr{chr}.phased.log"
+	benchmark:
+		"benchmarks/hap_leg/{sample}.chr{chr}.phased.benchmark.txt"
+	output:
+		hap = temp("impute_input/{sample}.chr{chr}.phased.haplotypes"),
+		leg = temp("impute_input/{sample}.chr{chr}.phased.legend"),
+		log = "impute_input/logs/{sample}.chr{chr}.phased.log"
+	shell:
+		"(shapeit -convert --input-haps {params.inprefix} --output-log {output.log} --output-ref {params.oprefix}) > {log}"
+
 rule make_merge_list: #How are we doing this on a repeated basis?
 	input:
 		filelist = expand("assay_chrsplit/{assay}.chr{{chr}}.bed", assay= ASSAYS )
 	log:
-		"logs/make_merge_list/list{list}.txt"
+		"logs/make_merge_list/mergelist.log"
 	output:
 		"assay_chrsplit/all_assays.chr{chr}.txt"
 	shell:
@@ -99,7 +172,7 @@ rule eagle_merged:
 		bed = "merged_chrsplit/merged_assays.chr{chr}.bed"
 	params:
 		bed="merged_chrsplit/merged_assays.chr{chr}",
-		out="eagle_merged/merged_assays.chr{chr}"
+		out="eagle_merged/merged_assays.chr{chr}.phased"
 	threads: 10
 	priority: 30
 	benchmark:
@@ -114,28 +187,28 @@ rule eagle_merged:
 
 rule decompress: #Is this still needed?
 	input:
-		gzhaps = "eagle_merged/merged_assays.chr{chr}.haps.gz"
+		gzhaps = "eagle_merged/merged_assays.chr{chr}.phased.haps.gz"
 	benchmark:
 		"benchmarks/decompress/merged_assays.chr{chr}.benchmark.txt"
 	log:
 		"logs/decompress/merged_assays.chr{chr}.log"
 	output:
-		haps = temp("eagle_merged/merged_assays.chr{chr}.haps")
+		haps = temp("eagle_merged/merged_assays.chr{chr}.phased.haps")
 	shell:
 		"(gunzip -c {input.gzhaps} > {output.haps}) > {log}"
 
 rule eagle_merged_vcf:
 	input:
-		haps="eagle_merged/merged_assays.chr{chr}.haps"
+		haps="eagle_merged/merged_assays.chr{chr}.phased.haps"
 	benchmark:
 		"benchmarks/eagle_merged_vcf/merged_assays.{chr}.benchmark.txt"
 	log:
 		"logs/eagle_merged_vcf/logs/merged_assays.{chr}.log"
 	params:
-		haps="eagle_merged/merged_assays.chr{chr}"
+		haps="eagle_merged/merged_assays.chr{chr}.phased"
 	output:
 		vcf=temp("eagle_merged_vcf/merged_assays.chr{chr}.phased.vcf"),
-		log="eagle_merged_vcf/logs/merged_assays.chr{chr}.log"
+		log="eagle_merged_vcf/logs/merged_assays.chr{chr}.phased.log"
 	shell:
 		"(shapeit -convert --input-haps {params.haps} --output-log {output.log} --output-vcf {output.vcf}) > {log}"
 
@@ -165,7 +238,7 @@ rule make_vcf_extract_lists: # This rule should be much easier when now that we'
 		keep_ids = "merged_chrsplit/extract_lists/{sample}.chr{chr}.keepvcf",
 		keep_snps = "merged_chrsplit/extract_lists/{sample}.chr{chr}.vcfregion"
 	shell:
-		"python vcf_extraction_maker.py {input.bim} {input.fam} {output.keep_snps} {output.keep_ids}"
+		"python ./bin/vcf_extraction_maker.py {input.bim} {input.fam} {output.keep_snps} {output.keep_ids}"
 
 
 rule vcf_per_assay: #filter the vcfs on a per chromosome per assay basis

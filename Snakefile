@@ -1,4 +1,4 @@
-FILES = []
+FILES = ['139977.170831.1.100.B', '139977.170831.1.129.C', '139977.170831.359.112.C', '139977.170831.648.112.B', '227234.170831.559.112.A', '26504.170831.2165.112.F', '26504.170831.776.112.A', '30105.170831.1.100.C', '30105.170831.3055.112.C', '30105.170831.3098.112.D', '58336.170831.11.112.A', '58336.170831.1113.112.C', '58336.170831.3.112.B', '58336.170831.7.100.C', '76999.170831.862.112.A', '777962.170831.315.112.A']#, '8762.170831.192.112.B']
 
 rule filter_target:
 	input:
@@ -24,8 +24,8 @@ def sampdicter(wildcards):
 #Output File Types: (.ped, .txt)
 rule filter_duplicate_individuals:
 	input:
-		id = "raw_genotypes/{sample}.ID",
-		ped = "raw_genotypes/{sample}.ped"
+		id = "../{sample}.ID",
+		ped = "../{sample}.ped"
 	benchmark:
 		"filter_benchmarks/duplicates_filtered/{sample}.txt"
 	log:
@@ -51,6 +51,7 @@ rule variant_stats:
 		# dup = "duplicates_filtered/dup_ids/{sample}.txt",
 		# input = "duplicates_filtered/{sample}.ped",
 	threads : 4
+	priority:100
 	params:
 		#inprefix = "duplicates_filtered/{sample}",
 		inprefix = "../{sample}"
@@ -96,6 +97,7 @@ rule filter_variants:
 		stats = "snp_stats/{sample}.frq",
 		png = "snp_stats/figures/{sample}.snp_call_rate.png"
 	threads : 4
+	priority:99
 	params:
 		#inprefix = "duplicates_filtered/{sample}",
 		inprefix = "../{sample}"
@@ -336,18 +338,18 @@ rule filter_logging:
 #Output File Types: (.bed, .bim, .fam, .log, .hh, .nosex)
 rule merge_assays:
 	input:
-		expand("correct_sex/{previous}.bed", previous=DATA), #Expand function allows us to ask for one file -- ___merged.bed, and have it produce all of the necessary prerequesite files from the DATA list above.
-		expand("correct_sex/{previous}.bim", previous=DATA),
-		expand("correct_sex/{previous}.fam", previous=DATA),
-		expand("correct_sex/{previous}.log", previous=DATA)
+		expand("correct_sex/{previous}.bed", previous=FILES), #Expand function allows us to ask for one file -- ___merged.bed, and have it produce all of the necessary prerequesite files from the DATA list above.
+		expand("correct_sex/{previous}.bim", previous=FILES),
+		expand("correct_sex/{previous}.fam", previous=FILES),
+		expand("correct_sex/{previous}.log", previous=FILES)
 	params:
 		oprefix="merged_files/170112_merged"
 	output:
 		#mergefilelist= "correct_sex/allfiles.txt"
-                bim = "merged_files/170112_merged.bim",
-                fam = "merged_files/170112_merged.fam",
-                log = "merged_files/170112_merged.log",
-                bed = "merged_files/170112_merged.bed"
+		bim = "merged_files/170112_merged.bim",
+		fam = "merged_files/170112_merged.fam",
+		log = "merged_files/170112_merged.log",
+		bed = "merged_files/170112_merged.bed"
 	shell:
 		"python bin/file_list_maker.py correct_sex/allfiles.txt; plink --merge-list correct_sex/allfiles.txt  --cow --real-ref-alleles --make-bed --out {params.oprefix}"
 
@@ -378,27 +380,3 @@ rule split_chromosomes:
 		log = "chrsplit/170112_merged.chr{chr}.log"
 	shell:
 		"(plink --bfile {params.inprefix}  --real-ref-alleles --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
-
-
-
-rule assay_chromosomes:
-        input:
-                bed = expand( "correct_sex/{assay}.bed", assay = DATA),
-                bim = expand("correct_sex/{assay}.bim", assay = DATA),
-                fam = expand("correct_sex/{assay}.fam", assay = DATA),
-                log = expand("correct_sex/{assay}.log", assay = DATA)
-        params:
-                inprefix = "correct_sex/{sample}",
-                oprefix = "eagle_chrsplit/{sample}.chr{chr}",
-                chr = "{chr}"
-        benchmark:
-                "filter_benchmarks/eagle_chrsplit/{sample}.chr{chr}.txt"
-        log:
-                "snake_logs/eagle_split_chromosomes/{sample}.chr{chr}.log"
-        output:
-                bed = "assay_chrsplit/{sample}.chr{chr}.bed",
-                bim = "assay_chrsplit/{sample}.chr{chr}.bim",
-                fam = "assay_chrsplit/{sample}.chr{chr}.fam",
-                log = "assay_chrsplit/{sample}.chr{chr}.log"
-        shell:
-                "(plink --bfile {params.inprefix}  --real-ref-alleles --chr {params.chr} --make-bed  --nonfounders --cow --out {params.oprefix})> {log}"
