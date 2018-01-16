@@ -13,42 +13,46 @@ rangedict = {'1':chunks(158322647),'2':chunks(136914030),'3':chunks(121412973), 
 def chrchunker(WC):
 	return rangedict[WC.chr][int(WC.chunk)]
 
+IMPGENS= ["merged"]
+
 rule target:
 	input:
-		targ = expand("vcf_to_haps/{sample}.chr{chr}.phased.haps", sample = ["ggpld", "snp50", "f250", "hd"], chr = list(range(1,30)))
-rule merged_chrsplit:
-	input:
-		mergelist = "dataprepper/F250_HD_merged.1970.bed"
-	params:
-		outprefix="merged_chrsplit/F250_HD_merged.1970.chr{chr}",
-		inprefix = "dataprepper/F250_HD_merged.1970",
-		chrom = "{chr}"
-	benchmark:
-		"benchmarks/chrsplit/F250_HD_merged.1970.chr{chr}.txt"
-	log:
-		"logs/chrsplit/F250_HD_merged.1970.chr{chr}.txt"
-	output:
-		bed="merged_chrsplit/F250_HD_merged.1970.chr{chr}.bed",
+		targ = expand("impute4_seq_chromosome/{sample}.chr{chr}.gen.gz", sample = IMPGENS, chr = list(range(1,30)))
 	shell:
-		"(plink --bfile {params.inprefix} --nonfounders --real-ref-alleles --cow --chr {params.chrom} --make-bed --out {params.outprefix}) > {log}"
-
-rule eagle_phasing:
-	input:
-		bed="merged_chrsplit/F250_HD_merged.1970.chr{chr}.bed"
-	params:
-		inprefix="merged_chrsplit/F250_HD_merged.1970.chr{chr}",
-		oprefix="eagle_merged/F250_HD_merged.1970.chr{chr}"
-	threads: 10
-	priority: 30
-	benchmark:
-		"benchmarks/eagle_merged/F250_HD_merged.1970.chr{chr}.benchmark.txt"
-	log:
-		"logs/eagle_merged/F250_HD_merged.1970.chr{chr}.log"
-	output:
-		sample = "eagle_merged/F250_HD_merged.1970.chr{chr}.sample",
-		haps = "eagle_merged/F250_HD_merged.1970.chr{chr}.haps.gz"
-	shell:
-		"(eagle --bfile={params.inprefix}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .99 --numThreads 10 --outPrefix {params.oprefix})> {log}"
+		"python bin/cleanup.py"
+# rule merged_chrsplit:
+# 	input:
+# 		mergelist = "dataprepper/holseqtest.merged.bed"
+# 	params:
+# 		outprefix="merged_chrsplit/F250_HD_merged.1970.chr{chr}",
+# 		inprefix = "dataprepper/holseqtest.merged",
+# 		chrom = "{chr}"
+# 	benchmark:
+# 		"benchmarks/chrsplit/F250_HD_merged.1970.chr{chr}.txt"
+# 	log:
+# 		"logs/chrsplit/F250_HD_merged.1970.chr{chr}.txt"
+# 	output:
+# 		bed="merged_chrsplit/F250_HD_merged.1970.chr{chr}.bed",
+# 	shell:
+# 		"(plink --bfile {params.inprefix} --nonfounders --real-ref-alleles --cow --chr {params.chrom} --make-bed --out {params.outprefix}) > {log}"
+#
+# rule eagle_phasing:
+# 	input:
+# 		bed="merged_chrsplit/F250_HD_merged.1970.chr{chr}.bed"
+# 	params:
+# 		inprefix="merged_chrsplit/F250_HD_merged.1970.chr{chr}",
+# 		oprefix="eagle_merged/F250_HD_merged.1970.chr{chr}"
+# 	threads: 10
+# 	priority: 30
+# 	benchmark:
+# 		"benchmarks/eagle_merged/F250_HD_merged.1970.chr{chr}.benchmark.txt"
+# 	log:
+# 		"logs/eagle_merged/F250_HD_merged.1970.chr{chr}.log"
+# 	output:
+# 		sample = "eagle_merged/F250_HD_merged.1970.chr{chr}.sample",
+# 		haps = "eagle_merged/F250_HD_merged.1970.chr{chr}.haps.gz"
+# 	shell:
+# 		"(eagle --bfile={params.inprefix}  --geneticMapFile=USE_BIM --maxMissingPerSnp .99  --maxMissingPerIndiv .99 --numThreads 10 --outPrefix {params.oprefix})> {log}"
 
 rule decompress:
 	input:
@@ -101,7 +105,7 @@ rule vcf_per_assay: #filter the vcfs on a per assay basis
 	log:
 		"logs/vcf_per_assay/{sample}.chr{chr}.log"
 	output:
-		vcf = temp("vcf_per_assay/{sample}.chr{chr}.vcf")
+		vcf = "vcf_per_assay/{sample}.chr{chr}.vcf"
 	shell:
 		"(bcftools view {input.vcfgz} -R {input.keep_maps}  -S {input.keep_ids} -o {output.vcf}) > {log}"
 
@@ -131,14 +135,27 @@ rule subset_run6:
 	log:
 		"logs/seqref/seqref.chr{chr}.log"
 	output:
-		vcf = "seqref/seqref_nobrd.chr{chr}.vcf.gz",
-		tabix = "seqref/seqref_nobrd.chr{chr}.vcf.gz.tbi"
+		vcf = temp("seqref/seqref_nobrd.chr{chr}.vcf.gz"),
 	shell:
-		"(bcftools view {input.vcfgz} -S {input.keep_ids} -O b -o {output.vcf}; tabix {output.vcf}) > {log}"
+		"(bcftools view {input.vcfgz} -S ^{input.keep_ids} -O z -o {output.vcf}) > {log}"
+
+rule tabix_subset:
+	input:
+		vcf = "seqref/seqref_nobrd.chr{chr}.vcf.gz"
+	benchmark:
+		"benchmarks/tabix_seqref/seqref.chr{chr}.benchmark.txt"
+	log:
+		"logs/tabix_seqref/seqref.chr{chr}.log"
+	output:
+		tabix = temp("seqref/seqref_nobrd.chr{chr}.vcf.gz.tbi")
+	shell:
+		"(tabix {input.vcf})>{log}"
+
 
 rule vcf_to_hap:
 	input:
 		vcf = "seqref/seqref_nobrd.chr{chr}.vcf.gz",
+		tabix = "seqref/seqref_nobrd.chr{chr}.vcf.gz.tbi"
 	params:
 		chr = "{chr}",
 		oprefix ="seqref/seqref_nobrd.chr{chr}",
@@ -173,7 +190,7 @@ rule run_impute4_seq: #for parralel phasing
 	shell:
 		"(impute4.r265.1 -m {input.maps} -h {input.hap} -l {input.legend} -g {input.knownhaps} -int {params.chunk} -Ne 20000 -no_maf_align -o_gz -o {params.oprefix}) > {log}"
 
-rundict = {}
+sampledict = {}
 for sample in IMPGENS:
 	filedict = {}
 	for chr in rangedict.keys():
@@ -181,25 +198,36 @@ for sample in IMPGENS:
 		flist = []
 		for chunk in rangedict.get(chr):
 			chunkcounter = chunkcounter+1
-			file = 'impute4_seq/run'+ run + '/'+sample + '.chr'+chr+'.'+str(chunkcounter)+'.gen.gz' #need to edit this to accept run as a wildcard
+			file = 'impute4_seq/'+sample + '.chr'+chr+'.'+str(chunkcounter)+'.gen.gz' #need to edit this to accept run as a wildcard
 			flist.append(file)
 			filedict[chr]=flist
 	sampledict[sample] = filedict
 
-def chrfiles(chrom):
-	return rundict[chrom.run][chrom.sample][chrom.chr]
+def chrfiles(WC):
+	return sampledict[WC.sample][WC.chr]
 
 rule cat_chunks:
 	input:
 		chunks = chrfiles
-		#chunks = "impute2_imputed/{sample}.chr{chr}.1.phased.impute2"
-	params:
-		#star = "impute2_imputed/{sample}.chr{chr}.*.phased.impute2" What is wrong wit this appraoch
 	log:
-		"logs/cat_chunks/run{run}/{sample}.chr{chr}.log"
+		"logs/cat_chunks/{sample}.chr{chr}.log"
 	benchmark:
-		"benchmarks/cat_chunks/run{run}/{sample}.chr{chr}.benchmark.txt"
+		"benchmarks/cat_chunks/{sample}.chr{chr}.benchmark.txt"
 	output:
-		cat = "impute4_seq_chromosome/run{run}/{sample}.chr{chr}.gen.gz"
+		cat = "impute4_seq_chromosome/{sample}.chr{chr}.gen.gz"
 	shell:
 		"(cat {input.chunks} > {output.cat}) > {log}"
+
+rule subset_run6_truth:
+	input:
+		vcfgz="/CIFS/MUG01_S/schnabelr/1kbulls/run6/beaglevcf/Chr{chr}-Beagle-TauInd-Run6.vcf.gz",
+		index="/CIFS/MUG01_S/schnabelr/1kbulls/run6/beaglevcf/Chr{chr}-Beagle-TauInd-Run6.vcf.gz.tbi",
+		keep_ids = "dataprepper/brd_1kbulls_list.txt"
+	benchmark:
+		"benchmarks/seqref_truth/seqref.chr{chr}.benchmark.txt"
+	log:
+		"logs/seqref_truth/seqref.chr{chr}.log"
+	output:
+		vcf = "impacc/seqref_truth.chr{chr}.vcf.gz",
+	shell:
+		"(bcftools view {input.vcfgz} -S {input.keep_ids} -O z -o {output.vcf}) > {log}"
